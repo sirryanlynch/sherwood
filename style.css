@@ -40,6 +40,7 @@ th{font-weight:600}
 .card{background:var(--soft);border-radius:12px;padding:28px;margin:32px 0}
 details{border-top:1px solid var(--line);padding:18px 0}details summary{cursor:pointer;font-weight:600}
 .ok{background:var(--soft);border-radius:10px;padding:18px;margin-top:20px}
+.note{background:var(--soft);border-radius:10px;padding:12px 14px;color:var(--muted);font-size:15px;margin:0}
 footer{border-top:1px solid var(--line);padding:40px 0;font-size:13px;color:var(--muted)}
 footer p{max-width:720px}
 .cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:28px}
