@@ -1,0 +1,37 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Intake — Fairbase</title><meta name="description" content="Santa Cruz County property tax appeals, made simple."><link rel="stylesheet" href="style.css"></head><body>
+<header><div class="wrap"><a class="logo" href="index.html">Fairbase</a><nav><a href="index.html">Check</a><a href="how-it-works.html">How it works</a><a href="pricing.html">Pricing</a><a href="case-study.html">Pilot case</a><a href="faq.html">FAQ</a><a href="contact.html">Contact</a></nav></div></header>
+<main><div class="wrap">
+<h1>Appeal intake</h1>
+<p class="lead">This is what we need to build your kit and file on your behalf.</p>
+<form data-kind="intake" data-thanks="We'll review your details and email you your next steps, including payment and e-signature.">
+<fieldset><legend>1. Property</legend>
+<label>Property address<input name="address" required data-msg="Enter the property address."></label>
+<label>APN (optional, it's on your tax bill)<input name="apn" placeholder="000-000-00"></label>
+<label>Property type<select name="type" required data-msg="Choose a property type."><option value="">Select…</option><option>Single-family home</option><option>Townhouse</option><option>Condominium</option><option>Other residential</option></select></label>
+<label>Assessed value on your tax bill (optional)<input name="assessed" inputmode="numeric" placeholder="$"></label>
+<label>Plan<select name="plan" required data-msg="Choose a plan."><option value="">Select…</option><option>DIY kit ($79)</option><option>Done-for-you ($249)</option><option>Contingency (35% of first-year savings)</option></select></label></fieldset>
+<fieldset><legend>2. Occupancy</legend>
+<label>Is this your primary residence?<select name="ownerOccupied" required data-msg="Please answer."><option value="">Select…</option><option>Yes</option><option>No</option></select></label>
+<label>Homeowner's Exemption on file?<select name="hoExemption"><option>Not sure</option><option>Yes</option><option>No</option></select></label></fieldset>
+<fieldset><legend>3. Condition</legend>
+<p class="small muted" style="margin:0">Things that lower value help your case. Describe them as they were around January 1, 2026.</p>
+<label>Roof age (years, approx.)<input name="roofAge" type="number" min="0" max="150" required data-msg="Enter a roof age (0 if new or unknown)."></label>
+<label>Damage (termites, water, foundation, etc.)<textarea name="damage" rows="3" placeholder="None, or describe"></textarea></label>
+<label>Remodels or improvements (what and when)<textarea name="remodels" rows="3"></textarea></label>
+<label>Systems (heating, plumbing, electrical, solar) age or problems<textarea name="systems" rows="3"></textarea></label>
+<p class="small muted" style="margin:0">Photos and inspection reports help. We'll ask for them by email.</p></fieldset>
+<fieldset><legend>4. Contact</legend>
+<label>Full name (as on title)<input name="name" required autocomplete="name" data-msg="Enter your name."></label>
+<label>Email<input name="email" type="email" required autocomplete="email" data-msg="Enter a valid email."></label>
+<label>Phone<input name="phone" type="tel" required autocomplete="tel" pattern="[0-9()+\-. ]{7,}" data-msg="Enter a valid phone number."></label>
+<label>Mailing address (if different)<input name="mailing"></label></fieldset>
+<fieldset><legend>5. Authorization</legend>
+<label class="check"><input type="checkbox" name="ownerConfirm" required data-msg="Required."> I am an owner of this property, or otherwise entitled to file for it.</label>
+<label class="check"><input type="checkbox" name="agentAuth" required data-msg="Required to file on your behalf."> I authorize Fairbase to prepare and file an assessment appeal for this property for the 2026–27 tax year as my agent. I understand I'll e-sign a formal agent authorization and the application's certification myself.</label>
+<label class="check"><input type="checkbox" name="risks" required data-msg="Please confirm."> I understand Fairbase is not a law firm, results aren't guaranteed, the board can raise my assessment, and I must keep paying my taxes on time.</label>
+<p class="small muted" style="margin:0">DIY plan? You file yourself. The agent authorization covers us only if you upgrade.</p></fieldset>
+<div><button class="btn" type="submit">Submit intake</button></div></form></div></main>
+<footer><div class="wrap"><p><b>Fairbase</b> (working name) · Property tax assessment appeals · Santa Cruz County, California</p>
+<p>Fairbase is not a law firm and does not provide legal advice. We prepare appeal materials and, with your written authorization, file as your agent. Results are not guaranteed: the Assessment Appeals Board may increase, decrease, or leave your assessment unchanged. Filing an appeal does not relieve you of paying your property taxes on time. Fees, deadlines, and county procedures change — verify with the Clerk of the Board, (831) 454-2323.</p>
+<p>© 2026 Fairbase</p></div></footer><script src="app.js"></script></body></html>
