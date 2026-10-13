@@ -40,7 +40,8 @@ if (gate) {
         </fieldset>
         <fieldset><legend>Who is signing</legend>
           <label>Full name<input name="name" required autocomplete="name"></label>
-          <label>Email<input name="email" type="email" required value="${esc(matter.email)}"></label>
+          <label>Email<input name="email" type="email" required value="${esc(matter.email || "")}"></label>
+          <p class="privacy-note">We use your email and approximate location only to run your check and send what you ask for. <a href="privacy.html">Privacy policy</a>.</p>
           <label>Phone<input name="phone" type="tel" required></label>
           <label class="check"><input type="checkbox" name="ownerConfirm" required> I am an owner of this property, or otherwise entitled to file for it.</label>
           ${plan.filesAsAgent ? `<label class="check"><input type="checkbox" name="agentAuth" required> I will sign an agent authorization so Sherwood can prepare and file for this parcel and tax year. I will sign the application's certification myself.</label>` : `<p class="small muted">DIY kit: you file. Sherwood does not become your agent on this plan.</p>`}

@@ -30,6 +30,7 @@ if (sessionUser() && !token) {
     <p class="lead">Magic link, simulated. We do not send email. The link appears below so you can continue.</p>
     <form id="magic" class="wide">
       <label>Email<input name="email" type="email" required value="${esc(suggested)}"></label>
+      <p class="privacy-note">We use your email and approximate location only to run your check and send what you ask for. <a href="privacy.html">Privacy policy</a>.</p>
       <button class="btn" type="submit">Create sign-in link</button>
     </form>
     <div id="link-box"></div>`;

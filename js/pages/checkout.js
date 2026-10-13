@@ -4,6 +4,8 @@ import { money, esc, formatDay } from "../format.js";
 import { CHECKOUT_PLANS } from "../pricing.js";
 import { getCounty } from "../counties.js";
 import { filingWindow } from "../engine.js";
+import { slugForCountyId } from "../place.js";
+import { markConverted } from "../reminders.js";
 import { requireMatter, saveMatter } from "../store.js";
 
 const ESTIMATE_LABEL = "Estimate from your numbers, if the county agrees to your value.";
@@ -62,6 +64,10 @@ if (gate) {
       matter.paymentId = payment.id;
       matter.paidAt = payment.createdAt;
       saveMatter(matter);
+      if (matter.email) {
+        try { await markConverted({ email: matter.email, county_slug: slugForCountyId(matter.countyId) }); }
+        catch (err) { /* conversion is a reminder flag; checkout still continues */ }
+      }
       location.href = "intake.html";
     });
   }

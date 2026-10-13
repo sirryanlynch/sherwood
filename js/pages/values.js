@@ -2,20 +2,24 @@ import "../boot.js";
 import { loadCounties } from "../counties.js";
 import { decide } from "../engine.js";
 import { esc, moneyToNumber } from "../format.js";
+import { currentPlace } from "../place-ui.js";
 import { currentMatter, newMatter, saveMatter } from "../store.js";
 
 const form = document.querySelector("#values-form");
 const select = form.querySelector("select[name=county]");
 const banner = document.querySelector("#county-banner");
 const check = JSON.parse(sessionStorage.getItem("sherwood_check") || "null");
-if (!check || !check.address || !check.email) {
+if (!check || !check.address) {
   location.href = "index.html";
 } else {
   document.querySelector("#for-address").textContent = check.address;
 }
 
+if (check && check.address) {
 const counties = await loadCounties();
 select.innerHTML = counties.map(c => `<option value="${esc(c.id)}">${esc(c.county)} — ${esc(c.status_label)}</option>`).join("");
+const place = currentPlace(check.address);
+if (place.id && counties.some(c => c.id === place.id)) select.value = place.id;
 
 function selectedCounty() {
   return counties.find(c => c.id === select.value);
@@ -67,7 +71,7 @@ form.addEventListener("submit", e => {
   const matter = {
     ...(existing || {}),
     address: check.address,
-    email: check.email,
+    email: check.email || "",
     geo: { city: check.geoCity || "", region: check.geoRegion || "", inLaunchArea: check.inLaunchArea === true },
     countyId: county.id,
     assessed,
@@ -88,3 +92,4 @@ form.addEventListener("submit", e => {
   else newMatter(matter);
   location.href = "results.html";
 });
+}

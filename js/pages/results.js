@@ -3,7 +3,10 @@ import { paymentsAdapter } from "../adapters/payments.js";
 import { notify } from "../adapters/notify.js";
 import { getCounty } from "../counties.js";
 import { contactLine, esc, formatDay, money } from "../format.js";
+import { slugForCountyId } from "../place.js";
+import { reminderMessage } from "../place-ui.js";
 import { MONITOR } from "../pricing.js";
+import { createLead, createReminder } from "../reminders.js";
 import { currentMatter, saveMatter } from "../store.js";
 
 const root = document.querySelector("#results");
@@ -13,6 +16,16 @@ if (!matter || !matter.outcome) {
 } else {
   const county = await getCounty(matter.countyId);
   render(matter, county);
+}
+
+function emailForm(matter, privacy) {
+  return `
+    <form id="result-email" class="wide">
+      <label>Email this result<input name="email" type="email" required value="${esc(matter.email || "")}" placeholder="you@example.com"></label>
+      ${privacy}
+      <button class="btn" type="submit">Email me this result</button>
+      <p id="email-ok" class="small muted" hidden></p>
+    </form>`;
 }
 
 function render(matter, county) {
@@ -37,14 +50,21 @@ function render(matter, county) {
     else savingsHtml += `<p>Estimated first-year tax difference: <b>${esc(money(savings.amount))}</b>. Rate used: ${(savings.rate * 100).toFixed(2)}% from your tax bill ÷ assessed value. ${esc(savings.note)}</p>`;
   }
 
+  const disclaimer = `<div class="disclaimer"><p><b>Before you continue to checkout.</b> Sherwood is not a law firm and does not provide legal advice. You sign the application's certification. With your written authorization, Sherwood can file as your agent where that county allows it. Results are estimates. The board may increase, decrease, or leave an assessment unchanged. Filing does not pause your tax bill.</p></div>`;
+  const privacy = `<p class="privacy-note">We use your email and approximate location only to run your check and send what you ask for. <a href="privacy.html">Privacy policy</a>.</p>`;
   let next = "";
   if (matter.outcome === "go") {
-    next = `<div class="cta"><a class="btn" href="login.html?next=checkout.html">Create an account and choose a plan</a></div>`;
+    next = `${disclaimer}
+      ${emailForm(matter, privacy)}
+      <div class="cta"><a class="btn" href="login.html?next=checkout.html">Create an account and choose a plan</a></div>`;
   } else if (matter.outcome === "borderline") {
     next = `<p>You can create an account. Sherwood will not treat this as ready to file until a person marks it reviewed. The ops queue on this browser lists it.</p>
+      ${disclaimer}
+      ${emailForm(matter, privacy)}
       <div class="cta"><a class="btn" href="login.html?next=checkout.html">Create an account</a></div>`;
   } else if (matter.outcome === "no_go") {
-    next = `<p>There is no checkout on a no-go. Your email is already stored with this check.</p>
+    next = `<p>There is no checkout on a no-go.</p>
+      ${emailForm(matter, privacy)}
       <div class="cta"><a class="btn ghost" href="how-it-works.html">See how a case moves when the numbers support it</a></div>`;
   } else {
     const opens = win.start ? formatDay(win.start) : "This adapter does not state an opening date.";
@@ -53,8 +73,12 @@ function render(matter, county) {
         <h2>Filing opens later</h2>
         <p>The window on this adapter opens: <b>${esc(opens)}</b>.</p>
         <p class="small muted">Deadline source: ${source}. Verified: ${esc(verified)}.</p>
-        <div class="cta"><button class="btn" id="remind" type="button" ${matter.remindWhenOpen ? "disabled" : ""}>Remind me when filing opens</button></div>
-        <p id="remind-ok" class="small muted" ${matter.remindWhenOpen ? "" : "hidden"}>Saved in this browser for ${esc(matter.email)}. No email was sent.</p>
+        <form id="remind-form" class="wide">
+          <label>Email<input name="email" type="email" required value="${esc(matter.email || "")}" placeholder="you@example.com"></label>
+          ${privacy}
+          <button class="btn" type="submit" ${matter.remindWhenOpen ? "disabled" : ""}>Remind me when filing opens</button>
+          <p id="remind-ok" class="small muted" ${matter.remindWhenOpen ? "" : "hidden"}>${matter.remindWhenOpen ? "Saved for " + esc(matter.email) + "." : ""}</p>
+        </form>
       </div>
       <div class="card">
         <h3>Annual monitor</h3>
@@ -88,26 +112,60 @@ function render(matter, county) {
       <p class="small muted" style="margin-bottom:0">Locked because this demo does not have comparable sales for your address. We do not invent them. The pilot method is on the case study page, and those sales belong to that pilot, not to this check.</p>
     </div>`;
 
-  const remind = document.querySelector("#remind");
+  const remind = document.querySelector("#remind-form");
   if (remind) {
-    remind.addEventListener("click", async () => {
+    remind.addEventListener("submit", async e => {
+      e.preventDefault();
+      const email = String(new FormData(remind).get("email") || "").trim();
+      if (!remind.reportValidity()) return;
+      matter.email = email;
       const opens = win.start || null;
-      matter.remindWhenOpen = {
-        at: new Date().toISOString(),
-        email: matter.email,
-        openDate: opens
-      };
+      const result = await createReminder({
+        email,
+        county_slug: slugForCountyId(matter.countyId),
+        address: matter.address,
+        marketing_consent: true,
+        consent_source: "results_off_season"
+      });
+      matter.remindWhenOpen = { at: new Date().toISOString(), email, openDate: opens, simulated: !!result.simulated };
       saveMatter(matter);
       await notify.outbox({
         channel: "email",
-        to: matter.email,
+        to: email,
         kind: "remind_when_open",
         simulated: true,
-        body: `Reminder request stored for ${matter.email}. Not sent. Opening date on the adapter: ${opens ? formatDay(opens) : "not set"}.`
+        body: `Reminder request stored for ${email}. ${result.simulated ? "No email was sent." : reminderMessage(result)} Opening date on the adapter: ${opens ? formatDay(opens) : "not set"}.`
       });
-      remind.disabled = true;
+      remind.querySelector("button").disabled = true;
       const ok = document.querySelector("#remind-ok");
-      if (ok) ok.hidden = false;
+      if (ok) {
+        ok.hidden = false;
+        ok.textContent = reminderMessage(result);
+      }
+    });
+  }
+  const saveForm = document.querySelector("#result-email");
+  if (saveForm) {
+    saveForm.addEventListener("submit", async e => {
+      e.preventDefault();
+      if (!saveForm.reportValidity()) return;
+      const email = String(new FormData(saveForm).get("email") || "").trim();
+      matter.email = email;
+      saveMatter(matter);
+      const result = await createLead({
+        email,
+        county_slug: slugForCountyId(matter.countyId),
+        address: matter.address,
+        outcome: matter.outcome,
+        consent_source: "results_save"
+      });
+      const ok = document.querySelector("#email-ok");
+      if (ok) {
+        ok.hidden = false;
+        ok.textContent = result.simulated
+          ? "Saved in this browser. No email was sent."
+          : (result.email_sent ? "Check your email for this result." : (result.ok ? "Saved. Email is not configured yet." : (result.error || "Could not save.")));
+      }
     });
   }
   const monitor = document.querySelector("#monitor");

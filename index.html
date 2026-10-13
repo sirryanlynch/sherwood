@@ -2,18 +2,32 @@
 <title>Are you overpaying property tax? — Sherwood</title><meta name="description" content="Free over-assessment check. You enter the numbers. County rules come from a county adapter."><link rel="stylesheet" href="style.css"></head><body>
 <header><div class="wrap"><a class="logo" href="index.html">Sherwood</a><nav><a href="index.html" aria-current=page>Check</a><a href="how-it-works.html">How it works</a><a href="pricing.html">Pricing</a><a href="case-study.html">Pilot case</a><a href="faq.html">FAQ</a><a href="contact.html">Contact</a></nav></div></header>
 <main><div class="wrap">
-<p class="muted small">Homeowners in <span data-geo="city">your area</span></p>
-<h1>Are you overpaying property tax?</h1>
-<p class="lead">Enter the property address and your email. On the next screen you add the assessed value from your tax bill and your own estimate of market value. We apply that county's deadline and fee from its adapter and show an estimate computed from your numbers.</p>
-<form data-kind="check" aria-label="Free over-assessment check">
+<div data-place-bar></div>
+<h1>Think <span data-geo="city">your</span> property is assessed too high?</h1>
+<div id="home-launch" hidden>
+<p class="lead">Check for free. If there's a case, file it yourself for $79, or we'll file it for you for $249.</p>
+</div>
+<div id="home-other" hidden>
+<p class="lead">We're launching county by county. Get a reminder when we're in your county.</p>
+<form id="county-reminder">
+<label>Email<input name="email" type="email" required autocomplete="email" placeholder="you@example.com" data-msg="Enter a valid email."></label>
+<p class="privacy-note">We use your email and approximate location only to run your check and send what you ask for. <a href="privacy.html">Privacy policy</a>.</p>
+<div><button class="btn" type="submit">Email me a reminder</button></div>
+<p id="county-reminder-ok" class="small muted" hidden></p>
+</form>
+<p><button class="btn ghost" id="show-check" type="button">Check a property anyway</button></p>
+</div>
+<div id="home-ambiguous">
+<p class="lead">Choose your county, then check your property.</p>
+</div>
+<form id="check-form" data-kind="check" aria-label="Free over-assessment check">
 <label>Property address<input name="address" required autocomplete="street-address" placeholder="Street, city, ZIP" data-msg="Enter your property address."></label>
-<label>Email (for your results)<input name="email" type="email" required autocomplete="email" placeholder="you@example.com" data-msg="Enter a valid email."></label>
-<p class="note" data-launch-note hidden aria-live="polite">We're launching county by county - we'll let you know when we're in your area.</p>
-<div><button class="btn" type="submit">Run my free check</button></div>
-<p class="small muted">Free. No payment. This demo does not pull comparable sales, and it does not send your email anywhere.</p></form>
+<div><button class="btn" type="submit">Check my property</button></div>
+</form>
+<p class="small muted" id="home-under" hidden>No account needed to see your result. Results are estimates.</p>
 <h2>How it works</h2>
 <ol class="steps">
-<li><h3>Free check</h3><span class="muted">Address and email, then your assessed value and market-value estimate.</span></li>
+<li><h3>Free check</h3><span class="muted">Address, then the assessed value and your market-value estimate. Email comes after the result.</span></li>
 <li><h3>Go, borderline, no-go, or off-season</h3><span class="muted">The result uses your numbers and that county's adapter. A person reviews borderline checks.</span></li>
 <li><h3>Account, plan, intake</h3><span class="muted">You choose a plan, confirm the property, and add condition notes. You can upload photos in this browser.</span></li>
 <li><h3>You sign. Then filing.</h3><span class="muted">You sign the certification. If you hired Sherwood to file, you also sign an agent authorization. Then you track the case.</span></li></ol>
@@ -25,8 +39,8 @@
 <footer><div class="wrap"><p><b>Sherwood</b> · Property tax assessment appeals · <span data-geo="city">your area</span>, <span data-geo="region">your state</span></p>
 <p>Sherwood is not a law firm and does not provide legal advice. You sign the application's certification. With your written authorization, Sherwood can file as your agent where that county allows it. Results are not guaranteed. The board may increase, decrease, or leave an assessment unchanged. Filing does not pause your tax bill.</p>
 <p>Launch-county clerk, from the adapter: <span data-fact="santa_cruz.clerk">loading…</span></p>
-<p><a href="trust.html">Trust and data</a> · <a href="dashboard.html">Your appeal</a> · <a href="admin.html">Ops</a> · <a href="docs/PRODUCT_FLOW.md">Product notes</a></p>
+<p><a href="trust.html">Trust and data</a> · <a href="privacy.html">Privacy policy</a> · <a href="dashboard.html">Your appeal</a> · <a href="admin.html">Ops</a> · <a href="docs/PRODUCT_FLOW.md">Product notes</a></p>
 <p>© 2026 Sherwood</p></div></footer>
-<script src="app.js"></script>
+<script type="module" src="app.js"></script>
 <script type="module" src="js/boot.js"></script>
 </body></html>

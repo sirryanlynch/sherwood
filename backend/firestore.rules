@@ -1,0 +1,59 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function emailOk(value) {
+      return value is string
+        && value.size() > 3
+        && value.size() < 200
+        && value.matches('^[^@\s]+@[^@\s]+\.[^@\s]+$');
+    }
+    function slugOk(value) {
+      return value == null
+        || (value is string && value.size() > 1 && value.size() < 64 && value.matches('^[a-z0-9-]+$'));
+    }
+    function addressOk(value) {
+      return value == null || (value is string && value.size() < 300);
+    }
+
+    match /reminders/{id} {
+      allow read, update, delete: if false;
+      allow create: if request.resource.data.keys().hasOnly([
+          'email', 'county_slug', 'address', 'window_opens_at', 'status',
+          'created_at', 'marketing_consent', 'consent_source', 'consent_requested_at'
+        ])
+        && emailOk(request.resource.data.email)
+        && slugOk(request.resource.data.county_slug)
+        && addressOk(request.resource.data.address)
+        && request.resource.data.status == 'pending'
+        && request.resource.data.marketing_consent == true
+        && request.resource.data.consent_source is string
+        && request.resource.data.consent_source.size() > 1
+        && request.resource.data.consent_source.size() < 64
+        && request.resource.data.created_at == request.time
+        && request.resource.data.consent_requested_at == request.time
+        && (request.resource.data.window_opens_at == null
+          || (request.resource.data.window_opens_at is string
+            && request.resource.data.window_opens_at.matches('^\d{4}-\d{2}-\d{2}$')));
+    }
+
+    match /leads/{id} {
+      allow read, update, delete: if false;
+      allow create: if request.resource.data.keys().hasOnly([
+          'email', 'county_slug', 'address', 'outcome', 'consent_source', 'created_at'
+        ])
+        && emailOk(request.resource.data.email)
+        && slugOk(request.resource.data.county_slug)
+        && addressOk(request.resource.data.address)
+        && request.resource.data.outcome is string
+        && request.resource.data.outcome.size() < 40
+        && request.resource.data.consent_source is string
+        && request.resource.data.consent_source.size() > 1
+        && request.resource.data.consent_source.size() < 64
+        && request.resource.data.created_at == request.time;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -6,9 +6,9 @@ The source of truth for Santa Cruz County is the October 2026 business kit: the 
 
 ## Journey
 
-1. **Free check** (`index.html`). Address and email only. The lead is stored in this browser. Visitor geolocation still fills marketing city/state lines and is not the property's county.
+1. **Free check** (`index.html`). Address only. Email is asked after the result. The headline stays “Think your property is assessed too high?” An IP lookup may fill the state. It does not put the IP city in the headline, and a city alone does not choose the launch or non-launch screen. A county name from the lookup can. `?county=santa-cruz` overrides the lookup, a saved choice, and the typed address for that tab. After an address is typed, that address’s city or county overrides the IP result. A “Showing results for” control can change the county in one click, and that choice is stored in this browser. If the place is still ambiguous, the page shows the county picker and does not show prices. Santa Cruz County shows the $79 / $249 line and the button “Check my property”. Any other confirmed county shows a reminder signup and no prices.
 2. **Numbers** (`values.html`). County, assessed value, the visitor's market-value estimate, optional tax bill, confidence, and an optional supplemental notice date. The market field's helper text is "Not sure? Use your recent purchase price or skip." Skipping does not block the check.
-3. **Result** (`results.html`). One of four outcomes from `js/engine.js`.
+3. **Result** (`results.html`). One of four outcomes from `js/engine.js`. Email is collected here, with the privacy line, to save the result or to request a filing-window reminder. The legal disclaimer sits above the path into checkout.
 4. **Account** (`login.html`). Magic link, simulated. The link is shown on the page because no email is sent. Open it in the same tab.
 5. **Plan and pay** (`checkout.html`). Exactly two cards: DIY kit $79 and We file it $249. Each card shows that fee next to the estimated tax difference, labeled "Estimate from your numbers, if the county agrees to your value." If no tax bill was entered, the card says no dollar estimate is available. Contingency is not a checkout plan. The county fee is shown from the adapter and is not charged here. If the adapter's filing window is not open, checkout stops and does not take a payment.
 6. **Intake** (`intake.html`). Property confirm, occupancy, exemption question, condition notes, optional photo/PDF upload, and the authorization checkboxes.
@@ -140,3 +140,23 @@ A new county is a new JSON file plus a line in `data/counties/index.json`, then 
 - `homeowner_exemption` (omitted means the intake will not quote $7,000 or $86)
 
 Until `status` is `verified`, the engine will not return Go.
+
+## Place, email, and privacy
+
+The first screen does not ask for an email. `js/place.js` decides the county in this order: the `?county=` parameter (kept for the browser tab), a property address the visitor typed, a county they picked in “Showing results for”, then an IP lookup that uses a county name only. An IP city such as Cupertino does not choose a variant and is not written into the headline. The state may still fill `data-geo="region"`.
+
+Launch copy (Santa Cruz County) names the $79 and $249 prices. Any other confirmed county hides prices and offers a reminder. An ambiguous lookup shows the county picker and the check, without prices.
+
+Every email field has the sentence “We use your email and approximate location only to run your check and send what you ask for.” linking to `privacy.html`. That page is marked “Draft, pending review” and lists address, email, IP-based approximate location, signatures, and payment via a processor. Deletion requests go through `contact.html`.
+
+The long disclaimer is in the footer and again immediately before checkout (`checkout.html`, and on the result when checkout is the next step).
+
+`trust.html` has a “Who we are” block. Founder name, bio, Santa Cruz tie, and contact are `[pending]`. The sample packet is `sample-packet.html`, labeled sample, with placeholder names and numbers only.
+
+## Reminders backend
+
+`backend/` is the Firebase project: rules, indexes, and Node 20 functions. `js/config.js` holds `FUNCTIONS_BASE_URL`. While that string is empty, reminder and result emails stay in this browser and no request is made.
+
+When it is set, the site POSTs to `createReminder` (outside a launch county, or when the filing window is closed) and `createLead` (email me this result). Checkout can POST `markConverted`. The function stores marketing consent with `consent_source`, `consent_requested_at`, and `confirmed_at`. `confirmed_at` is set only from the double opt-in link. A daily job in America/Los_Angeles sends a 14-day heads-up, an open-window note, and a 14-day deadline nudge if the reminder is confirmed and not converted. Dates come from the county adapter. Mail is not sent unless `MAIL_POSTAL_ADDRESS`, `MAIL_FROM`, a provider key, and `PUBLIC_FUNCTIONS_BASE_URL` are set. Every email includes an unsubscribe link, that postal address, and a not-legal-advice line.
+
+Setup steps for the owner are in `backend/README.md`. The GitHub workflow deploys rules and functions on a push to `main` that touches `backend/`, and it skips when `FIREBASE_SERVICE_ACCOUNT` or `FIREBASE_PROJECT_ID` is missing.

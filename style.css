@@ -46,6 +46,12 @@ th{font-weight:600}
 details{border-top:1px solid var(--line);padding:18px 0}details summary{cursor:pointer;font-weight:600}
 .ok{background:var(--soft);border-radius:10px;padding:18px;margin-top:20px}
 .note{background:var(--soft);border-radius:10px;padding:12px 14px;color:var(--muted);font-size:15px;margin:0}
+.place-bar{font-size:14px;color:var(--muted);margin:0 0 8px}
+.place-bar button{background:none;border:0;padding:0;font:inherit;color:inherit;text-decoration:underline;cursor:pointer}
+.place-picker{max-width:360px;margin:0 0 20px}
+.privacy-note{color:var(--muted);font-size:14px;margin:0}
+.disclaimer{border:1px solid var(--ink);border-radius:12px;padding:16px 18px;margin:0 0 24px}
+.disclaimer p{margin:0}
 footer{border-top:1px solid var(--line);padding:40px 0;font-size:13px;color:var(--muted)}
 footer p{max-width:720px}
 .cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:28px}

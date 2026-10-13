@@ -1,0 +1,4 @@
+backend/functions/node_modules/
+backend/functions/.env
+backend/functions/.env.*
+!backend/functions/.env.example
