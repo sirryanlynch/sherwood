@@ -1,3 +1,4 @@
+import { attributionPayload } from "./attribution.js";
 import { backendEnabled, functionsUrl } from "./config.js";
 
 function remember(kind, row) {
@@ -25,7 +26,8 @@ export async function createReminder(input) {
     address: input.address || null,
     marketing_consent: true,
     consent_source: input.consent_source,
-    requestedAt: new Date().toISOString()
+    requestedAt: new Date().toISOString(),
+    ...attributionPayload()
   };
   remember("reminder", row);
   if (!backendEnabled()) return { ok: true, simulated: true, email_sent: false };
@@ -43,7 +45,8 @@ export async function createLead(input) {
     address: input.address || null,
     outcome: input.outcome || "",
     consent_source: input.consent_source || "results_save",
-    requestedAt: new Date().toISOString()
+    requestedAt: new Date().toISOString(),
+    ...attributionPayload()
   };
   remember("lead", row);
   if (!backendEnabled()) return { ok: true, simulated: true, email_sent: false };

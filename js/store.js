@@ -1,3 +1,4 @@
+import { readAttribution } from "./attribution.js";
 import { uid } from "./format.js";
 
 const DB_KEY = "sherwood_db_v1";
@@ -73,6 +74,7 @@ export function newMatter(partial) {
     waitlist: false,
     reviewed: false,
     demoPreview: false,
+    attribution: readAttribution(),
     ...partial
   };
   return saveMatter(matter);

@@ -1,4 +1,7 @@
+import { captureFirstTouch } from "./js/attribution.js";
 import { startPlace, rememberAddress } from "./js/place-ui.js";
+
+captureFirstTouch();
 
 const FORM_ENDPOINT = "";
 

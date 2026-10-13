@@ -28,6 +28,21 @@ test("rejects a long address and a bad slug", () => {
   assert.equal(bad.ok, false);
 });
 
+test("src and utm travel with the county slug", () => {
+  const reminder = validateReminderInput({
+    email: "a@b.co",
+    county_slug: "santa-cruz",
+    marketing_consent: true,
+    consent_source: "non_launch_home",
+    src: "mail1",
+    utm: { utm_source: "letter", county: "ignored" }
+  });
+  assert.equal(reminder.ok, true);
+  assert.equal(reminder.value.county_slug, "santa-cruz");
+  assert.equal(reminder.value.src, "mail1");
+  assert.deepEqual(reminder.value.utm, { utm_source: "letter" });
+});
+
 test("lead accepts a result without marketing consent", () => {
   const lead = validateLeadInput({ email: "a@b.co", outcome: "go", county_slug: "santa-cruz", consent_source: "results_save" });
   assert.equal(lead.ok, true);

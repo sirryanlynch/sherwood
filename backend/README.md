@@ -61,10 +61,10 @@ node scripts/seed-counties.mjs
 
 ## What the functions do
 
-- `createReminder` — POST JSON `{ email, county_slug, address, marketing_consent: true, consent_source }`. Validates the body, rate-limits by hashed IP (8 requests an hour), stores marketing consent with `consent_source`, `consent_requested_at`, and `confirmed_at: null`, and sends a double opt-in email. `window_opens_at` is taken from the county adapter, not from the browser. `confirmed_at` is set only when the person opens the confirm link.
+- `createReminder` — POST JSON `{ email, county_slug, address, marketing_consent: true, consent_source }`. Optional `src` and `utm` from the first landing link are stored when they are present. Validates the body, rate-limits by hashed IP (8 requests an hour), stores marketing consent with `consent_source`, `consent_requested_at`, and `confirmed_at: null`, and sends a double opt-in email. `window_opens_at` is taken from the county adapter, not from the browser. `confirmed_at` is set only when the person opens the confirm link. An existing pending reminder keeps the first `src` and `utm`.
 - `confirmReminder` — GET `?token=`. Sets `confirmed_at`.
 - `unsubscribe` — GET `?token=`. Sets `status` to `unsubscribed`.
-- `createLead` — POST from “Email me this result”. Stores the lead and, when mail is configured, sends one plain result email.
+- `createLead` — POST from “Email me this result”. Stores the lead, including optional `src` and `utm`, and, when mail is configured, sends one plain result email.
 - `markConverted` — POST `{ email, county_slug }` after checkout. Sets `converted_at` so the deadline nudge is skipped.
 - `sendDueReminders` — every day at 08:00 America/Los_Angeles. For confirmed reminders still `pending`, it sends at most one of each: 14 days before the adapter open date, once while the window is open, and 14 days before the adapter deadline if `converted_at` is empty. A missing open date is not invented. After the deadline date, `status` becomes `sent`.
 

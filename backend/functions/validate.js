@@ -7,6 +7,28 @@ function clean(body) {
   return body;
 }
 
+const SRC_RE = /^[A-Za-z0-9._-]{1,64}$/;
+const UTM_KEY_RE = /^utm_[a-z0-9_]{1,24}$/;
+const UTM_VAL_RE = /^[A-Za-z0-9._+:/=~-]{1,120}$/;
+
+function cleanAttribution(data) {
+  const srcRaw = data.src == null || data.src === "" ? "" : String(data.src).trim();
+  const src = SRC_RE.test(srcRaw) ? srcRaw : null;
+  const utm = {};
+  const raw = data.utm;
+  if (raw && typeof raw === "object" && !Array.isArray(raw)) {
+    for (const key of Object.keys(raw)) {
+      if (Object.keys(utm).length >= 8) break;
+      const name = String(key || "").trim().toLowerCase();
+      if (!UTM_KEY_RE.test(name)) continue;
+      const value = String(raw[key] ?? "").trim();
+      if (!UTM_VAL_RE.test(value)) continue;
+      utm[name] = value;
+    }
+  }
+  return { src, utm };
+}
+
 function validateReminderInput(body) {
   const data = clean(body);
   const errors = [];
@@ -23,7 +45,7 @@ function validateReminderInput(body) {
   if (errors.length) return { ok: false, errors };
   return {
     ok: true,
-    value: { email, county_slug: county, address, marketing_consent: true, consent_source: source }
+    value: { email, county_slug: county, address, marketing_consent: true, consent_source: source, ...cleanAttribution(data) }
   };
 }
 
@@ -42,7 +64,7 @@ function validateLeadInput(body) {
   const source = String(data.consent_source || "results_save").trim();
   if (!SOURCE_RE.test(source)) errors.push("Consent source is required.");
   if (errors.length) return { ok: false, errors };
-  return { ok: true, value: { email, county_slug: county, address, outcome, consent_source: source } };
+  return { ok: true, value: { email, county_slug: county, address, outcome, consent_source: source, ...cleanAttribution(data) } };
 }
 
 function validateConvertedInput(body) {

@@ -1,5 +1,6 @@
 import "../boot.js";
 import { loadCounties } from "../counties.js";
+import { readAttribution } from "../attribution.js";
 import { decide } from "../engine.js";
 import { planPriceLines } from "../pricing.js";
 import { esc, moneyToNumber } from "../format.js";
@@ -86,7 +87,8 @@ form.addEventListener("submit", e => {
     savings: result.savings,
     fee: result.fee,
     window: result.window,
-    decidedAt: new Date().toISOString()
+    decidedAt: new Date().toISOString(),
+    attribution: (existing && existing.attribution) || readAttribution()
   };
   if (existing) saveMatter(matter);
   else newMatter(matter);

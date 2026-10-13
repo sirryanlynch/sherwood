@@ -33,6 +33,8 @@ function paint() {
   root.innerHTML = `
     <h1>Ops</h1>
     <p class="lead">This view reads appeals saved in this browser. It is not a secure admin and it is not on a server.</p>
+    <h2>Paid cases by src</h2>
+    ${paidBySrc(db.matters)}
     <h2>Review queue</h2>
     ${queue.length ? queue.map(m => `<div class="card"><p><b>${esc(m.address)}</b> · ${esc(m.outcome)} · ${esc(m.countyId)}</p><ul>${(m.reasons || []).map(r => `<li>${esc(r)}</li>`).join("")}</ul><button class="btn" type="button" data-review="${esc(m.id)}">Mark reviewed</button></div>`).join("") : `<p>No borderline checks waiting.</p>`}
     <h2>Pipeline</h2>
@@ -53,6 +55,29 @@ function paint() {
   });
 }
 
+function sourceLabel(matter) {
+  const touch = matter && matter.attribution;
+  if (!touch) return "";
+  const src = touch.src || "";
+  const utm = touch.utm && typeof touch.utm === "object"
+    ? Object.entries(touch.utm).map(([key, value]) => `${key}=${value}`).join(", ")
+    : "";
+  if (src && utm) return `${src} (${utm})`;
+  return src || utm;
+}
+
+function paidBySrc(matters) {
+  const counts = new Map();
+  matters.forEach(matter => {
+    if (!matter.paymentId && !matter.paidAt) return;
+    const src = matter.attribution && matter.attribution.src ? matter.attribution.src : "(none)";
+    counts.set(src, (counts.get(src) || 0) + 1);
+  });
+  if (!counts.size) return `<p class="small muted">No paid cases in this browser.</p>`;
+  const rows = [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+  return `<ul>${rows.map(([src, count]) => `<li><b>${esc(src)}</b> — ${count}</li>`).join("")}</ul>`;
+}
+
 function table(rows) {
-  return `<div class="table-scroll"><table><tr><th>Address</th><th>Outcome</th><th>Plan</th><th>County</th></tr>${rows.map(m => `<tr><td>${esc(m.address)}</td><td>${esc(m.outcome || "")}</td><td>${esc(m.planId || "")}</td><td>${esc(m.countyId || "")}</td></tr>`).join("")}</table></div>`;
+  return `<div class="table-scroll"><table><tr><th>Address</th><th>Outcome</th><th>Plan</th><th>County</th><th>Src</th></tr>${rows.map(m => `<tr><td>${esc(m.address)}</td><td>${esc(m.outcome || "")}</td><td>${esc(m.planId || "")}</td><td>${esc(m.countyId || "")}</td><td>${esc(sourceLabel(m))}</td></tr>`).join("")}</table></div>`;
 }

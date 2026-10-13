@@ -145,10 +145,21 @@ exports.createReminder = onRequest(httpsOpts, async (req, res) => {
         consent_requested_at: FieldValue.serverTimestamp(),
         confirmed_at: null,
         sent_kinds: [],
-        converted_at: null
+        converted_at: null,
+        src: value.src,
+        utm: value.utm
       };
       rowRef = await db.collection("reminders").add(created);
       row = { ...created, unsubscribe_token, confirm_token };
+    } else {
+      const patch = {};
+      if (!row.src && value.src) patch.src = value.src;
+      const hasUtm = row.utm && typeof row.utm === "object" && Object.keys(row.utm).length;
+      if (!hasUtm && value.utm && Object.keys(value.utm).length) patch.utm = value.utm;
+      if (Object.keys(patch).length) {
+        await rowRef.update(patch);
+        row = { ...row, ...patch };
+      }
     }
     let email_sent = false;
     if (!row.confirmed_at && sendingConfig().ok) {
