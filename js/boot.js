@@ -1,4 +1,5 @@
 import { getCounty, loadCounties } from "./counties.js";
+import { mountStatutoryDisclosure } from "./statutoryDisclosure.js";
 import { contactLine, esc, formatDay, money } from "./format.js";
 import { filingFeeNote, planPriceLines } from "./pricing.js";
 
@@ -60,6 +61,8 @@ async function fillLaunchFacts() {
   const calendar = document.getElementById("deadline-note");
   if (calendar) calendar.textContent = county.deadline_note || county.filing.deadline_note || "";
 }
+
+mountStatutoryDisclosure();
 
 function mountChrome() {
   document.querySelectorAll("[data-sim]").forEach(el => {

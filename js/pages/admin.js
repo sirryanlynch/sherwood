@@ -1,6 +1,8 @@
 import "../boot.js";
+import { paymentsAdapter } from "../adapters/payments.js";
 import { loadCounties } from "../counties.js";
 import { formatDay, esc, parseISODate } from "../format.js";
+import { AUTHORIZATION_RETENTION, retainUntil } from "../retention.js";
 import { loadDb, saveDb } from "../store.js";
 
 const STAGES = ["filed", "acknowledged", "assessor_review", "hearing_scheduled", "decision", "refund", "monitor", "kit_ready"];
@@ -33,6 +35,12 @@ function paint() {
   root.innerHTML = `
     <h1>Ops</h1>
     <p class="lead">This view reads appeals saved in this browser. It is not a secure admin and it is not on a server.</p>
+    <h2>Mark filed, then charge</h2>
+    <p class="small muted">We file it saves a card. This step records the county confirmation, then a charge success or a charge failure.</p>
+    ${chargeQueue(db.matters)}
+    <h2>Signed agent authorizations</h2>
+    <p>${esc(AUTHORIZATION_RETENTION)}</p>
+    ${authorizationRows(db.matters)}
     <h2>Paid cases by src</h2>
     ${paidBySrc(db.matters)}
     <h2>Review queue</h2>
@@ -43,6 +51,41 @@ function paint() {
     ${unstaged.length ? table(unstaged) : `<p class="small muted">None.</p>`}
     <h2>Deadlines by county adapter</h2>
     <ul>${calendar}</ul>`;
+  root.querySelectorAll("[data-charge]").forEach(button => {
+    button.addEventListener("click", async () => {
+      const id = button.getAttribute("data-charge");
+      const fail = button.getAttribute("data-fail") === "1";
+      const current = loadDb().matters.find(m => m.id === id);
+      if (!current || current.chargeStatus === "succeeded") return;
+      const charge = await paymentsAdapter.chargeSavedCard({
+        userId: current.userId,
+        matterId: current.id,
+        setupIntentId: current.setupIntentId,
+        amount: 249,
+        fail,
+        attribution: current.attribution
+      });
+      const next = loadDb();
+      const matter = next.matters.find(m => m.id === id);
+      if (!matter) return;
+      matter.countyConfirmedAt = new Date().toISOString();
+      if (!matter.stage) matter.stage = "filed";
+      matter.chargeStatus = charge.status;
+      matter.charge = {
+        id: charge.id,
+        status: charge.status,
+        reason: charge.reason || "",
+        at: charge.createdAt,
+        amount: charge.amount
+      };
+      if (charge.status === "succeeded") {
+        matter.paymentId = charge.id;
+        matter.paidAt = charge.createdAt;
+      }
+      saveDb(next);
+      paint();
+    });
+  });
   root.querySelectorAll("[data-review]").forEach(button => {
     button.addEventListener("click", () => {
       const id = button.getAttribute("data-review");
@@ -64,6 +107,29 @@ function sourceLabel(matter) {
     : "";
   if (src && utm) return `${src} (${utm})`;
   return src || utm;
+}
+
+function chargeQueue(matters) {
+  const rows = matters.filter(matter => matter.planId === "dfy" && matter.setupIntentId);
+  if (!rows.length) return `<p class="small muted">No saved cards in this browser.</p>`;
+  return rows.map(matter => {
+    const done = matter.chargeStatus === "succeeded";
+    const status = matter.chargeStatus || "not_charged";
+    const detail = matter.charge && matter.charge.reason ? ` ${matter.charge.reason}` : "";
+    return `<div class="card"><p><b>${esc(matter.address)}</b></p><p>Charge: ${esc(status)}.${esc(detail)}</p>
+      <button class="btn" type="button" data-charge="${esc(matter.id)}" ${done ? "disabled" : ""}>Mark filed, then charge</button>
+      <button class="btn ghost" type="button" data-charge="${esc(matter.id)}" data-fail="1" ${done ? "disabled" : ""}>Record a failed charge</button></div>`;
+  }).join("");
+}
+
+function authorizationRows(matters) {
+  const rows = matters.filter(matter => matter.agentAuthorization && matter.agentAuthorization.signedAt);
+  if (!rows.length) return `<p class="small muted">No signed agent authorizations in this browser.</p>`;
+  return `<ul>${rows.map(matter => {
+    const auth = matter.agentAuthorization;
+    const until = auth.retainUntil || retainUntil(auth.signedAt);
+    return `<li>${esc(matter.address)} — signed ${esc(auth.signedAt)}. Kept until ${esc(until)}.</li>`;
+  }).join("")}</ul>`;
 }
 
 function paidBySrc(matters) {

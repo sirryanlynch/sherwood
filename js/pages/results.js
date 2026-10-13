@@ -1,11 +1,11 @@
 import "../boot.js";
-import { paymentsAdapter } from "../adapters/payments.js";
 import { notify } from "../adapters/notify.js";
 import { getCounty } from "../counties.js";
 import { deadlineBadge, nextWindowCopy } from "../engine.js";
 import { contactLine, esc, formatDay, money } from "../format.js";
 import { slugForCountyId } from "../place.js";
 import { reminderMessage } from "../place-ui.js";
+import { confirmationBody, createMonitorRemote, enrollMonitor, monitorOfferHtml } from "../monitor.js";
 import { MONITOR, planPriceLines } from "../pricing.js";
 import { createLead, createReminder } from "../reminders.js";
 import { currentMatter, saveMatter } from "../store.js";
@@ -89,8 +89,7 @@ function render(matter, county) {
       <div class="card">
         <h3>Annual monitor</h3>
         <p>${esc(money(MONITOR.price))} a year. ${esc(MONITOR.summary)}</p>
-        <button class="btn" id="monitor" type="button" ${matter.monitor ? "disabled" : ""}>${matter.monitor ? "Monitor recorded in this browser" : "Add the annual monitor"}</button>
-        <p id="monitor-ok" class="small muted" ${matter.monitor ? "" : "hidden"}>A ${esc(money(MONITOR.price))} monitor record is stored in this browser. Nothing was billed to a card.</p>
+        ${monitorOfferHtml({ email: matter.email, enrolled: !!matter.monitor, cancelToken: matter.monitor && matter.monitor.cancelToken })}
       </div>
       <p class="small muted">${esc(county.informal_review || "")}</p>
       <p class="small muted">Assessor contact from the adapter: ${esc(contactLine(county.assessor_office))}</p>`;
@@ -175,28 +174,42 @@ function render(matter, county) {
       }
     });
   }
-  const monitor = document.querySelector("#monitor");
-  if (monitor) {
-    monitor.addEventListener("click", async () => {
-      const payment = await paymentsAdapter.charge({
-        userId: matter.userId || null,
-        matterId: matter.id,
-        plan: MONITOR,
-        amount: MONITOR.price
-      });
-      matter.monitor = { paymentId: payment.id, at: payment.createdAt, price: MONITOR.price, simulated: true };
-      saveMatter(matter);
-      await notify.outbox({
-        channel: "email",
-        to: matter.email,
-        kind: "monitor",
-        simulated: true,
-        body: `Annual monitor at ${money(MONITOR.price)} a year recorded in this browser. Not billed.`
-      });
-      monitor.disabled = true;
-      monitor.textContent = "Monitor recorded in this browser";
-      const ok = document.querySelector("#monitor-ok");
-      if (ok) ok.hidden = false;
+  bindMonitor(matter);
+}
+
+function bindMonitor(matter) {
+  const form = document.querySelector("#monitor-form");
+  if (!form) return;
+  form.addEventListener("submit", async e => {
+    e.preventDefault();
+    const data = new FormData(form);
+    const err = form.querySelector("#monitor-consent-err");
+    if (data.get("renewalConsent") !== "on") {
+      if (err) err.hidden = false;
+      return;
+    }
+    if (!form.reportValidity()) return;
+    if (err) err.hidden = true;
+    const email = String(data.get("email") || "").trim();
+    const record = enrollMonitor({ email, matterId: matter.id, userId: matter.userId || null });
+    matter.email = email;
+    matter.monitor = {
+      id: record.id,
+      at: record.consentedAt,
+      price: record.price,
+      cancelToken: record.cancelToken,
+      retainUntil: record.retainUntil,
+      renewsOn: record.renewsOn
+    };
+    saveMatter(matter);
+    await notify.outbox({
+      channel: "email",
+      to: email,
+      kind: "monitor_confirm",
+      simulated: true,
+      body: confirmationBody(record)
     });
-  }
+    await createMonitorRemote(record);
+    form.outerHTML = monitorOfferHtml({ email, enrolled: true, cancelToken: record.cancelToken });
+  });
 }

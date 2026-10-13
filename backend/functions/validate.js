@@ -85,4 +85,15 @@ function nextRate({ count, windowStartMs, now, limit = 8, windowMs = 60 * 60 * 1
   return { allow: true, count: used + 1, windowStartMs: start };
 }
 
-module.exports = { validateReminderInput, validateLeadInput, validateConvertedInput, nextRate };
+function validateMonitorInput(body) {
+  const data = clean(body);
+  const errors = [];
+  if (!data) return { ok: false, errors: ["Body must be a JSON object."] };
+  const email = String(data.email || "").trim().toLowerCase();
+  if (!EMAIL_RE.test(email) || email.length > 200) errors.push("Enter a valid email.");
+  if (data.renewal_consent !== true) errors.push("Automatic renewal consent is required.");
+  if (errors.length) return { ok: false, errors };
+  return { ok: true, value: { email, renewal_consent: true } };
+}
+
+module.exports = { validateReminderInput, validateLeadInput, validateConvertedInput, validateMonitorInput, nextRate };

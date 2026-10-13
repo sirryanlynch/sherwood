@@ -3,6 +3,7 @@ import { efileAdapter } from "../adapters/efile.js";
 import { notify } from "../adapters/notify.js";
 import { getCounty } from "../counties.js";
 import { AGENT_CONTACT, OWNER_COPY_LINE, signedDateText } from "../authorization.js";
+import { AUTHORIZATION_RETENTION } from "../retention.js";
 import { contactLine, esc } from "../format.js";
 import { filingWindow } from "../engine.js";
 import { planById, planPriceLines } from "../pricing.js";
@@ -120,7 +121,8 @@ function paintFiled(root, matter, county) {
        <p>Date signed: ${esc(signedDateText(auth.signedAt) || "not stored")}. This is the day it was signed. It was not backdated.</p>
        <p>Agent name: ${esc(auth.agentName || AGENT_CONTACT.name)}</p>
        <p>Agent address: ${esc(auth.agentAddress || AGENT_CONTACT.address)}</p>
-       <p>Agent phone: ${esc(auth.agentPhone || AGENT_CONTACT.phone)}</p>`
+       <p>Agent phone: ${esc(auth.agentPhone || AGENT_CONTACT.phone)}</p>
+       <p>${esc(auth.retention || AUTHORIZATION_RETENTION)} Kept until ${esc(auth.retainUntil || "the date three years after signing")}.</p>`
     : `<p>No agent authorization is stored on this appeal.</p>`;
   root.innerHTML = `
     <h1>Filing recorded</h1>

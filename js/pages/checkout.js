@@ -33,8 +33,8 @@ if (gate) {
         <div class="plans">
           ${CHECKOUT_PLANS.map(plan => cardHtml(plan, lines, savings)).join("")}
         </div>
-        <p class="small muted">Simulated Stripe. There is no card field. Pressing the button writes a local payment record only.</p>
-        <button class="btn" type="submit">Simulate payment and continue</button>
+        <p class="small muted">Simulated Stripe. We file it saves the card and does not charge it. There is no card field.</p>
+        <button class="btn" type="submit">Continue</button>
       </form>`;
     document.querySelector("#pay").addEventListener("submit", async e => {
       e.preventDefault();
@@ -47,18 +47,29 @@ if (gate) {
         return;
       }
       matter.attribution = matter.attribution || readAttribution();
-      const payment = await paymentsAdapter.charge({
-        userId: user.id,
-        matterId: matter.id,
-        plan,
-        amount: plan.dueToday,
-        attribution: matter.attribution
-      });
       matter.userId = user.id;
-      matter.src = payment.src;
       matter.planId = plan.id;
-      matter.paymentId = payment.id;
-      matter.paidAt = payment.createdAt;
+      if (plan.id === "dfy") {
+        const setup = await paymentsAdapter.saveCard({
+          userId: user.id,
+          matterId: matter.id,
+          plan,
+          attribution: matter.attribution
+        });
+        matter.setupIntentId = setup.id;
+        matter.cardSavedAt = setup.createdAt;
+        matter.chargeStatus = "not_charged";
+        matter.paymentId = null;
+        matter.paidAt = null;
+        matter.src = setup.src;
+      } else {
+        matter.paymentTimingNote = plan.timingFlag || "";
+        matter.chargeStatus = "timing_pending";
+        matter.setupIntentId = null;
+        matter.paymentId = null;
+        matter.paidAt = null;
+        matter.src = (matter.attribution && matter.attribution.src) || null;
+      }
       saveMatter(matter);
       if (matter.email) {
         try { await markConverted({ email: matter.email, county_slug: slugForCountyId(matter.countyId) }); }
@@ -89,16 +100,19 @@ function closedHtml(county, window) {
 function cardHtml(plan, lines, savings) {
   const price = plan.id === "dfy" ? lines.dfy : lines.diyLine;
   const waiver = plan.id === "diy" && lines.feeNote ? `<p class="small muted">${esc(lines.feeNote)}</p>` : "";
-  const versus = savings == null ? "no dollar estimate on this check" : money(savings);
+  const estimate = savings == null
+    ? "No dollar estimate on this check."
+    : `${ESTIMATE_LABEL} ${money(savings)}.`;
+  const flag = plan.timingFlag ? `<p><b>${esc(plan.timingFlag)}</b></p>` : "";
   return `
     <label class="card">
       <input type="radio" name="plan" value="${plan.id}" required>
       <h3>${esc(plan.name)}</h3>
       <p><b>${esc(price)}</b></p>
+      ${flag}
       ${waiver}
-      <p>vs ${esc(versus)}</p>
+      <p>${esc(estimate)}</p>
       ${plan.chargeNote ? `<p>${esc(plan.chargeNote)}</p>` : ""}
-      <p class="small muted">${esc(ESTIMATE_LABEL)}</p>
       <p class="small muted">${esc(plan.summary)}</p>
     </label>`;
 }

@@ -85,7 +85,7 @@ export function filingWindow(county, today, supplementalNoticeDate) {
 export function deadlineBadge(county) {
   const end = county && county.filing && county.filing.regular_window && county.filing.regular_window.end;
   if (!end || formatShortDay(end) === "not set") return "";
-  return `Filing deadline: ${formatShortDay(end)}`;
+  return `County filing deadline: ${formatShortDay(end)}`;
 }
 
 /* Dates come only from a window whose start is still ahead. A passed window is not described as next, and no opening is promised. */

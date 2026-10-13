@@ -37,6 +37,13 @@ function campaignFinished(today, windowEnd) {
   return Boolean(windowEnd) && today > windowEnd;
 }
 
+function renewalNoticeDue({ today, renewsOn, alreadySent, status }) {
+  if (status !== "active" || alreadySent || !renewsOn) return false;
+  const start = addDays(renewsOn, -45);
+  const end = addDays(renewsOn, -15);
+  return today >= start && today <= end;
+}
+
 function windowOf(county) {
   const win = county && county.filing && county.filing.regular_window;
   if (!win) return { start: null, end: null, label: "" };
@@ -47,4 +54,4 @@ function windowOf(county) {
   };
 }
 
-module.exports = { laToday, addDays, dueNotices, campaignFinished, windowOf };
+module.exports = { laToday, addDays, dueNotices, campaignFinished, renewalNoticeDue, windowOf };

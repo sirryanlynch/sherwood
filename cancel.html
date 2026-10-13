@@ -1,0 +1,28 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cancel the annual monitor — Sherwood</title><link rel="stylesheet" href="style.css"></head><body>
+<header><div class="wrap"><a class="logo" href="index.html">Sherwood</a><nav><a href="index.html">Check</a><a href="pricing.html">Pricing</a><a href="contact.html">Contact</a></nav></div></header>
+<main><div class="wrap">
+<h1>Cancel the annual monitor</h1>
+<p id="cancel-status" class="lead">Opening this link cancels the renewal.</p>
+</div></main>
+<footer><div class="wrap"><p>Sherwood is not a law firm and does not provide legal advice.</p>
+<p>© 2026 Sherwood</p></div></footer>
+<script type="module">
+import { cancelMonitorLocal, cancelMonitorRemote, monitorByToken } from "./js/monitor.js";
+
+const token = new URLSearchParams(location.search).get("token");
+const status = document.querySelector("#cancel-status");
+if (!token) {
+  status.textContent = "Use the cancel link from the confirmation email. That link is the one click.";
+} else {
+  const existing = monitorByToken(token);
+  const row = existing && existing.status === "canceled" ? existing : cancelMonitorLocal(token);
+  cancelMonitorRemote(token);
+  if (row || (existing && existing.status === "canceled")) {
+    status.textContent = "The annual monitor will not renew. The consent record is kept for 3 years.";
+  } else {
+    status.textContent = "This cancel link does not match an annual monitor in this browser.";
+  }
+}
+</script>
+</body></html>

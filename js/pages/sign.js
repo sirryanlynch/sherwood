@@ -6,6 +6,7 @@ import {
 import { getCounty } from "../counties.js";
 import { esc, formatShortDay } from "../format.js";
 import { planById } from "../pricing.js";
+import { AUTHORIZATION_RETENTION, retainUntil } from "../retention.js";
 import { requireMatter, saveMatter } from "../store.js";
 
 const gate = requireMatter("sign.html");
@@ -140,7 +141,9 @@ function paintForm(root, matter, county, step, round, envelope) {
         ownerGetsCopy: true,
         agentName: AGENT_CONTACT.name,
         agentAddress: AGENT_CONTACT.address,
-        agentPhone: AGENT_CONTACT.phone
+        agentPhone: AGENT_CONTACT.phone,
+        retainUntil: retainUntil(signedAt),
+        retention: AUTHORIZATION_RETENTION
       };
     }
     if (round === 3) matter.stipulationDecision = "Accepted in the demo. The signature is simulated and there is no stipulation form in the pilot kit.";

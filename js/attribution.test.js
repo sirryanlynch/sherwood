@@ -29,6 +29,14 @@ test("first touch is kept when a later visit has a different src", () => {
   assert.equal(JSON.parse(store.getItem(ATTR_KEY)).src, "mail1");
 });
 
+test("src=search is kept beside a county landing", () => {
+  const store = memory();
+  const touch = captureFirstTouch("?src=search", store);
+  assert.equal(touch.src, "search");
+  assert.equal(touchFromSearch("?src=search").src, "search");
+  assert.equal(captureFirstTouch("?county=santa-cruz", store).src, "search");
+});
+
 test("a county param alone is not stored", () => {
   const store = memory();
   assert.equal(captureFirstTouch("?county=santa-cruz", store), null);

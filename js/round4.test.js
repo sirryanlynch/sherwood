@@ -27,7 +27,7 @@ test("October 13, 2026 is inside the Santa Cruz filing window", () => {
 
 test("the open plan step names the November 30 deadline", () => {
   assert.equal(formatShortDay("2026-11-30"), "Nov 30, 2026");
-  assert.equal(deadlineBadge(county), "Filing deadline: Nov 30, 2026");
+  assert.equal(deadlineBadge(county), "County filing deadline: Nov 30, 2026");
 });
 
 test("a future window is quoted from the county file and promises nothing", () => {

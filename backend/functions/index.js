@@ -4,9 +4,10 @@ const { onSchedule } = require("firebase-functions/v2/scheduler");
 const { initializeApp } = require("firebase-admin/app");
 const { getFirestore, FieldValue } = require("firebase-admin/firestore");
 const { getAppCheck } = require("firebase-admin/app-check");
-const { validateReminderInput, validateLeadInput, validateConvertedInput, nextRate } = require("./validate");
+const { validateReminderInput, validateLeadInput, validateConvertedInput, validateMonitorInput, nextRate } = require("./validate");
 const { buildEmail, deliver, sendingConfig } = require("./email");
-const { dueNotices, campaignFinished, laToday, windowOf } = require("./window");
+const { dueNotices, campaignFinished, renewalNoticeDue, laToday, windowOf } = require("./window");
+const { retainUntil, renewsOn } = require("./retention");
 const { loadBundled, findCounty } = require("./counties");
 
 initializeApp();
@@ -289,6 +290,82 @@ exports.unsubscribe = onRequest(httpsOpts, async (req, res) => {
   }
 });
 
+exports.createMonitor = onRequest(httpsOpts, async (req, res) => {
+  if (cors(req, res)) return;
+  if (req.method !== "POST") return res.status(405).json({ ok: false, error: "POST only." });
+  try {
+    await enforceAppCheck(req);
+    await rateLimit(req);
+    const parsed = validateMonitorInput(req.body);
+    if (!parsed.ok) return res.status(400).json({ ok: false, error: parsed.errors.join(" ") });
+    const now = new Date().toISOString();
+    const cancel_token = token();
+    const row = {
+      email: parsed.value.email,
+      price: 49,
+      interval: "year",
+      renewal_consent: true,
+      consented_at: FieldValue.serverTimestamp(),
+      retain_until: retainUntil(now),
+      renews_on: renewsOn(now),
+      cancel_token,
+      status: "active",
+      renewal_notice_sent: false,
+      created_at: FieldValue.serverTimestamp()
+    };
+    const ref = await db.collection("monitors").add(row);
+    let email_sent = false;
+    if (sendingConfig().ok) {
+      try {
+        const stored = { ...row, cancel_token };
+        await sendMonitor({ kind: "monitor_confirm", to: parsed.value.email, row: stored });
+        email_sent = true;
+      } catch (err) {
+        console.error("monitor confirmation failed", err.message);
+      }
+    }
+    res.json({ ok: true, id: ref.id, email_sent, retain_until: row.retain_until });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
+exports.cancelMonitor = onRequest(httpsOpts, async (req, res) => {
+  try {
+    const cancelToken = String(req.query.token || "");
+    if (!cancelToken) return res.status(400).send(page("Missing token", "This link has no token."));
+    const snap = await db.collection("monitors").where("cancel_token", "==", cancelToken).limit(1).get();
+    if (snap.empty) return res.status(404).send(page("Link not found", "This cancel link does not match an annual monitor."));
+    const doc = snap.docs[0];
+    const row = doc.data();
+    if (row.status !== "canceled") {
+      await doc.ref.update({
+        status: "canceled",
+        canceled_at: FieldValue.serverTimestamp()
+      });
+    }
+    res.status(200).send(page(
+      "Annual monitor canceled",
+      "The annual monitor will not renew. The consent record is kept for 3 years. Sherwood is not a law firm and this is not legal advice."
+    ));
+  } catch (err) {
+    res.status(500).send(page("Something went wrong", "The cancellation could not be saved."));
+  }
+});
+
+async function sendMonitor({ kind, to, row }) {
+  const base = sendingConfig().base;
+  const cancelUrl = `${base}/cancelMonitor?token=${encodeURIComponent(row.cancel_token)}`;
+  const mail = buildEmail({
+    kind,
+    countyName: "your county",
+    unsubscribeUrl: cancelUrl,
+    cancelUrl,
+    postal: sendingConfig().postal
+  });
+  await deliver({ to, subject: mail.subject, text: mail.text, html: mail.html });
+}
+
 exports.sendDueReminders = onSchedule({
   schedule: "0 8 * * *",
   timeZone: "America/Los_Angeles",
@@ -329,6 +406,26 @@ exports.sendDueReminders = onSchedule({
       status: campaignFinished(today, win.end) ? "sent" : "pending",
       updated_at: FieldValue.serverTimestamp()
     });
+  }
+  const monitors = await db.collection("monitors").where("status", "==", "active").get();
+  for (const doc of monitors.docs) {
+    const row = doc.data();
+    if (!renewalNoticeDue({
+      today,
+      renewsOn: row.renews_on,
+      alreadySent: row.renewal_notice_sent === true,
+      status: row.status
+    })) continue;
+    try {
+      await sendMonitor({ kind: "renewal", to: row.email, row });
+      await doc.ref.update({
+        renewal_notice_sent: true,
+        renewal_notice_on: today,
+        updated_at: FieldValue.serverTimestamp()
+      });
+    } catch (err) {
+      console.error("renewal notice failed", doc.id, err.message);
+    }
   }
 });
 

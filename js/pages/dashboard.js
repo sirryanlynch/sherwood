@@ -1,6 +1,6 @@
 import "../boot.js";
 import { notify } from "../adapters/notify.js";
-import { paymentsAdapter } from "../adapters/payments.js";
+import { confirmationBody, createMonitorRemote, enrollMonitor, monitorOfferHtml } from "../monitor.js";
 import { authAdapter } from "../adapters/auth.js";
 import { getCounty } from "../counties.js";
 import { contactLine, esc, formatDay, isoDay, money } from "../format.js";
@@ -64,8 +64,8 @@ function paint(matter, user, county) {
     <p id="decision-copy">${esc(matter.decisionNote || "")}</p>` : "";
   const monitor = stage === "monitor" ? `
     <h2>Annual monitor</h2>
-    <p>${esc(MONITOR.summary)} Price on this site: ${esc(money(MONITOR.price))}/yr. Simulated enrollment. Nothing is billed to a card.</p>
-    <button class="btn" id="enroll" type="button" ${matter.monitor ? "disabled" : ""}>${matter.monitor ? "Enrolled in this browser" : "Enroll"}</button>` : "";
+    <p>${esc(MONITOR.summary)} Price on this site: ${esc(money(MONITOR.price))}/yr.</p>
+    ${monitorOfferHtml({ email: user.email, enrolled: !!matter.monitor, cancelToken: matter.monitor && matter.monitor.cancelToken })}` : "";
 
   root.innerHTML = `
     <h1>Your appeal</h1>
@@ -167,12 +167,35 @@ function paint(matter, user, county) {
       paint(matter, user, county);
     });
   });
-  const enroll = document.querySelector("#enroll");
-  if (enroll) enroll.addEventListener("click", async () => {
-    const payment = await paymentsAdapter.charge({ userId: user.id, matterId: matter.id, plan: MONITOR, amount: MONITOR.price });
-    matter.monitor = { paymentId: payment.id, at: payment.createdAt, price: MONITOR.price, simulated: true };
+  const monitorForm = document.querySelector("#monitor-form");
+  if (monitorForm) monitorForm.addEventListener("submit", async e => {
+    e.preventDefault();
+    const data = new FormData(monitorForm);
+    const err = monitorForm.querySelector("#monitor-consent-err");
+    if (data.get("renewalConsent") !== "on") {
+      if (err) err.hidden = false;
+      return;
+    }
+    if (!monitorForm.reportValidity()) return;
+    const email = String(data.get("email") || "").trim();
+    const record = enrollMonitor({ email, matterId: matter.id, userId: user.id });
+    matter.monitor = {
+      id: record.id,
+      at: record.consentedAt,
+      price: record.price,
+      cancelToken: record.cancelToken,
+      retainUntil: record.retainUntil,
+      renewsOn: record.renewsOn
+    };
     saveMatter(matter);
-    await ping(user, "Annual monitor enrollment recorded in this browser. Not billed.");
+    await notify.outbox({
+      channel: "email",
+      to: email,
+      kind: "monitor_confirm",
+      simulated: true,
+      body: confirmationBody(record)
+    });
+    await createMonitorRemote(record);
     paint(matter, user, county);
   });
   const noticeForm = document.querySelector("#notice-form");

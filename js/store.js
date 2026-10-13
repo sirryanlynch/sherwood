@@ -6,7 +6,7 @@ const USER_KEY = "sherwood_user";
 const MATTER_KEY = "sherwood_matter";
 
 function blank() {
-  return { users: [], matters: [], notices: [], payments: [], outbox: [], envelopes: [], filings: [] };
+  return { users: [], matters: [], notices: [], payments: [], outbox: [], envelopes: [], filings: [], monitors: [] };
 }
 
 export function loadDb() {

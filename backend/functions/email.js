@@ -1,3 +1,7 @@
+const { STATUTORY_DISCLOSURE, statutoryDisclosureHtml } = require("./disclosure");
+
+const REMINDER_KINDS = new Set(["confirm", "heads_up_14", "open_day", "deadline_14"]);
+
 function usable(value) {
   const text = String(value || "").trim();
   if (!text || text === "unused") return "";
@@ -27,7 +31,7 @@ function escapeHtml(value) {
   }[ch]));
 }
 
-function buildEmail({ kind, countyName, windowLabel, windowStart, windowEnd, confirmUrl, unsubscribeUrl, postal, outcome }) {
+function buildEmail({ kind, countyName, windowLabel, windowStart, windowEnd, confirmUrl, unsubscribeUrl, cancelUrl, postal, outcome }) {
   if (!String(postal || "").trim()) {
     throw new Error("MAIL_POSTAL_ADDRESS is required before sending");
   }
@@ -56,9 +60,17 @@ function buildEmail({ kind, countyName, windowLabel, windowStart, windowEnd, con
     lines.push(`About 14 days remain before the filing deadline on the ${name} adapter${windowEnd ? ` (${windowEnd})` : ""}.`);
     if (windowLabel) lines.push(windowLabel);
   } else if (kind === "renewal") {
-    heading = `Annual monitor renewal for ${name}`;
-    lines.push(`Your annual monitor for ${name} is ready to renew.`);
-    lines.push("The published price is $49 a year. Sherwood re-checks the value and tells you when filing again makes sense.");
+    heading = `Annual monitor renewal notice for ${name}`;
+    lines.push("Your annual monitor will renew unless you cancel.");
+    lines.push("The renewal price is $49 for another year.");
+    lines.push("This notice is sent 15 to 45 days before the renewal date.");
+    if (cancelUrl) lines.push(`Cancel online: ${cancelUrl}`);
+  } else if (kind === "monitor_confirm") {
+    heading = "Annual monitor confirmation";
+    lines.push("You agreed to the annual monitor at $49 a year.");
+    lines.push("The annual monitor costs $49 and renews automatically each year until you cancel. You can cancel online in one click before the renewal date. Sherwood emails a renewal notice 15 to 45 days before the renewal.");
+    lines.push("This confirmation is yours to keep.");
+    if (cancelUrl) lines.push(`Cancel online: ${cancelUrl}`);
   } else if (kind === "result") {
     heading = "Your Sherwood check";
     lines.push(`Your check for ${name} was saved${outcome ? ` (${outcome})` : ""}.`);
@@ -67,9 +79,14 @@ function buildEmail({ kind, countyName, windowLabel, windowStart, windowEnd, con
     throw new Error("Unknown email kind");
   }
   const body = lines.join("\n");
-  const text = [DISCLOSURE, "", heading, "", body, "", String(postal).trim(), `Unsubscribe: ${unsubscribeUrl}`].join("\n");
+  const reminder = REMINDER_KINDS.has(kind);
+  const text = [
+    ...(reminder ? [STATUTORY_DISCLOSURE, ""] : []),
+    DISCLOSURE, "", heading, "", body, "", String(postal).trim(), `Unsubscribe: ${unsubscribeUrl}`
+  ].join("\n");
   const html = [
     `<div style="font-family:-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif;color:#111">`,
+    ...(reminder ? [statutoryDisclosureHtml()] : []),
     `<p style="font-size:${DISCLOSURE_PX}px;line-height:1.35;font-weight:500;margin:0 0 28px">${escapeHtml(DISCLOSURE)}</p>`,
     `<h1 style="font-size:${HEADING_PX}px;line-height:1.35;font-weight:700;margin:0 0 32px">${escapeHtml(heading)}</h1>`,
     ...lines.map(line => `<p style="font-size:16px;line-height:1.5;margin:0 0 12px">${escapeHtml(line)}</p>`),
@@ -99,4 +116,4 @@ async function deliver({ to, subject, text, html }, env = process.env, fetchImpl
   return { provider: "resend" };
 }
 
-module.exports = { sendingConfig, buildEmail, deliver };
+module.exports = { sendingConfig, buildEmail, deliver, REMINDER_KINDS };

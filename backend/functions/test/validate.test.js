@@ -1,6 +1,6 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { validateReminderInput, validateLeadInput, nextRate } = require("../validate");
+const { validateReminderInput, validateLeadInput, validateMonitorInput, nextRate } = require("../validate");
 
 test("reminder requires marketing consent, email, and source", () => {
   const bad = validateReminderInput({ email: "not-an-email", marketing_consent: false, consent_source: "" });
@@ -47,6 +47,15 @@ test("lead accepts a result without marketing consent", () => {
   const lead = validateLeadInput({ email: "a@b.co", outcome: "go", county_slug: "santa-cruz", consent_source: "results_save" });
   assert.equal(lead.ok, true);
   assert.equal(lead.value.outcome, "go");
+});
+
+test("monitor consent is required", () => {
+  const missing = validateMonitorInput({ email: "a@b.co", renewal_consent: false });
+  assert.equal(missing.ok, false);
+  const good = validateMonitorInput({ email: "A@B.co", renewal_consent: true });
+  assert.equal(good.ok, true);
+  assert.equal(good.value.email, "a@b.co");
+  assert.equal(good.value.renewal_consent, true);
 });
 
 test("rate limit allows eight per hour and then blocks", () => {
