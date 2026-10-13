@@ -1,4 +1,4 @@
-:root{--ink:#111;--muted:#666;--line:#e6e6e6;--bg:#fff;--soft:#f7f7f5;--accent:#111}
+:root{--ink:#111;--muted:#666;--line:#e6e6e6;--bg:#fff;--soft:#f7f7f5;--accent:#111;--type-disclosure:34px;--type-step:26px;--type-max:20px}
 *{box-sizing:border-box}
 body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Inter","Helvetica Neue",Arial,sans-serif;color:var(--ink);background:var(--bg);line-height:1.6;font-size:17px;-webkit-font-smoothing:antialiased}
 a{color:inherit}
@@ -51,8 +51,13 @@ details{border-top:1px solid var(--line);padding:18px 0}details summary{cursor:p
 .place-bar button{background:none;border:0;padding:0;font:inherit;color:inherit;text-decoration:underline;cursor:pointer}
 .place-picker{max-width:360px;margin:0 0 20px}
 .privacy-note{color:var(--muted);font-size:14px;margin:0}
-.disclaimer{border:1px solid var(--ink);border-radius:12px;padding:16px 18px;margin:0 0 24px}
+.disclaimer{display:block;border:1px solid var(--ink);border-radius:12px;padding:20px 22px;margin:0 0 28px;max-height:none;height:auto;overflow:visible;visibility:visible}
 .disclaimer p{margin:0}
+.has-disclosure .disclaimer{font-size:var(--type-disclosure);line-height:1.35;font-weight:500}
+.has-disclosure h1{font-size:var(--type-max);font-weight:700;line-height:1.35;letter-spacing:-.01em;margin:8px 0 48px}
+.has-disclosure h2,.has-disclosure h3,.has-disclosure .lead,.has-disclosure .stats b,.has-disclosure .btn,.has-disclosure .logo{font-size:var(--type-max)}
+.has-disclosure h2{font-weight:700;margin:48px 0 16px}
+.has-disclosure h3{font-weight:700}
 footer{border-top:1px solid var(--line);padding:40px 0;font-size:13px;color:var(--muted)}
 footer p{max-width:720px}
 .cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:28px}
@@ -65,4 +70,4 @@ form.wide{max-width:720px}
 [data-progress] [aria-current=step]{color:var(--ink);font-weight:600}
 pre.card{overflow:auto}
 @media(max-width:800px){.split{grid-template-columns:1fr}}
-@media(max-width:640px){header .wrap{height:auto;flex-direction:column;align-items:flex-start;padding:16px 24px}nav{gap:14px}main{padding:48px 0 72px}body{font-size:16px}.plans{grid-template-columns:1fr}}
+@media(max-width:640px){header .wrap{height:auto;flex-direction:column;align-items:flex-start;padding:16px 24px}nav{gap:14px}main{padding:48px 0 72px}body{font-size:16px}.plans{grid-template-columns:1fr}.has-disclosure .disclaimer{font-size:var(--type-disclosure)}.has-disclosure h1,.has-disclosure h2,.has-disclosure h3,.has-disclosure .lead,.has-disclosure .stats b{font-size:var(--type-max)}}

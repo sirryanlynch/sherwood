@@ -100,7 +100,7 @@ async function sendKind({ kind, to, row, county, win, outcome }) {
     postal: sendingConfig().postal,
     outcome
   });
-  await deliver({ to, subject: mail.subject, text: mail.text });
+  await deliver({ to, subject: mail.subject, text: mail.text, html: mail.html });
 }
 
 async function existingReminder(email, countySlug) {

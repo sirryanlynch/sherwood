@@ -17,6 +17,16 @@ function sendingConfig(env = process.env) {
   return { ok: missing.length === 0, missing, postal, from, base, resend };
 }
 
+const DISCLOSURE = "Sherwood is not a law firm and this email is not legal advice.";
+const DISCLOSURE_PX = 34;
+const HEADING_PX = 20;
+
+function escapeHtml(value) {
+  return String(value ?? "").replace(/[&<>"']/g, ch => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  }[ch]));
+}
+
 function buildEmail({ kind, countyName, windowLabel, windowStart, windowEnd, confirmUrl, unsubscribeUrl, postal, outcome }) {
   if (!String(postal || "").trim()) {
     throw new Error("MAIL_POSTAL_ADDRESS is required before sending");
@@ -24,43 +34,54 @@ function buildEmail({ kind, countyName, windowLabel, windowStart, windowEnd, con
   if (!unsubscribeUrl) throw new Error("Unsubscribe link is required");
   const name = countyName || "your county";
   const lines = [];
+  let heading = "";
   if (kind === "confirm") {
+    heading = `Confirm your ${name} filing reminder`;
     lines.push(`Confirm that you want filing-window reminders for ${name}.`);
     if (windowStart) lines.push(`The adapter opening date is ${windowStart}.`);
     else lines.push("This county adapter does not state an opening date.");
     if (confirmUrl) lines.push(`Confirm: ${confirmUrl}`);
     lines.push("No window reminder is sent until you confirm.");
   } else if (kind === "heads_up_14") {
+    heading = `Filing window reminder for ${name}`;
     lines.push(`About 14 days remain before the filing window on the ${name} adapter${windowStart ? ` (${windowStart})` : ""}.`);
     if (windowLabel) lines.push(windowLabel);
   } else if (kind === "open_day") {
+    heading = `The filing window is open for ${name}`;
     lines.push(`The filing window on the ${name} adapter is open.`);
     if (windowLabel) lines.push(windowLabel);
     if (windowEnd) lines.push(`The adapter deadline is ${windowEnd}.`);
   } else if (kind === "deadline_14") {
+    heading = `Filing deadline reminder for ${name}`;
     lines.push(`About 14 days remain before the filing deadline on the ${name} adapter${windowEnd ? ` (${windowEnd})` : ""}.`);
     if (windowLabel) lines.push(windowLabel);
+  } else if (kind === "renewal") {
+    heading = `Annual monitor renewal for ${name}`;
+    lines.push(`Your annual monitor for ${name} is ready to renew.`);
+    lines.push("The published price is $49 a year. Sherwood re-checks the value and tells you when filing again makes sense.");
   } else if (kind === "result") {
+    heading = "Your Sherwood check";
     lines.push(`Your check for ${name} was saved${outcome ? ` (${outcome})` : ""}.`);
     lines.push("That result is an estimate from numbers you entered. It is not a decision.");
   } else {
     throw new Error("Unknown email kind");
   }
-  lines.push("");
-  lines.push("Sherwood is not a law firm and this email is not legal advice.");
-  lines.push(String(postal).trim());
-  lines.push(`Unsubscribe: ${unsubscribeUrl}`);
-  const subject = {
-    confirm: `Confirm your ${name} filing reminder`,
-    heads_up_14: `Filing window reminder for ${name}`,
-    open_day: `The filing window is open for ${name}`,
-    deadline_14: `Filing deadline reminder for ${name}`,
-    result: "Your Sherwood check"
-  }[kind];
-  return { subject, text: lines.join("\n") };
+  const body = lines.join("\n");
+  const text = [DISCLOSURE, "", heading, "", body, "", String(postal).trim(), `Unsubscribe: ${unsubscribeUrl}`].join("\n");
+  const html = [
+    `<div style="font-family:-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif;color:#111">`,
+    `<p style="font-size:${DISCLOSURE_PX}px;line-height:1.35;font-weight:500;margin:0 0 28px">${escapeHtml(DISCLOSURE)}</p>`,
+    `<h1 style="font-size:${HEADING_PX}px;line-height:1.35;font-weight:700;margin:0 0 32px">${escapeHtml(heading)}</h1>`,
+    ...lines.map(line => `<p style="font-size:16px;line-height:1.5;margin:0 0 12px">${escapeHtml(line)}</p>`),
+    `<p style="font-size:16px;line-height:1.5;margin:24px 0 0">${escapeHtml(String(postal).trim())}</p>`,
+    `<p style="font-size:16px;line-height:1.5;margin:12px 0 0">Unsubscribe: ${escapeHtml(unsubscribeUrl)}</p>`,
+    `</div>`
+  ].join("");
+  const subject = heading;
+  return { subject, text, html, disclosurePx: DISCLOSURE_PX, headingPx: HEADING_PX };
 }
 
-async function deliver({ to, subject, text }, env = process.env, fetchImpl = fetch) {
+async function deliver({ to, subject, text, html }, env = process.env, fetchImpl = fetch) {
   const cfg = sendingConfig(env);
   if (!cfg.ok) {
     const err = new Error(`${cfg.missing.join(", ")} required before sending`);
@@ -72,7 +93,7 @@ async function deliver({ to, subject, text }, env = process.env, fetchImpl = fet
   const res = await fetchImpl("https://api.resend.com/emails", {
     method: "POST",
     headers: { Authorization: `Bearer ${cfg.resend}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ from: cfg.from, to: [to], subject, text })
+    body: JSON.stringify({ from: cfg.from, to: [to], subject, text, html })
   });
   if (!res.ok) throw new Error(`Resend returned ${res.status}`);
   return { provider: "resend" };

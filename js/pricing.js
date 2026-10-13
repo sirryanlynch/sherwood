@@ -17,6 +17,7 @@ export const CHECKOUT_PLANS = [
     price: 249,
     dueToday: 249,
     filesAsAgent: true,
+    chargeNote: "We'll save your card today. You won't be charged until the county confirms your appeal is filed.",
     summary: "Everything in the kit. Sherwood files as your authorized agent after you sign this county's agent authorization. You sign the perjury certification yourself."
   }
 ];

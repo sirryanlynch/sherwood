@@ -68,7 +68,7 @@ node scripts/seed-counties.mjs
 - `markConverted` — POST `{ email, county_slug }` after checkout. Sets `converted_at` so the deadline nudge is skipped.
 - `sendDueReminders` — every day at 08:00 America/Los_Angeles. For confirmed reminders still `pending`, it sends at most one of each: 14 days before the adapter open date, once while the window is open, and 14 days before the adapter deadline if `converted_at` is empty. A missing open date is not invented. After the deadline date, `status` becomes `sent`.
 
-Every outgoing email includes the unsubscribe link, `MAIL_POSTAL_ADDRESS`, and the line that Sherwood is not a law firm and the email is not legal advice. Copy uses the county name and the adapter window only.
+Every outgoing email starts with the disclosure “Sherwood is not a law firm and this email is not legal advice.” In the HTML version that line is 34px and every heading is 20px. The message also includes the unsubscribe link and `MAIL_POSTAL_ADDRESS`. Copy uses the county name and the adapter window only. Reminder kinds are confirm, heads-up, open day, and deadline. `renewal` is the annual-monitor note.
 
 ## Rules
 

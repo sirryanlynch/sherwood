@@ -93,6 +93,7 @@ function cardHtml(plan, lines, savings) {
       <p><b>${esc(price)}</b></p>
       ${fee}
       <p>vs ${esc(versus)}</p>
+      ${plan.chargeNote ? `<p>${esc(plan.chargeNote)}</p>` : ""}
       <p class="small muted">${esc(ESTIMATE_LABEL)}</p>
       <p class="small muted">${esc(plan.summary)}</p>
     </label>`;
