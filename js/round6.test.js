@@ -79,7 +79,7 @@ test("a zero county fee is not described as included, and the $199 display stays
   const orange = planPriceLines(readCounty("orange"));
   assert.equal(orange.fee, null);
   assert.equal(orange.dfy.includes("included"), false);
-  assert.equal(deadlineBadge(readCounty("santa_cruz"), oct13), "County filing deadline: Nov 30, 2026 (48 days left)");
+  assert.equal(deadlineBadge(readCounty("santa_cruz"), oct13), "County filing deadline: Nov 30, 2026");
 });
 
 test("checkout saves a card and does not mark it paid", async () => {
@@ -122,7 +122,7 @@ test("agent authorization needs a title and a signature before the filing time",
 
 test("every page mounts the disclosure outside a collapsible, larger than the headline", () => {
   const pages = readdirSync(new URL("../", import.meta.url)).filter(name => name.endsWith(".html"));
-  pages.push("santa-cruz/index.html");
+  pages.push("santa-cruz/index.html", "san-diego/index.html", "san-mateo/index.html");
   const css = readFileSync(new URL("../style.css", import.meta.url), "utf8");
   assert.match(css, /--type-disclosure:34px/);
   assert.match(css, /--type-max:20px/);

@@ -4,8 +4,8 @@ import { readAttribution } from "../attribution.js";
 import { money, esc, formatDay } from "../format.js";
 import { CHECKOUT_PLANS, adapterFeeNotes, planPriceLines } from "../pricing.js";
 import { getCounty } from "../counties.js";
-import { deadlineBadge, filingWindow, nextWindowCopy } from "../engine.js";
-import { offerMessage, purchaseOffer } from "../offer.js";
+import { filingWindow, nextWindowCopy } from "../engine.js";
+import { mountOrderCountdowns, offerMessage, orderBadgeHtml, purchaseOffer } from "../offer.js";
 import { slugForCountyId } from "../place.js";
 import { markConverted, createReminder } from "../reminders.js";
 import { reminderMessage } from "../place-ui.js";
@@ -24,18 +24,18 @@ if (gate) {
   const root = document.querySelector("#checkout");
   if (!plans.length) {
     root.innerHTML = closedHtml(county, season, offer);
+    mountOrderCountdowns(root);
     bindReminder(root, matter, county);
   } else if (matter.outcome === "no_go") {
     location.href = "results.html";
   } else {
     const savings = matter.savings && matter.savings.amount;
     const lines = planPriceLines(county);
-    const deadline = deadlineBadge(county, today);
     const notes = adapterFeeNotes(county).map(line => `<p class="small muted">${esc(line)}</p>`).join("");
     const limit = offerMessage(county, offer);
     root.innerHTML = `
       <h1>Choose a plan</h1>
-      ${deadline ? `<p class="badge">${esc(deadline)}</p>` : ""}
+      ${orderBadgeHtml(county)}
       <p class="lead">${esc(matter.address)}</p>
       ${limit ? `<p>${esc(limit)}</p>` : ""}
       <form id="pay" class="wide">
@@ -55,6 +55,7 @@ if (gate) {
       const stillOpen = plan.id === "dfy" ? liveOffer.dfy : liveOffer.diy;
       if (!stillOpen) {
         root.innerHTML = closedHtml(county, filingWindow(county, new Date(), matter.supplementalNoticeDate), liveOffer);
+        mountOrderCountdowns(root);
         bindReminder(root, matter, county);
         return;
       }
@@ -81,6 +82,7 @@ if (gate) {
       }
       location.href = "intake.html";
     });
+    mountOrderCountdowns(root);
   }
 }
 
@@ -94,8 +96,8 @@ function closedHtml(county, window, offer) {
     ? "Checkout cannot proceed. This county's filing window is not open on the adapter."
     : (offerMessage(county, offer) || "We file it is not for sale in this county.");
   const windowLine = closed
-    ? nextWindowCopy(county, new Date())
-    : (deadlineBadge(county, new Date()) || "The filing window on this adapter is open. Purchase is not available.");
+    ? `<p>${esc(nextWindowCopy(county, new Date()))}</p>`
+    : (orderBadgeHtml(county) || "<p>The filing window on this adapter is open. Purchase is not available.</p>");
   const informal = closed && county.informal_review
     ? `<h2>Free informal review</h2><p>${esc(county.informal_review)}</p>`
     : "";
@@ -107,7 +109,7 @@ function closedHtml(county, window, offer) {
     <h1>${esc(title)}</h1>
     <p class="lead">${esc(lead)}</p>
     <div class="card">
-      <p>${esc(windowLine)}</p>
+      ${windowLine}
       <ul>${(window.reasons || []).map(r => `<li>${esc(r)}</li>`).join("")}</ul>
       ${informal}
       ${supplemental}

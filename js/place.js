@@ -5,7 +5,13 @@
 export const CHOICE_KEY = "sherwood_county_choice";
 
 export const LAUNCH_COUNTIES = [
-  { slug: "santa-cruz", id: "santa_cruz", label: "Santa Cruz County", state: "CA" }
+  { slug: "santa-cruz", id: "santa_cruz", label: "Santa Cruz County", state: "CA", city: "Santa Cruz" }
+];
+
+/* Unlisted landings. Not a launch county, so the home screen does not sell We file it. */
+export const PREVIEW_COUNTIES = [
+  { slug: "san-diego", id: "san_diego", label: "San Diego County", state: "CA", city: "San Diego" },
+  { slug: "san-mateo", id: "san_mateo", label: "San Mateo County", state: "CA", city: "San Mateo" }
 ];
 
 const LAUNCH_CITY_TOKENS = [
@@ -34,6 +40,7 @@ function titleCity(value) {
 export function headlinePlace(input) {
   if (!input || typeof input !== "object") return "your";
   const param = input.param;
+  if (param && param.city) return param.city;
   if (param && (param.slug === "santa-cruz" || param.id === "santa_cruz")) return "Santa Cruz";
   const address = String(input.address || "").trim();
   if (!address) return "your";
@@ -46,7 +53,8 @@ export function headlinePlace(input) {
 export function countyBySlug(value) {
   const slug = String(value || "").trim().toLowerCase();
   if (!slug) return null;
-  return LAUNCH_COUNTIES.find(c => c.slug === slug || c.id === slug || c.id === slug.replace(/-/g, "_")) || null;
+  const all = LAUNCH_COUNTIES.concat(PREVIEW_COUNTIES);
+  return all.find(c => c.slug === slug || c.id === slug || c.id === slug.replace(/-/g, "_")) || null;
 }
 
 export function slugForCountyId(id) {
@@ -122,8 +130,9 @@ export function classifyIp(geo) {
 }
 
 export function choiceFromCounty(county, source) {
+  const launch = LAUNCH_COUNTIES.some(item => item.id === county.id);
   return {
-    status: "launch",
+    status: launch ? "launch" : "preview",
     slug: county.slug,
     id: county.id,
     label: county.label,

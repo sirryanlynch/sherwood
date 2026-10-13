@@ -121,3 +121,14 @@ export function planPriceLines(county) {
     : `Check for free. If there's a case, file it yourself for $79 + ${plainDollars(fee)} county fee, paid when you file, or we'll file it for you for ${dfy}`;
   return { fee, diy: "$79", diyFee, diyLine, dfy, home, feeNote: filingFeeNote(county), service };
 }
+
+/* Unlisted landings. We file it stays out of the sentence while its flag is off.
+   A missing or zero county fee is a plain total, with no fee line. */
+export function landingHomeLine(county) {
+  const lines = planPriceLines(county);
+  const flags = CONFIG.LANDING_DFY || {};
+  const dfyOn = !!(county && Object.prototype.hasOwnProperty.call(flags, county.id) && flags[county.id] === true);
+  if (dfyOn) return lines.home;
+  if (lines.fee == null) return "Check for free. If there's a case, file it yourself for $79.";
+  return `Check for free. If there's a case, file it yourself for ${lines.diyLine}.`;
+}

@@ -2,9 +2,9 @@ import "../boot.js";
 import { notify } from "../adapters/notify.js";
 import { getCounty } from "../counties.js";
 import { paymentsAdapter } from "../adapters/payments.js";
-import { deadlineBadge, nextWindowCopy } from "../engine.js";
+import { nextWindowCopy } from "../engine.js";
 import { contactLine, esc, formatDay, money } from "../format.js";
-import { offerMessage, purchaseOffer } from "../offer.js";
+import { mountOrderCountdowns, offerMessage, orderBadgeHtml, purchaseOffer } from "../offer.js";
 import { slugForCountyId } from "../place.js";
 import { reminderMessage } from "../place-ui.js";
 import { confirmationBody, createMonitorRemote, enrollMonitor, monitorOfferHtml } from "../monitor.js";
@@ -114,10 +114,10 @@ function render(matter, county) {
       </div>`;
   }
 
-  const deadline = matter.window && matter.window.state === "open" ? deadlineBadge(county, new Date()) : "";
+  const deadline = matter.window && matter.window.state === "open" ? orderBadgeHtml(county) : "";
   root.innerHTML = `
     <p class="badge">${esc(labels[matter.outcome] || matter.outcome)}</p>
-    ${deadline ? `<p class="badge">${esc(deadline)}</p>` : ""}
+    ${deadline}
     <h1>Your check</h1>
     <p class="lead">For ${esc(matter.address)}. County adapter: ${esc(county.county)} (${esc(county.status_label)}).</p>
     <div class="card">
@@ -193,6 +193,7 @@ function render(matter, county) {
       }
     });
   }
+  mountOrderCountdowns(root);
   bindMonitor(matter);
 }
 

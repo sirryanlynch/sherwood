@@ -82,18 +82,11 @@ export function filingWindow(county, today, supplementalNoticeDate) {
   return { state: "unknown", kind: "regular", reasons, label: win && win.label };
 }
 
-export function deadlineBadge(county, today) {
+/* Fixed county date. Day counts are not baked into this string. */
+export function deadlineBadge(county) {
   const end = county && county.filing && county.filing.regular_window && county.filing.regular_window.end;
   if (!end || formatShortDay(end) === "not set") return "";
-  const label = `County filing deadline: ${formatShortDay(end)}`;
-  if (!(today instanceof Date)) return label;
-  const endDate = parseISODate(end);
-  if (!endDate) return label;
-  const day = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  const diff = Math.round((Date.UTC(endDate.getFullYear(), endDate.getMonth(), endDate.getDate()) - Date.UTC(day.getFullYear(), day.getMonth(), day.getDate())) / 86400000);
-  if (diff < 0) return label;
-  if (diff === 0) return `${label} (last day)`;
-  return `${label} (${diff} day${diff === 1 ? "" : "s"} left)`;
+  return `County filing deadline: ${formatShortDay(end)}`;
 }
 
 /* A start still ahead is quoted from the file. A window that has ended names July 2 of the next year and does not promise that year's close date or an outcome. */

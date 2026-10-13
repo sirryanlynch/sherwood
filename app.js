@@ -63,7 +63,8 @@ document.querySelectorAll("form[data-kind]").forEach(form => {
       data.placeStatus = place.status;
       data.placeSource = place.source;
       sessionStorage.setItem("sherwood_check", JSON.stringify(data));
-      location.href = "values.html";
+      const nested = /\/(santa-cruz|san-diego|san-mateo)(\/|$)/.test(location.pathname);
+      location.href = nested ? "../values.html" : "values.html";
       return;
     }
     const sent = await send(kind, data);

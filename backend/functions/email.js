@@ -30,7 +30,51 @@ function escapeHtml(value) {
   }[ch]));
 }
 
-function buildEmail({ kind, countyName, windowLabel, windowStart, windowEnd, confirmUrl, unsubscribeUrl, cancelUrl, postal, outcome }) {
+const SHORT_MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+function calendarParts(iso) {
+  const match = String(iso || "").match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!match) return null;
+  return { year: Number(match[1]), month: Number(match[2]), day: Number(match[3]) };
+}
+
+function formatShortDay(iso) {
+  const parts = calendarParts(iso);
+  if (!parts) return "";
+  return `${SHORT_MONTHS[parts.month - 1]} ${parts.day}, ${parts.year}`;
+}
+
+function daysBetween(fromIso, toIso) {
+  const from = calendarParts(fromIso);
+  const to = calendarParts(toIso);
+  if (!from || !to) return null;
+  const ms = Date.UTC(to.year, to.month - 1, to.day) - Date.UTC(from.year, from.month - 1, from.day);
+  return Math.round(ms / 86400000);
+}
+
+/* Fixed county date. A day count is added only when `today` is the send date. */
+function deadlineLine(windowEnd, today) {
+  const label = formatShortDay(windowEnd);
+  if (!label) return "";
+  const fixed = `County filing deadline: ${label}`;
+  if (!today) return fixed;
+  const days = daysBetween(today, windowEnd);
+  if (days == null || days < 0) return fixed;
+  if (days === 0) return `${fixed} (last day)`;
+  return `${fixed} (${days} day${days === 1 ? "" : "s"} left)`;
+}
+
+function openingLine(name, windowStart, today) {
+  const label = formatShortDay(windowStart);
+  if (!label) return windowStart ? `The adapter opening date is ${windowStart}.` : "";
+  if (!today) return `The filing window on the ${name} adapter opens ${label}.`;
+  const days = daysBetween(today, windowStart);
+  if (days == null || days < 0) return `The filing window on the ${name} adapter opens ${label}.`;
+  if (days === 0) return `The filing window on the ${name} adapter opens ${label} (today).`;
+  return `The filing window on the ${name} adapter opens ${label} (${days} day${days === 1 ? "" : "s"} from this email).`;
+}
+
+function buildEmail({ kind, countyName, windowLabel, windowStart, windowEnd, confirmUrl, unsubscribeUrl, cancelUrl, postal, outcome, today }) {
   if (!String(postal || "").trim()) {
     throw new Error("MAIL_POSTAL_ADDRESS is required before sending");
   }
@@ -44,19 +88,26 @@ function buildEmail({ kind, countyName, windowLabel, windowStart, windowEnd, con
     if (windowStart) lines.push(`The adapter opening date is ${windowStart}.`);
     else lines.push("This county adapter does not state an opening date.");
     if (confirmUrl) lines.push(`Confirm: ${confirmUrl}`);
+    const confirmDeadline = deadlineLine(windowEnd, today);
+    if (confirmDeadline) lines.push(confirmDeadline);
     lines.push("No window reminder is sent until you confirm.");
   } else if (kind === "heads_up_14") {
     heading = `Filing window reminder for ${name}`;
-    lines.push(`About 14 days remain before the filing window on the ${name} adapter${windowStart ? ` (${windowStart})` : ""}.`);
+    const opening = openingLine(name, windowStart, today);
+    if (opening) lines.push(opening);
+    const deadline = deadlineLine(windowEnd, today);
+    if (deadline) lines.push(deadline);
     if (windowLabel) lines.push(windowLabel);
   } else if (kind === "open_day") {
     heading = `The filing window is open for ${name}`;
     lines.push(`The filing window on the ${name} adapter is open.`);
     if (windowLabel) lines.push(windowLabel);
-    if (windowEnd) lines.push(`The adapter deadline is ${windowEnd}.`);
+    const deadline = deadlineLine(windowEnd, today);
+    if (deadline) lines.push(deadline);
+    else if (windowEnd) lines.push(`The adapter deadline is ${windowEnd}.`);
   } else if (kind === "deadline_14") {
     heading = `Filing deadline reminder for ${name}`;
-    lines.push(`About 14 days remain before the filing deadline on the ${name} adapter${windowEnd ? ` (${windowEnd})` : ""}.`);
+    lines.push(deadlineLine(windowEnd, today) || `The filing deadline on the ${name} adapter is not set.`);
     if (windowLabel) lines.push(windowLabel);
   } else if (kind === "renewal") {
     heading = `Annual monitor renewal notice for ${name}`;
@@ -112,4 +163,4 @@ async function deliver({ to, subject, text, html }, env = process.env, fetchImpl
   return { provider: "resend" };
 }
 
-module.exports = { sendingConfig, buildEmail, deliver, REMINDER_KINDS };
+module.exports = { sendingConfig, buildEmail, deliver, REMINDER_KINDS, daysBetween, deadlineLine };

@@ -29,7 +29,7 @@
       "The explanation field fits only about 150 characters. Attach the Statement of Facts at the DocuSign step.",
       "The portal has no roll-year field for a regular assessment; the current year is implied.",
       "A transient 'Failure to find valid APN' notice appeared in the pilot and then cleared. Retry before treating it as a rejection.",
-      "A fee waiver is on the portal for applicants who receive public benefits or are low-income."
+      "A fee waiver is on the county portal. The county decides who qualifies."
     ],
     "filing_fee": {
       "amount": 50,
@@ -176,7 +176,19 @@
     ],
     "max_years": 4,
     "no_retroactive": true,
-    "revocation": "unconfirmed — no source; written notice to Clerk of the Board pending attorney confirmation"
+    "revocation": "unconfirmed — no source; written notice to Clerk of the Board pending attorney confirmation",
+    "local_rule_6": {
+      "options": [
+        {
+          "id": "application_section",
+          "label": "Application authorization section"
+        },
+        {
+          "id": "county_form",
+          "label": "Santa Cruz County Agent Authorization form"
+        }
+      ]
+    }
   },
   "agent": {
     "agent_filing_allowed": true,
@@ -270,6 +282,6 @@
   ],
   "fee_waiver": {
     "available": true,
-    "url": null
+    "url": "https://www2.santacruzcountyca.gov/AAB"
   }
 }

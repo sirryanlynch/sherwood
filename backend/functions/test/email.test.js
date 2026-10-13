@@ -56,6 +56,43 @@ test("monitor confirmation keeps the renewal terms and a cancel link", () => {
   assert.match(mail.text, /This confirmation is yours to keep/);
 });
 
+test("deadline emails print the county date and do not hardcode a day count", () => {
+  const fixed = buildEmail({
+    kind: "deadline_14",
+    countyName: "Santa Cruz",
+    windowEnd: "2026-11-30",
+    unsubscribeUrl: "https://example.com/unsubscribe?token=def",
+    postal: "1 Market St, San Francisco, CA 94105"
+  });
+  assert.match(fixed.text, /County filing deadline: Nov 30, 2026/);
+  assert.equal(/14 days/.test(fixed.text), false);
+  assert.equal(/\d+ days left/.test(fixed.text), false);
+  assert.equal(fixed.text.includes("About 14 days"), false);
+
+  const counted = buildEmail({
+    kind: "deadline_14",
+    countyName: "Santa Cruz",
+    windowEnd: "2026-11-30",
+    today: "2026-10-13",
+    unsubscribeUrl: "https://example.com/unsubscribe?token=def",
+    postal: "1 Market St, San Francisco, CA 94105"
+  });
+  assert.match(counted.text, /County filing deadline: Nov 30, 2026 \(48 days left\)/);
+
+  const heads = buildEmail({
+    kind: "heads_up_14",
+    countyName: "Santa Cruz",
+    windowStart: "2026-07-02",
+    windowEnd: "2026-11-30",
+    unsubscribeUrl: "https://example.com/unsubscribe?token=def",
+    postal: "1 Market St, San Francisco, CA 94105"
+  });
+  assert.match(heads.text, /opens Jul 2, 2026/);
+  assert.match(heads.text, /County filing deadline: Nov 30, 2026/);
+  assert.equal(heads.text.includes("About 14 days"), false);
+  assert.equal(/\d+ days/.test(heads.text), false);
+});
+
 test("sending refuses to build without a postal address", () => {
   assert.throws(() => buildEmail({
     kind: "open_day",

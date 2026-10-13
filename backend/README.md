@@ -66,7 +66,7 @@ node scripts/seed-counties.mjs
 - `unsubscribe` — GET `?token=`. Sets `status` to `unsubscribed`.
 - `createLead` — POST from “Email me this result”. Stores the lead, including optional `src` and `utm`, and, when mail is configured, sends one plain result email.
 - `markConverted` — POST `{ email, county_slug }` after checkout. Sets `converted_at` so the deadline nudge is skipped.
-- `sendDueReminders` — every day at 08:00 America/Los_Angeles. For confirmed reminders still `pending`, it sends at most one of each: 14 days before the adapter open date, once while the window is open, and 14 days before the adapter deadline if `converted_at` is empty. A missing open date is not invented. After the deadline date, `status` becomes `sent`.
+- `sendDueReminders` — every day at 08:00 America/Los_Angeles. For confirmed reminders still `pending`, it sends at most one of each: during the 14 days before the adapter open date, once while the window is open, and during the 14 days before the adapter deadline if `converted_at` is empty. The message prints the county deadline as a fixed date, or a day count computed from the send date. A missing open date is not invented. After the deadline date, `status` becomes `sent`.
 
 Every outgoing email starts with the B&P 17537.9 assessment-reduction disclosure, in bold, inside a 4px border, at 34px. Headings are 20px. The message includes the unsubscribe link and `MAIL_POSTAL_ADDRESS`.
 

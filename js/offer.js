@@ -1,5 +1,6 @@
-import { filingWindow } from "./engine.js";
-import { parseISODate } from "./format.js";
+import { CONFIG } from "./config.js";
+import { deadlineBadge, filingWindow } from "./engine.js";
+import { esc, parseISODate } from "./format.js";
 
 export const EFILE_LEAD_DAYS = 3;
 export const PAPER_LEAD_DAYS = 7;
@@ -14,6 +15,81 @@ export function registrationBlocksDfy(county) {
   const agent = county && county.agent;
   if (!agent || agent.registration_required !== true) return false;
   return agent.registration_status !== "active";
+}
+
+const SHORT_MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+/* Santa Cruz product cutoff. Other counties do not use this date. */
+export function orderCutoffIso(county) {
+  if (!county || county.id !== "santa_cruz") return "";
+  const iso = String(CONFIG.order_cutoff || "");
+  return /^\d{4}-\d{2}-\d{2}$/.test(iso) ? iso : "";
+}
+
+/* True after the cutoff calendar day. The cutoff day itself is still open. */
+export function pastOrderCutoff(county, today) {
+  const cutoff = parseISODate(orderCutoffIso(county));
+  if (!cutoff || !(today instanceof Date)) return false;
+  const day = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  return day > cutoff;
+}
+
+export function orderCloseLine(county) {
+  const cutoff = parseISODate(orderCutoffIso(county));
+  if (!cutoff) return "";
+  return `We file it orders close ${SHORT_MONTHS[cutoff.getMonth()]} ${cutoff.getDate()}`;
+}
+
+/* Remaining time until the end of the cutoff day. Computed from `now`. */
+export function orderCountdownText(iso, now) {
+  const cutoff = parseISODate(iso);
+  if (!cutoff || !(now instanceof Date) || Number.isNaN(now.getTime())) return "";
+  const end = new Date(cutoff.getFullYear(), cutoff.getMonth(), cutoff.getDate() + 1);
+  const ms = end.getTime() - now.getTime();
+  if (ms <= 0) return "We file it orders are closed.";
+  const total = Math.floor(ms / 1000);
+  const days = Math.floor(total / 86400);
+  const hours = Math.floor((total % 86400) / 3600);
+  const minutes = Math.floor((total % 3600) / 60);
+  const seconds = total % 60;
+  const part = (n, word) => `${n} ${word}${n === 1 ? "" : "s"}`;
+  return `${part(days, "day")}, ${part(hours, "hour")}, ${part(minutes, "minute")}, ${part(seconds, "second")}`;
+}
+
+export function orderBadgeHtml(county) {
+  const deadline = deadlineBadge(county);
+  const close = orderCloseLine(county);
+  const iso = orderCutoffIso(county);
+  return [
+    deadline ? `<p class="badge">${esc(deadline)}</p>` : "",
+    close ? `<p class="badge">${esc(close)}</p>` : "",
+    iso ? `<p class="badge" data-order-countdown="${esc(iso)}"></p>` : ""
+  ].join("");
+}
+
+const countdownTimers = new WeakMap();
+
+export function mountOrderCountdowns(root) {
+  const scope = root && root.querySelectorAll ? root : (typeof document !== "undefined" ? document : null);
+  if (!scope) return;
+  const nodes = [...scope.querySelectorAll("[data-order-countdown]")];
+  if (!nodes.length) return;
+  const tick = () => {
+    const now = new Date();
+    nodes.forEach(el => {
+      el.textContent = orderCountdownText(el.getAttribute("data-order-countdown"), now);
+    });
+  };
+  tick();
+  const prev = countdownTimers.get(scope);
+  if (prev) clearInterval(prev);
+  countdownTimers.set(scope, setInterval(tick, 1000));
+}
+
+export function landingDfyEnabled(county) {
+  const flags = CONFIG.LANDING_DFY;
+  if (!flags || !county || !Object.prototype.hasOwnProperty.call(flags, county.id)) return true;
+  return flags[county.id] === true;
 }
 
 /* Last days of a regular window are too late to finish signing. */
@@ -33,19 +109,22 @@ export function purchaseOffer(county, today, supplementalNoticeDate) {
   const verified = !!(county && county.status === "verified");
   const paper = paperFiling(county);
   const registration = registrationBlocksDfy(county);
-  const lead = open && season.kind === "regular" && withinDfyLead(county, today || new Date());
+  const day = today || new Date();
+  const lead = open && season.kind === "regular" && withinDfyLead(county, day);
+  const cutoff = open && pastOrderCutoff(county, day);
+  const landingOff = !landingDfyEnabled(county);
   const losAngeles = !!(county && county.id === "los_angeles");
   let diy = open && verified;
-  let dfy = open && verified && !paper && !registration && !lead;
+  let dfy = open && verified && !paper && !registration && !lead && !cutoff && !landingOff;
   if (open && losAngeles) {
     diy = true;
-    dfy = !paper && !registration && !lead;
+    dfy = !paper && !registration && !lead && !cutoff && !landingOff;
   }
   if (!verified && !losAngeles) {
     diy = false;
     dfy = false;
   }
-  if (!open || paper || registration || lead) dfy = false;
+  if (!open || paper || registration || lead || cutoff || landingOff) dfy = false;
   if (!open) diy = false;
   return {
     diy,
@@ -54,6 +133,8 @@ export function purchaseOffer(county, today, supplementalNoticeDate) {
     paper,
     registration,
     lead,
+    cutoff,
+    landingOff,
     closed: !open,
     informal: !open,
     verified,
@@ -76,6 +157,13 @@ export function offerMessage(county, offer) {
   }
   if (!offer.verified) {
     return "This county file is unconfirmed. Sherwood is not selling We file it here. Leave your email for a reminder.";
+  }
+  if (offer.cutoff && !offer.dfy) {
+    const line = orderCloseLine(county);
+    return line ? `${line}.` : "We file it orders are closed.";
+  }
+  if (offer.landingOff && !offer.dfy) {
+    return "We file it stays off for this county until that switch is turned on.";
   }
   if (offer.lead && !offer.dfy) {
     return "We file it checkout is closed for the last days of this window so there is time to finish signing.";

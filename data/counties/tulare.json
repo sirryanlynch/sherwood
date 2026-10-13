@@ -159,5 +159,9 @@
       "text": "Template close date: November 30, 2026. Opening day is not set. Not a verified county."
     }
   ],
-  "notes": "County page not yet reviewed."
+  "notes": "County page not yet reviewed.",
+  "county_form": {
+    "agent_authorization": { "exists": true, "url": null },
+    "revocation": { "exists": true, "url": null }
+  }
 }

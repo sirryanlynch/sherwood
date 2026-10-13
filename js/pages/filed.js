@@ -37,7 +37,7 @@ if (gate) {
 function paintGate(root, matter, user, county) {
   const doc = county.agent_authorization || {};
   const auth = matter.agentAuthorization;
-  const signed = authorizationReady(auth);
+  const signed = authorizationReady(auth, county);
   const certOk = !!(matter.signatures && matter.signatures.perjury_and_statement && !matter.signatures.perjury_and_statement.skipped);
   const season = filingWindow(county, new Date(), matter.supplementalNoticeDate);
   const blocks = [];
@@ -58,6 +58,7 @@ function paintGate(root, matter, user, county) {
       <p>Document: <b>${esc(doc.doc_title || "Not defined on this adapter")}</b></p>
       <p class="small muted">${esc(doc.source || "No source on this adapter.")} Verified on the adapter: ${doc.verified === true ? "yes" : "no"}.</p>
       ${signed ? `<p>Signed by ${esc(auth.signerName)} at ${esc(auth.signedAt)}. Stored on this appeal.</p>` : `<p>Not signed yet.</p>`}
+      ${signed && auth.rule6Label ? `<p>Local Rule 6: ${esc(auth.rule6Label)}.</p>` : ""}
       ${blocks.length ? `<ul>${blocks.map(line => `<li>${esc(line)}</li>`).join("")}</ul>` : `<p>The authorization is on this appeal. You can record the filing.</p>`}
     </div>
     <button class="btn" id="file-btn" type="button" ${canFile ? "" : "disabled"}>Record the filing</button>
@@ -72,7 +73,7 @@ function paintGate(root, matter, user, county) {
 async function submitFiling(root, matter, user, county) {
   const button = root.querySelector("#file-btn");
   if (button) button.disabled = true;
-  if (!authorizationReady(matter.agentAuthorization) || !signedBeforeFiling(matter.agentAuthorization, new Date().toISOString())) {
+  if (!authorizationReady(matter.agentAuthorization, county) || !signedBeforeFiling(matter.agentAuthorization, new Date().toISOString(), county)) {
     root.innerHTML = `<h1>Not submitted</h1><p>The agent authorization is missing a required field, or it was not signed before filing, so nothing was filed.</p>`;
     return;
   }
@@ -81,7 +82,7 @@ async function submitFiling(root, matter, user, county) {
     root.innerHTML = `<h1>Not submitted</h1><p>${esc(result.reason || "The e-file adapter did not submit.")}</p>${stepsHtml(county)}`;
     return;
   }
-  if (!signedBeforeFiling(matter.agentAuthorization, result.filedAt)) {
+  if (!signedBeforeFiling(matter.agentAuthorization, result.filedAt, county)) {
     root.innerHTML = `<h1>Not submitted</h1><p>The agent authorization has to be signed before the filing time. Nothing was stored as filed.</p>`;
     return;
   }

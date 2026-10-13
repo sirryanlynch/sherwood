@@ -100,7 +100,8 @@ async function sendKind({ kind, to, row, county, win, outcome }) {
     confirmUrl: links.confirmUrl,
     unsubscribeUrl: links.unsubscribeUrl,
     postal: sendingConfig().postal,
-    outcome
+    outcome,
+    today: laToday()
   });
   await deliver({ to, subject: mail.subject, text: mail.text, html: mail.html });
 }

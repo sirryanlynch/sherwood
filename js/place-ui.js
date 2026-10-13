@@ -123,6 +123,11 @@ function paintHeadline(address) {
   });
 }
 
+function onThisLanding(place) {
+  const id = document.body && document.body.getAttribute("data-landing");
+  return !!(id && place && place.status === "preview" && place.id === id);
+}
+
 function paint(place) {
   renderBar(place);
   paintHeadline(currentAddress());
@@ -130,12 +135,14 @@ function paint(place) {
   const other = document.querySelector("#home-other");
   const ambiguous = document.querySelector("#home-ambiguous");
   if (!launch) return;
-  launch.hidden = place.status !== "launch";
-  other.hidden = place.status !== "other";
+  const here = onThisLanding(place);
+  const heldBack = place.status === "preview" && !here;
+  launch.hidden = place.status !== "launch" && !here;
+  other.hidden = place.status !== "other" && !heldBack;
   ambiguous.hidden = place.status !== "ambiguous";
   const check = document.querySelector("#check-form");
   const under = document.querySelector("#home-under");
-  if (check) check.hidden = place.status === "other" && !check.dataset.forced;
+  if (check) check.hidden = (place.status === "other" || heldBack) && !check.dataset.forced;
   if (under && check) under.hidden = check.hidden;
 }
 

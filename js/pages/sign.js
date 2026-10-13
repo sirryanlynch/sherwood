@@ -50,11 +50,29 @@ function paintExplainer(root, matter, county, onContinue) {
     <div class="card">
       <p><b>What you're signing.</b> You authorize Sherwood to file this appeal as your agent for this parcel and the tax years you select, up to 4. You still sign the perjury certification yourself.</p>
       <p><b>Why the county needs it.</b> ${why}</p>
+      ${rule6Explainer(doc)}
       <p>How to revoke: ${esc(doc.revocation || "[pending verification]")}</p>
     </div>
     ${summaryHtml(matter, years[0], null)}
     <button class="btn" id="to-sign" type="button">Continue to sign</button>`;
   root.querySelector("#to-sign").addEventListener("click", onContinue);
+}
+
+function rule6Options(county) {
+  const options = county && county.agent_authorization && county.agent_authorization.local_rule_6 && county.agent_authorization.local_rule_6.options;
+  return Array.isArray(options) ? options.filter(option => option && option.id && option.label) : [];
+}
+
+function rule6Explainer(doc) {
+  const options = doc && doc.local_rule_6 && Array.isArray(doc.local_rule_6.options) ? doc.local_rule_6.options : [];
+  if (!options.length) return "";
+  const items = options.map(option => `<li>${esc(option.label)}</li>`).join("");
+  return `<p><b>Local Rule 6.</b> An authorized agent may file when the application includes one of these, signed by you.</p><ul>${items}</ul>`;
+}
+
+function rule6Label(county, id) {
+  const match = rule6Options(county).find(option => option.id === id);
+  return match ? match.label : "";
 }
 
 function summaryHtml(matter, years, signedAt) {
@@ -80,6 +98,9 @@ function paintForm(root, matter, county, step, round, envelope) {
   const yearChoices = step.id === "agent_authorization" ? taxYearChoices(county, new Date()) : [];
   const yearFields = yearChoices.map((year, index) => `
     <label class="check"><input type="checkbox" name="taxYear" value="${year}" ${index === 0 ? "checked" : ""}> ${year}</label>`).join("");
+  const rule6 = step.id === "agent_authorization" ? rule6Options(county) : [];
+  const rule6Fields = rule6.map(option => `
+    <label class="check"><input type="radio" name="rule6" value="${esc(option.id)}" required> ${esc(option.label)}</label>`).join("");
   root.innerHTML = `
     <p class="banner">Simulated embedded signing. Not a DocuSign session. Sherwood cannot sign as you.</p>
     <h1>${esc(step.title)}</h1>
@@ -92,6 +113,7 @@ function paintForm(root, matter, county, step, round, envelope) {
       <p class="small muted">Envelope ${esc(envelope.id)} · ${esc(envelope.status)} · simulated</p>
     </div>
     <form id="sign-form" class="wide">
+      ${rule6Fields ? `<fieldset><legend>Local Rule 6 written authorization</legend><p class="small muted">Choose the application authorization section or the county Agent Authorization form.</p>${rule6Fields}</fieldset>` : ""}
       ${yearFields ? `<fieldset><legend>Tax years covered, up to 4</legend>${yearFields}<p class="err" id="year-err" hidden>Choose at least one tax year, and no more than 4.</p></fieldset>` : ""}
       <label>Type your full name as the signature<input name="signer" required value="${esc(matter.intake && matter.intake.name || "")}"></label>
       ${step.id === "agent_authorization" ? `<label>Your title<input name="title" required placeholder="Owner"></label>` : ""}
@@ -116,7 +138,10 @@ function paintForm(root, matter, county, step, round, envelope) {
     const signerName = formData.get("signer");
     const signerTitle = String(formData.get("title") || "").trim();
     let taxYears = [];
+    let rule6Option = "";
     if (step.id === "agent_authorization") {
+      rule6Option = String(formData.get("rule6") || "");
+      if (rule6.length && !rule6.some(option => option.id === rule6Option)) return;
       taxYears = normalizeTaxYears(formData.getAll("taxYear"), yearChoices);
       const yearErr = root.querySelector("#year-err");
       if (!taxYears.length || taxYears.length > 4) {
@@ -146,10 +171,12 @@ function paintForm(root, matter, county, step, round, envelope) {
         agentName: AGENT_CONTACT.name,
         agentAddress: AGENT_CONTACT.address,
         agentPhone: AGENT_CONTACT.phone,
+        rule6Option: rule6Option || undefined,
+        rule6Label: rule6Label(county, rule6Option),
         retainUntil: retainUntil(signedAt),
         retention: AUTHORIZATION_RETENTION
       };
-      if (!authorizationReady(matter.agentAuthorization)) return;
+      if (!authorizationReady(matter.agentAuthorization, county)) return;
     }
     if (round === 3) matter.stipulationDecision = "Accepted in the demo. The signature is simulated and there is no stipulation form in the pilot kit.";
     saveMatter(matter);

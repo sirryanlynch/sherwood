@@ -1,14 +1,34 @@
 import { getCounty, loadCounties } from "./counties.js";
 import { mountStatutoryDisclosure } from "./statutoryDisclosure.js";
 import { contactLine, esc, formatDay, money } from "./format.js";
-import { filingFeeNote, planPriceLines } from "./pricing.js";
+import { landingDfyEnabled, mountOrderCountdowns, orderBadgeHtml } from "./offer.js";
+import { filingFeeNote, landingHomeLine, planPriceLines } from "./pricing.js";
 
 const SIM = "Simulated on this device. Payment, signatures, county filing, and email or SMS do not leave this browser.";
 
+function paintOrderBadge(county) {
+  const host = document.querySelector("[data-order-badge]");
+  if (!host) return;
+  host.innerHTML = orderBadgeHtml(county);
+  mountOrderCountdowns(host);
+}
+
 async function fillLaunchFacts() {
+  const landingId = document.body && document.body.getAttribute("data-landing");
+  if (landingId) {
+    const landing = await getCounty(landingId);
+    if (landing) {
+      const home = document.getElementById("home-price");
+      if (home) home.textContent = landingHomeLine(landing);
+      const note = document.getElementById("landing-dfy-note");
+      if (note) note.hidden = landingDfyEnabled(landing) && landing.status === "verified";
+      paintOrderBadge(landing);
+    }
+    return;
+  }
   const slots = document.querySelectorAll("[data-fact]");
   const needsPlans = document.getElementById("home-price") || document.getElementById("plan-diy-price") || document.getElementById("faq-prices") || document.getElementById("how-plans");
-  if (!slots.length && !document.getElementById("launch-facts") && !document.getElementById("launch-filing") && !document.getElementById("launch-fee") && !needsPlans) return;
+  if (!slots.length && !document.getElementById("launch-facts") && !document.getElementById("launch-filing") && !document.getElementById("launch-fee") && !needsPlans && !document.querySelector("[data-order-badge]")) return;
   const county = await getCounty("santa_cruz");
   if (!county) return;
   slots.forEach(el => {
@@ -52,6 +72,7 @@ async function fillLaunchFacts() {
       <p>${esc(county.agent.source)} ${esc(county.agent.perjury)}</p>`;
   }
   paintPlanPrices(county);
+  paintOrderBadge(county);
   const feeBox = document.getElementById("launch-fee");
   if (feeBox) {
     feeBox.textContent = lines.fee == null
