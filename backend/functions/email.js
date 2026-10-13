@@ -21,7 +21,6 @@ function sendingConfig(env = process.env) {
   return { ok: missing.length === 0, missing, postal, from, base, resend };
 }
 
-const DISCLOSURE = "Sherwood is not a law firm and this email is not legal advice.";
 const DISCLOSURE_PX = 34;
 const HEADING_PX = 20;
 
@@ -79,15 +78,12 @@ function buildEmail({ kind, countyName, windowLabel, windowStart, windowEnd, con
     throw new Error("Unknown email kind");
   }
   const body = lines.join("\n");
-  const reminder = REMINDER_KINDS.has(kind);
   const text = [
-    ...(reminder ? [STATUTORY_DISCLOSURE, ""] : []),
-    DISCLOSURE, "", heading, "", body, "", String(postal).trim(), `Unsubscribe: ${unsubscribeUrl}`
+    STATUTORY_DISCLOSURE, "", heading, "", body, "", String(postal).trim(), `Unsubscribe: ${unsubscribeUrl}`
   ].join("\n");
   const html = [
     `<div style="font-family:-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif;color:#111">`,
-    ...(reminder ? [statutoryDisclosureHtml()] : []),
-    `<p style="font-size:${DISCLOSURE_PX}px;line-height:1.35;font-weight:500;margin:0 0 28px">${escapeHtml(DISCLOSURE)}</p>`,
+    statutoryDisclosureHtml(),
     `<h1 style="font-size:${HEADING_PX}px;line-height:1.35;font-weight:700;margin:0 0 32px">${escapeHtml(heading)}</h1>`,
     ...lines.map(line => `<p style="font-size:16px;line-height:1.5;margin:0 0 12px">${escapeHtml(line)}</p>`),
     `<p style="font-size:16px;line-height:1.5;margin:24px 0 0">${escapeHtml(String(postal).trim())}</p>`,

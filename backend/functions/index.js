@@ -6,6 +6,7 @@ const { getFirestore, FieldValue } = require("firebase-admin/firestore");
 const { getAppCheck } = require("firebase-admin/app-check");
 const { validateReminderInput, validateLeadInput, validateConvertedInput, validateMonitorInput, nextRate } = require("./validate");
 const { buildEmail, deliver, sendingConfig } = require("./email");
+const { statutoryDisclosureHtml } = require("./disclosure");
 const { dueNotices, campaignFinished, renewalNoticeDue, laToday, windowOf } = require("./window");
 const { retainUntil, renewsOn } = require("./retention");
 const { loadBundled, findCounty } = require("./counties");
@@ -257,7 +258,7 @@ exports.confirmReminder = onRequest(httpsOpts, async (req, res) => {
     }
     res.status(200).send(page(
       "Reminder confirmed",
-      "You will get the filing-window emails for this county. Sherwood is not a law firm and this is not legal advice."
+      "You will get the filing-window emails for this county."
     ));
   } catch (err) {
     res.status(500).send(page("Something went wrong", "The confirmation could not be saved."));
@@ -283,7 +284,7 @@ exports.unsubscribe = onRequest(httpsOpts, async (req, res) => {
     });
     res.status(200).send(page(
       "Unsubscribed",
-      "You will not get more reminder emails for this record. Sherwood is not a law firm and this is not legal advice."
+      "You will not get more reminder emails for this record."
     ));
   } catch (err) {
     res.status(500).send(page("Something went wrong", "The unsubscribe could not be saved."));
@@ -346,7 +347,7 @@ exports.cancelMonitor = onRequest(httpsOpts, async (req, res) => {
     }
     res.status(200).send(page(
       "Annual monitor canceled",
-      "The annual monitor will not renew. The consent record is kept for 3 years. Sherwood is not a law firm and this is not legal advice."
+      "The annual monitor will not renew. The consent record is kept for 3 years."
     ));
   } catch (err) {
     res.status(500).send(page("Something went wrong", "The cancellation could not be saved."));
@@ -432,5 +433,5 @@ exports.sendDueReminders = onSchedule({
 function page(title, body) {
   const esc = String(body).replace(/[&<>]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[ch]));
   const safeTitle = String(title).replace(/[&<>]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[ch]));
-  return `<!doctype html><meta charset="utf-8"><title>${safeTitle}</title><h1>${safeTitle}</h1><p>${esc}</p>`;
+  return `<!doctype html><meta charset="utf-8"><title>${safeTitle}</title>${statutoryDisclosureHtml()}<h1 style="font-size:20px;line-height:1.35;font-weight:700">${safeTitle}</h1><p>${esc}</p>`;
 }

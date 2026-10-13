@@ -51,3 +51,23 @@ export function signedDateText(iso) {
   if (!iso || shown === "not set") return "";
   return shown;
 }
+
+/* Rule 305 fields the product stores. Agent contact may be the pending placeholders. */
+export function authorizationReady(auth) {
+  if (!auth || !auth.signedAt || !String(auth.signerName || "").trim()) return false;
+  if (!String(auth.signerTitle || "").trim()) return false;
+  if (!String(auth.parcel || "").trim()) return false;
+  if (!auth.ownerGetsCopy) return false;
+  if (!String(auth.agentName || "").trim() || !String(auth.agentAddress || "").trim() || !String(auth.agentPhone || "").trim()) return false;
+  const years = Array.isArray(auth.taxYears) ? auth.taxYears : [];
+  if (!years.length || years.length > 4) return false;
+  return true;
+}
+
+export function signedBeforeFiling(auth, filedAt) {
+  if (!authorizationReady(auth) || !filedAt) return false;
+  const signed = Date.parse(auth.signedAt);
+  const filed = Date.parse(filedAt);
+  if (!Number.isFinite(signed) || !Number.isFinite(filed)) return false;
+  return signed <= filed;
+}

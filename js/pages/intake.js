@@ -26,6 +26,7 @@ if (gate) {
         </fieldset>
         <fieldset><legend>Occupancy and exemption</legend>
           <label>Is this your primary residence?<select name="ownerOccupied" required><option value="">Select…</option><option>Yes</option><option>No</option></select></label>
+          ${county.fee_waiver && county.fee_waiver.available ? `<label>Do you want to ask the county about a filing-fee waiver?<select name="feeWaiver" required><option value="">Select…</option><option value="yes">Yes</option><option value="no">No</option><option value="unsure">Not sure</option></select></label><p class="small muted">This county adapter says a fee waiver may exist. Sherwood does not decide who qualifies.${county.fee_waiver.url ? ` County form: ${esc(county.fee_waiver.url)}` : ""}</p>` : ""}
           <label>Homeowner's Exemption already on file?<select name="hoExemption"><option>Not sure</option><option>Yes</option><option>No</option></select></label>
           <p class="small muted" id="exemption-note"></p>
         </fieldset>
@@ -85,6 +86,7 @@ if (gate) {
         apn: data.apn,
         type: data.type,
         ownerOccupied: data.ownerOccupied,
+        feeWaiver: data.feeWaiver || "",
         hoExemption: data.hoExemption,
         roofAge: data.roofAge,
         damage: data.damage,

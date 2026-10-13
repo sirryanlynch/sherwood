@@ -35,11 +35,9 @@ test("a future window is quoted from the county file and promises nothing", () =
   assert.equal(copy, "The next filing window in this county file is Jul 2, 2026 through Nov 30, 2026. No outcome is promised.");
 });
 
-test("a passed window is not described as the next one", () => {
+test("a passed window names the next July 2 and does not promise a close date", () => {
   const copy = nextWindowCopy(county, new Date(2026, 11, 1));
-  assert.equal(copy, "This county file does not list a future filing window. No opening date is promised.");
-  assert.equal(copy.includes("Jul"), false);
-  assert.equal(copy.includes("2026"), false);
+  assert.equal(copy, "Filing closed Nov 30, 2026. The next regular window opens July 2, 2027. This county file does not list that year's close date. No outcome is promised.");
 });
 
 test("the pricing line combines the DIY fee", () => {

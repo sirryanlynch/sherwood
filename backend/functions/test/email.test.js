@@ -3,7 +3,7 @@ const assert = require("node:assert/strict");
 const { buildEmail, sendingConfig } = require("../email");
 const { STATUTORY_DISCLOSURE } = require("../disclosure");
 
-test("every email includes unsubscribe, postal address, and the not-legal-advice line", () => {
+test("every email includes unsubscribe, postal address, and the statutory disclosure", () => {
   const mail = buildEmail({
     kind: "confirm",
     countyName: "Santa Cruz",
@@ -14,13 +14,11 @@ test("every email includes unsubscribe, postal address, and the not-legal-advice
   });
   assert.match(mail.text, /Unsubscribe: https:\/\/example.com\/unsubscribe\?token=def/);
   assert.match(mail.text, /1 Market St, San Francisco, CA 94105/);
-  assert.match(mail.text, /not legal advice/);
+  assert.equal(mail.text.includes("Sherwood is not a law firm"), false);
   assert.match(mail.text, /2026-07-02/);
   assert.equal(mail.text.startsWith(STATUTORY_DISCLOSURE), true);
-  assert.ok(mail.text.indexOf(STATUTORY_DISCLOSURE) < mail.text.indexOf("Sherwood is not a law firm"));
   assert.ok(mail.html.indexOf("border:4px solid #111") < mail.html.indexOf("<h1"));
   assert.ok(mail.html.indexOf("font-weight:700") < mail.html.indexOf("<h1"));
-  assert.ok(mail.html.indexOf("not legal advice") < mail.html.indexOf("<h1"));
   assert.equal(mail.disclosurePx, 34);
   assert.equal(mail.headingPx, 20);
   assert.ok(mail.disclosurePx - mail.headingPx >= 12);
@@ -35,7 +33,8 @@ test("renewal email leads with the disclosure and a smaller heading", () => {
     cancelUrl: "https://example.com/cancel?token=def",
     postal: "1 Market St, San Francisco, CA 94105"
   });
-  assert.equal(mail.text.startsWith("Sherwood is not a law firm and this email is not legal advice."), true);
+  assert.equal(mail.text.startsWith(STATUTORY_DISCLOSURE), true);
+  assert.equal(mail.text.includes("Sherwood is not a law firm"), false);
   assert.match(mail.text, /Annual monitor renewal/);
   assert.match(mail.text, /15 to 45 days before the renewal date/);
   assert.match(mail.text, /Cancel online: https:\/\/example.com\/cancel/);

@@ -1,8 +1,10 @@
 import "../boot.js";
 import { notify } from "../adapters/notify.js";
 import { getCounty } from "../counties.js";
+import { paymentsAdapter } from "../adapters/payments.js";
 import { deadlineBadge, nextWindowCopy } from "../engine.js";
 import { contactLine, esc, formatDay, money } from "../format.js";
+import { offerMessage, purchaseOffer } from "../offer.js";
 import { slugForCountyId } from "../place.js";
 import { reminderMessage } from "../place-ui.js";
 import { confirmationBody, createMonitorRemote, enrollMonitor, monitorOfferHtml } from "../monitor.js";
@@ -10,10 +12,13 @@ import { MONITOR, planPriceLines } from "../pricing.js";
 import { createLead, createReminder } from "../reminders.js";
 import { currentMatter, saveMatter } from "../store.js";
 
-function priceLine(county) {
+function priceLine(county, offer) {
   const lines = planPriceLines(county);
-  if (lines.fee == null) return "";
-  return `<p>DIY kit ${esc(lines.diyLine)}. We file it ${esc(lines.dfy)}</p>`;
+  const bits = [];
+  if (offer && offer.diy) bits.push(`DIY kit ${lines.diyLine}`);
+  if (offer && offer.dfy) bits.push(`We file it ${lines.dfy.replace(/\.$/, "")}`);
+  if (!bits.length) return "";
+  return `<p>${esc(bits.join(". "))}</p>`;
 }
 
 const root = document.querySelector("#results");
@@ -23,6 +28,16 @@ if (!matter || !matter.outcome) {
 } else {
   const county = await getCounty(matter.countyId);
   render(matter, county);
+}
+
+function remindForm(matter, privacy, label) {
+  return `
+    <form id="remind-form" class="wide">
+      <label>Email<input name="email" type="email" required value="${esc(matter.email || "")}" placeholder="you@example.com"></label>
+      ${privacy}
+      <button class="btn" type="submit" ${matter.remindWhenOpen ? "disabled" : ""}>${esc(label)}</button>
+      <p id="remind-ok" class="small muted" ${matter.remindWhenOpen ? "" : "hidden"}>${matter.remindWhenOpen ? "Saved for " + esc(matter.email) + "." : ""}</p>
+    </form>`;
 }
 
 function emailForm(matter, privacy) {
@@ -43,8 +58,9 @@ function render(matter, county) {
     off_season: "Filing opens later"
   };
   const savings = matter.savings || {};
-  const rules = (county.rules || []).map(rule => `<li>${esc(rule)}</li>`).join("");
-  const timelines = (county.timelines || []).map(row => `<li>${esc(row.text)}</li>`).join("");
+  const showFact = (text) => text && !/unverified template/i.test(text);
+  const rules = (county.rules || []).filter(showFact).map(rule => `<li>${esc(rule)}</li>`).join("");
+  const timelines = (county.timelines || []).filter(row => showFact(row.text)).map(row => `<li>${esc(row.text)}</li>`).join("");
   const win = (county.filing && county.filing.regular_window) || {};
   const source = win.source_url ? `<a href="${esc(win.source_url)}">${esc(win.source_url)}</a>` : "not set on this adapter";
   const verified = win.verified_date ? formatDay(win.verified_date) : "not set on this adapter";
@@ -57,45 +73,48 @@ function render(matter, county) {
     else savingsHtml += `<p>Estimated first-year tax difference: <b>${esc(money(savings.amount))}</b>. Rate used: ${(savings.rate * 100).toFixed(2)}% from your tax bill ÷ assessed value. ${esc(savings.note)}</p>`;
   }
 
-  const disclaimer = `<div class="disclaimer"><p><b>Before you continue to checkout.</b> Sherwood is not a law firm and does not provide legal advice. You sign the application's certification. With your written authorization, Sherwood can file as your agent where that county allows it. Results are estimates. The board may increase, decrease, or leave an assessment unchanged. Filing does not pause your tax bill.</p></div>`;
+  const offer = purchaseOffer(county, new Date(), matter.supplementalNoticeDate);
   const privacy = `<p class="privacy-note">We use your email and approximate location only to run your check and send what you ask for. <a href="privacy.html">Privacy policy</a>.</p>`;
+  const canBuy = offer.diy || offer.dfy;
   let next = "";
-  if (matter.outcome === "go") {
-    next = `${disclaimer}
-      ${emailForm(matter, privacy)}
+  if (matter.outcome === "go" && canBuy) {
+    next = `${emailForm(matter, privacy)}
       <div class="cta"><a class="btn" href="login.html?next=checkout.html">Create an account and choose a plan</a></div>`;
-  } else if (matter.outcome === "borderline") {
+  } else if (matter.outcome === "borderline" && canBuy) {
     next = `<p>You can create an account. Sherwood will not treat this as ready to file until a person marks it reviewed. The ops queue on this browser lists it.</p>
-      ${disclaimer}
+      <p>${esc(offerMessage(county, offer))}</p>
       ${emailForm(matter, privacy)}
       <div class="cta"><a class="btn" href="login.html?next=checkout.html">Create an account</a></div>`;
   } else if (matter.outcome === "no_go") {
     next = `<p>There is no checkout on a no-go.</p>
       ${emailForm(matter, privacy)}
       <div class="cta"><a class="btn ghost" href="how-it-works.html">See how a case moves when the numbers support it</a></div>`;
-  } else {
+  } else if (offer.closed || matter.outcome === "off_season") {
     next = `
       <div class="card">
         <h2>Filing opens later</h2>
         <p>${esc(nextWindowCopy(county, new Date()))}</p>
+        ${county.informal_review ? `<h3>Free informal review</h3><p>${esc(county.informal_review)}</p>` : ""}
         <p class="small muted">Deadline source: ${source}. Verified: ${esc(verified)}.</p>
-        <form id="remind-form" class="wide">
-          <label>Email<input name="email" type="email" required value="${esc(matter.email || "")}" placeholder="you@example.com"></label>
-          ${privacy}
-          <button class="btn" type="submit" ${matter.remindWhenOpen ? "disabled" : ""}>Remind me when filing opens</button>
-          <p id="remind-ok" class="small muted" ${matter.remindWhenOpen ? "" : "hidden"}>${matter.remindWhenOpen ? "Saved for " + esc(matter.email) + "." : ""}</p>
-        </form>
+        ${remindForm(matter, privacy, "Remind me when filing opens")}
       </div>
       <div class="card">
         <h3>Annual monitor</h3>
         <p>${esc(money(MONITOR.price))} a year. ${esc(MONITOR.summary)}</p>
         ${monitorOfferHtml({ email: matter.email, enrolled: !!matter.monitor, cancelToken: matter.monitor && matter.monitor.cancelToken })}
       </div>
-      <p class="small muted">${esc(county.informal_review || "")}</p>
       <p class="small muted">Assessor contact from the adapter: ${esc(contactLine(county.assessor_office))}</p>`;
+  } else {
+    next = `
+      <div class="card">
+        <h2>Reminder only</h2>
+        <p>${esc(offerMessage(county, offer) || "Purchase is not available for this county.")}</p>
+        <p class="small muted">Deadline source: ${source}. Verified: ${esc(verified)}.</p>
+        ${remindForm(matter, privacy, "Email me a reminder")}
+      </div>`;
   }
 
-  const deadline = matter.window && matter.window.state === "open" ? deadlineBadge(county) : "";
+  const deadline = matter.window && matter.window.state === "open" ? deadlineBadge(county, new Date()) : "";
   root.innerHTML = `
     <p class="badge">${esc(labels[matter.outcome] || matter.outcome)}</p>
     ${deadline ? `<p class="badge">${esc(deadline)}</p>` : ""}
@@ -105,7 +124,7 @@ function render(matter, county) {
       ${savingsHtml}
       <p class="small muted">${matter.outcome === "off_season" ? esc(nextWindowCopy(county, new Date())) : `Window: ${esc(matter.window && matter.window.label || "not set")}. Adapter deadline: ${esc(formatDay(county.filing.current_year_deadline))}.`}</p>
       <p class="small muted">Deadline source: ${source}. Verified: ${esc(verified)}.</p>
-      ${priceLine(county)}
+      ${priceLine(county, offer)}
       <ul>${(matter.reasons || []).map(r => `<li>${esc(r)}</li>`).join("")}</ul>
     </div>
     ${next}
@@ -191,7 +210,17 @@ function bindMonitor(matter) {
     if (!form.reportValidity()) return;
     if (err) err.hidden = true;
     const email = String(data.get("email") || "").trim();
-    const record = enrollMonitor({ email, matterId: matter.id, userId: matter.userId || null });
+    const setup = await paymentsAdapter.saveCard({
+      userId: matter.userId || null,
+      matterId: matter.id,
+      plan: { id: "monitor" }
+    });
+    const record = enrollMonitor({
+      email,
+      matterId: matter.id,
+      userId: matter.userId || null,
+      setupIntentId: setup.id
+    });
     matter.email = email;
     matter.monitor = {
       id: record.id,

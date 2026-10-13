@@ -1,5 +1,6 @@
 import "../boot.js";
 import { notify } from "../adapters/notify.js";
+import { paymentsAdapter } from "../adapters/payments.js";
 import { confirmationBody, createMonitorRemote, enrollMonitor, monitorOfferHtml } from "../monitor.js";
 import { authAdapter } from "../adapters/auth.js";
 import { getCounty } from "../counties.js";
@@ -178,7 +179,17 @@ function paint(matter, user, county) {
     }
     if (!monitorForm.reportValidity()) return;
     const email = String(data.get("email") || "").trim();
-    const record = enrollMonitor({ email, matterId: matter.id, userId: user.id });
+    const setup = await paymentsAdapter.saveCard({
+      userId: user.id,
+      matterId: matter.id,
+      plan: { id: "monitor" }
+    });
+    const record = enrollMonitor({
+      email,
+      matterId: matter.id,
+      userId: user.id,
+      setupIntentId: setup.id
+    });
     matter.monitor = {
       id: record.id,
       at: record.consentedAt,

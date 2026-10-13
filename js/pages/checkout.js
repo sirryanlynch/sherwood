@@ -2,11 +2,13 @@ import "../boot.js";
 import { paymentsAdapter } from "../adapters/payments.js";
 import { readAttribution } from "../attribution.js";
 import { money, esc, formatDay } from "../format.js";
-import { CHECKOUT_PLANS, planPriceLines } from "../pricing.js";
+import { CHECKOUT_PLANS, adapterFeeNotes, planPriceLines } from "../pricing.js";
 import { getCounty } from "../counties.js";
 import { deadlineBadge, filingWindow, nextWindowCopy } from "../engine.js";
+import { offerMessage, purchaseOffer } from "../offer.js";
 import { slugForCountyId } from "../place.js";
-import { markConverted } from "../reminders.js";
+import { markConverted, createReminder } from "../reminders.js";
+import { reminderMessage } from "../place-ui.js";
 import { requireMatter, saveMatter } from "../store.js";
 
 const ESTIMATE_LABEL = "Estimate from your numbers, if the county agrees to your value.";
@@ -15,61 +17,63 @@ const gate = requireMatter("checkout.html");
 if (gate) {
   const { matter, user } = gate;
   const county = await getCounty(matter.countyId);
-  const season = filingWindow(county, new Date(), matter.supplementalNoticeDate);
+  const today = new Date();
+  const season = filingWindow(county, today, matter.supplementalNoticeDate);
+  const offer = purchaseOffer(county, today, matter.supplementalNoticeDate);
+  const plans = CHECKOUT_PLANS.filter(plan => (plan.id === "dfy" ? offer.dfy : offer.diy));
   const root = document.querySelector("#checkout");
-  if (season.state !== "open") {
-    root.innerHTML = closedHtml(county, season);
+  if (!plans.length) {
+    root.innerHTML = closedHtml(county, season, offer);
+    bindReminder(root, matter, county);
   } else if (matter.outcome === "no_go") {
     location.href = "results.html";
   } else {
     const savings = matter.savings && matter.savings.amount;
     const lines = planPriceLines(county);
-    const deadline = deadlineBadge(county);
+    const deadline = deadlineBadge(county, today);
+    const notes = adapterFeeNotes(county).map(line => `<p class="small muted">${esc(line)}</p>`).join("");
+    const limit = offerMessage(county, offer);
     root.innerHTML = `
       <h1>Choose a plan</h1>
       ${deadline ? `<p class="badge">${esc(deadline)}</p>` : ""}
       <p class="lead">${esc(matter.address)}</p>
+      ${limit ? `<p>${esc(limit)}</p>` : ""}
       <form id="pay" class="wide">
         <div class="plans">
-          ${CHECKOUT_PLANS.map(plan => cardHtml(plan, lines, savings)).join("")}
+          ${plans.map(plan => cardHtml(plan, lines, savings)).join("")}
         </div>
-        <p class="small muted">Simulated Stripe. We file it saves the card and does not charge it. There is no card field.</p>
+        ${notes}
+        <p class="small muted">Simulated Stripe. The card is saved and not charged. There is no card field.</p>
         <button class="btn" type="submit">Continue</button>
       </form>`;
     document.querySelector("#pay").addEventListener("submit", async e => {
       e.preventDefault();
       if (!e.target.reportValidity()) return;
-      const plan = CHECKOUT_PLANS.find(p => p.id === new FormData(e.target).get("plan"));
+      const plan = plans.find(p => p.id === new FormData(e.target).get("plan"));
       if (!plan) return;
-      const live = filingWindow(county, new Date(), matter.supplementalNoticeDate);
-      if (live.state !== "open") {
-        root.innerHTML = closedHtml(county, live);
+      const liveOffer = purchaseOffer(county, new Date(), matter.supplementalNoticeDate);
+      const stillOpen = plan.id === "dfy" ? liveOffer.dfy : liveOffer.diy;
+      if (!stillOpen) {
+        root.innerHTML = closedHtml(county, filingWindow(county, new Date(), matter.supplementalNoticeDate), liveOffer);
+        bindReminder(root, matter, county);
         return;
       }
       matter.attribution = matter.attribution || readAttribution();
       matter.userId = user.id;
       matter.planId = plan.id;
-      if (plan.id === "dfy") {
-        const setup = await paymentsAdapter.saveCard({
-          userId: user.id,
-          matterId: matter.id,
-          plan,
-          attribution: matter.attribution
-        });
-        matter.setupIntentId = setup.id;
-        matter.cardSavedAt = setup.createdAt;
-        matter.chargeStatus = "not_charged";
-        matter.paymentId = null;
-        matter.paidAt = null;
-        matter.src = setup.src;
-      } else {
-        matter.paymentTimingNote = plan.timingFlag || "";
-        matter.chargeStatus = "timing_pending";
-        matter.setupIntentId = null;
-        matter.paymentId = null;
-        matter.paidAt = null;
-        matter.src = (matter.attribution && matter.attribution.src) || null;
-      }
+      const setup = await paymentsAdapter.saveCard({
+        userId: user.id,
+        matterId: matter.id,
+        plan,
+        attribution: matter.attribution
+      });
+      matter.setupIntentId = setup.id;
+      matter.cardSavedAt = setup.createdAt;
+      matter.chargeStatus = "card_saved";
+      matter.paymentTimingNote = plan.timingFlag || "";
+      matter.paymentId = null;
+      matter.paidAt = null;
+      matter.src = setup.src;
       saveMatter(matter);
       if (matter.email) {
         try { await markConverted({ email: matter.email, county_slug: slugForCountyId(matter.countyId) }); }
@@ -80,21 +84,65 @@ if (gate) {
   }
 }
 
-function closedHtml(county, window) {
+function closedHtml(county, window, offer) {
   const win = (county.filing && county.filing.regular_window) || {};
   const source = win.source_url ? `<a href="${esc(win.source_url)}">${esc(win.source_url)}</a>` : "not set on this adapter";
   const verified = win.verified_date ? formatDay(win.verified_date) : "not set on this adapter";
-  const title = window.state === "off_season" ? "The filing window is closed" : "Checkout cannot continue";
+  const closed = !offer || offer.closed || window.state !== "open";
+  const title = closed ? "The filing window is closed" : "Checkout is not open for this county";
+  const lead = closed
+    ? "Checkout cannot proceed. This county's filing window is not open on the adapter."
+    : (offerMessage(county, offer) || "We file it is not for sale in this county.");
+  const windowLine = closed
+    ? nextWindowCopy(county, new Date())
+    : (deadlineBadge(county, new Date()) || "The filing window on this adapter is open. Purchase is not available.");
+  const informal = closed && county.informal_review
+    ? `<h2>Free informal review</h2><p>${esc(county.informal_review)}</p>`
+    : "";
+  const supplementalText = county.filing && county.filing.supplemental_window;
+  const supplemental = supplementalText && !/unverified template/i.test(supplementalText)
+    ? `<p>${esc(supplementalText)}</p>`
+    : "";
   return `
     <h1>${esc(title)}</h1>
-    <p class="lead">Checkout cannot proceed. This county's filing window is not open on the adapter.</p>
+    <p class="lead">${esc(lead)}</p>
     <div class="card">
-      <p>${esc(nextWindowCopy(county, new Date()))}</p>
+      <p>${esc(windowLine)}</p>
       <ul>${(window.reasons || []).map(r => `<li>${esc(r)}</li>`).join("")}</ul>
+      ${informal}
+      ${supplemental}
       <p>Deadline source: ${source}</p>
       <p>Verified: ${esc(verified)}</p>
+      <form id="remind-form" class="wide">
+        <label>Email<input name="email" type="email" required placeholder="you@example.com"></label>
+        <button class="btn" type="submit">Email me a reminder</button>
+        <p id="remind-ok" class="small muted" hidden></p>
+      </form>
     </div>
-    <div class="cta"><a class="btn" href="results.html">Back to your result</a></div>`;
+    <div class="cta"><a class="btn ghost" href="results.html">Back to your result</a></div>`;
+}
+
+function bindReminder(root, matter, county) {
+  const form = root.querySelector("#remind-form");
+  if (!form) return;
+  form.addEventListener("submit", async e => {
+    e.preventDefault();
+    if (!form.reportValidity()) return;
+    const email = String(new FormData(form).get("email") || "").trim();
+    const result = await createReminder({
+      email,
+      county_slug: slugForCountyId(matter.countyId),
+      address: matter.address,
+      marketing_consent: true,
+      consent_source: "checkout_unavailable"
+    });
+    const ok = form.querySelector("#remind-ok");
+    if (ok) {
+      ok.hidden = false;
+      ok.textContent = reminderMessage(result);
+    }
+    form.querySelector("button").disabled = true;
+  });
 }
 
 function cardHtml(plan, lines, savings) {

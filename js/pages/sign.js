@@ -1,7 +1,7 @@
 import "../boot.js";
 import { docusignAdapter } from "../adapters/docusign.js";
 import {
-  AGENT_CONTACT, OWNER_COPY_LINE, normalizeTaxYears, parcelLabel, signedDateText, taxYearChoices
+  AGENT_CONTACT, OWNER_COPY_LINE, authorizationReady, normalizeTaxYears, parcelLabel, signedDateText, taxYearChoices
 } from "../authorization.js";
 import { getCounty } from "../counties.js";
 import { esc, formatShortDay } from "../format.js";
@@ -50,7 +50,7 @@ function paintExplainer(root, matter, county, onContinue) {
     <div class="card">
       <p><b>What you're signing.</b> You authorize Sherwood to file this appeal as your agent for this parcel and the tax years you select, up to 4. You still sign the perjury certification yourself.</p>
       <p><b>Why the county needs it.</b> ${why}</p>
-      <p>How to revoke: [pending verification]</p>
+      <p>How to revoke: ${esc(doc.revocation || "[pending verification]")}</p>
     </div>
     ${summaryHtml(matter, years[0], null)}
     <button class="btn" id="to-sign" type="button">Continue to sign</button>`;
@@ -72,6 +72,7 @@ function summaryHtml(matter, years, signedAt) {
       <p>Agent name: ${esc(AGENT_CONTACT.name)}</p>
       <p>Agent address: ${esc(AGENT_CONTACT.address)}</p>
       <p>Agent phone: ${esc(AGENT_CONTACT.phone)}</p>
+      <p>Your title is entered when you sign. The signature is yours.</p>
     </div>`;
 }
 
@@ -93,6 +94,7 @@ function paintForm(root, matter, county, step, round, envelope) {
     <form id="sign-form" class="wide">
       ${yearFields ? `<fieldset><legend>Tax years covered, up to 4</legend>${yearFields}<p class="err" id="year-err" hidden>Choose at least one tax year, and no more than 4.</p></fieldset>` : ""}
       <label>Type your full name as the signature<input name="signer" required value="${esc(matter.intake && matter.intake.name || "")}"></label>
+      ${step.id === "agent_authorization" ? `<label>Your title<input name="title" required placeholder="Owner"></label>` : ""}
       <label class="check"><input type="checkbox" name="read" required> I read this screen. I know it is a simulation and not the official county form.</label>
       <button class="btn" type="submit">Sign</button>
     </form>`;
@@ -112,6 +114,7 @@ function paintForm(root, matter, county, step, round, envelope) {
     if (!e.target.reportValidity()) return;
     const formData = new FormData(e.target);
     const signerName = formData.get("signer");
+    const signerTitle = String(formData.get("title") || "").trim();
     let taxYears = [];
     if (step.id === "agent_authorization") {
       taxYears = normalizeTaxYears(formData.getAll("taxYear"), yearChoices);
@@ -133,6 +136,7 @@ function paintForm(root, matter, county, step, round, envelope) {
         source: doc.source,
         verified: doc.verified === true,
         signerName,
+        signerTitle,
         signedAt,
         envelopeId: signed.id,
         simulated: true,
@@ -145,6 +149,7 @@ function paintForm(root, matter, county, step, round, envelope) {
         retainUntil: retainUntil(signedAt),
         retention: AUTHORIZATION_RETENTION
       };
+      if (!authorizationReady(matter.agentAuthorization)) return;
     }
     if (round === 3) matter.stipulationDecision = "Accepted in the demo. The signature is simulated and there is no stipulation form in the pilot kit.";
     saveMatter(matter);

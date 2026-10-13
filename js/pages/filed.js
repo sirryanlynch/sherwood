@@ -2,7 +2,7 @@ import "../boot.js";
 import { efileAdapter } from "../adapters/efile.js";
 import { notify } from "../adapters/notify.js";
 import { getCounty } from "../counties.js";
-import { AGENT_CONTACT, OWNER_COPY_LINE, signedDateText } from "../authorization.js";
+import { AGENT_CONTACT, OWNER_COPY_LINE, authorizationReady, signedBeforeFiling, signedDateText } from "../authorization.js";
 import { AUTHORIZATION_RETENTION } from "../retention.js";
 import { contactLine, esc } from "../format.js";
 import { filingWindow } from "../engine.js";
@@ -37,14 +37,14 @@ if (gate) {
 function paintGate(root, matter, user, county) {
   const doc = county.agent_authorization || {};
   const auth = matter.agentAuthorization;
-  const signed = !!(auth && auth.signedAt && auth.signerName && auth.doc_title);
+  const signed = authorizationReady(auth);
   const certOk = !!(matter.signatures && matter.signatures.perjury_and_statement && !matter.signatures.perjury_and_statement.skipped);
   const season = filingWindow(county, new Date(), matter.supplementalNoticeDate);
   const blocks = [];
   if (!signed) {
     const title = doc.doc_title || "the agent authorization";
     const source = doc.source || "This adapter does not define an agent authorization document.";
-    blocks.push(`Filing stays off until you sign ${title}. ${source}`);
+    blocks.push(`Filing stays off until the agent authorization is complete: date signed, tax years (4 at most), parcel, agent name, address, and phone, and your signature and title. ${title}. ${source}`);
   }
   if (!certOk) blocks.push("The homeowner certification is not signed yet.");
   if (matter.outcome === "borderline" && !matter.reviewed) blocks.push("A person has to mark this review complete before filing.");
@@ -72,9 +72,17 @@ function paintGate(root, matter, user, county) {
 async function submitFiling(root, matter, user, county) {
   const button = root.querySelector("#file-btn");
   if (button) button.disabled = true;
+  if (!authorizationReady(matter.agentAuthorization) || !signedBeforeFiling(matter.agentAuthorization, new Date().toISOString())) {
+    root.innerHTML = `<h1>Not submitted</h1><p>The agent authorization is missing a required field, or it was not signed before filing, so nothing was filed.</p>`;
+    return;
+  }
   const result = await efileAdapter.submit({ matter, county });
   if (!result.ok) {
     root.innerHTML = `<h1>Not submitted</h1><p>${esc(result.reason || "The e-file adapter did not submit.")}</p>${stepsHtml(county)}`;
+    return;
+  }
+  if (!signedBeforeFiling(matter.agentAuthorization, result.filedAt)) {
+    root.innerHTML = `<h1>Not submitted</h1><p>The agent authorization has to be signed before the filing time. Nothing was stored as filed.</p>`;
     return;
   }
   const filing = {
@@ -122,6 +130,8 @@ function paintFiled(root, matter, county) {
        <p>Agent name: ${esc(auth.agentName || AGENT_CONTACT.name)}</p>
        <p>Agent address: ${esc(auth.agentAddress || AGENT_CONTACT.address)}</p>
        <p>Agent phone: ${esc(auth.agentPhone || AGENT_CONTACT.phone)}</p>
+       <p>Signed by: ${esc(auth.signerName)}, title ${esc(auth.signerTitle || "not stored")}.</p>
+       ${matter.chargeStatus === "card_saved" ? "<p>Your card is saved. You won't be charged until the county confirms your appeal is filed.</p>" : ""}
        <p>${esc(auth.retention || AUTHORIZATION_RETENTION)} Kept until ${esc(auth.retainUntil || "the date three years after signing")}.</p>`
     : `<p>No agent authorization is stored on this appeal.</p>`;
   root.innerHTML = `

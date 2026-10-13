@@ -9,7 +9,11 @@ export const CONFIG = {
     projectId: "",
     appId: ""
   },
-  FUNCTIONS_BASE_URL: ""
+  FUNCTIONS_BASE_URL: "",
+  /* Display only. Off keeps Santa Cruz at $249 with the county fee included.
+     On switches We file it to $199 plus the county fee. Do not turn this on
+     until the attorney clears that price. */
+  SHOW_199_PLUS_COUNTY_FEE: false
 };
 
 export function backendEnabled() {

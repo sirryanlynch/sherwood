@@ -1,5 +1,6 @@
 import "../boot.js";
 import { paymentsAdapter } from "../adapters/payments.js";
+import { planById } from "../pricing.js";
 import { loadCounties } from "../counties.js";
 import { formatDay, esc, parseISODate } from "../format.js";
 import { AUTHORIZATION_RETENTION, retainUntil } from "../retention.js";
@@ -61,7 +62,7 @@ function paint() {
         userId: current.userId,
         matterId: current.id,
         setupIntentId: current.setupIntentId,
-        amount: 249,
+        amount: (planById(current.planId) && planById(current.planId).price) || 249,
         fail,
         attribution: current.attribution
       });

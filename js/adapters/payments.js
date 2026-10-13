@@ -17,7 +17,7 @@ export const paymentsAdapter = {
       planId: plan.id,
       amount: 0,
       currency: "USD",
-      status: "succeeded",
+      status: "card_saved",
       usage: "off_session",
       createdAt: new Date().toISOString(),
       src: touch && touch.src || null,
@@ -33,7 +33,7 @@ export const paymentsAdapter = {
     updateDb(db => {
       setup = db.payments.find(item => item.id === setupIntentId && item.object === "setup_intent") || null;
     });
-    if (!setup || setup.status !== "succeeded") {
+    if (!setup || (setup.status !== "card_saved" && setup.status !== "succeeded")) {
       const missed = {
         id: uid("ch"),
         provider: "stripe",

@@ -4,7 +4,7 @@
   "state": "CA",
   "status": "verified",
   "status_label": "Verified from the October 12, 2026 pilot kit",
-  "verified": "2026-10-12",
+  "verified": "2026-10-13",
   "appeals_board": {
     "name": "Assessment Appeals Board",
     "file_with": "Clerk of the Board",
@@ -45,21 +45,21 @@
       "label": "$50.00 nonrefundable per application via the e-file portal (portal price as of the October 12, 2026 filing)."
     },
     "paper_fee": {
-      "amount": 30,
+      "amount": null,
       "currency": "USD",
       "refundable": false,
       "unit": "per application",
       "payable_to": "County of Santa Cruz",
-      "label": "$30.00 nonrefundable processing fee for paper filing, per the 2021 AAB Local Rules, Rule 7, as recorded in the pilot filing guide. Check or money order payable to County of Santa Cruz. Cash is accepted in person. The 2021 rulebook and the 2026 portal price are different; e-file uses the portal fee."
+      "label": "Paper filing fee is not confirmed for 2026. Do not quote a paper amount. The e-file portal fee is $50."
     },
-    "fee_conflict": "The e-file portal charged $50 on October 12, 2026. The 2021 local rules said $30. Do not hardcode one number for every year.",
+    "fee_conflict": "The e-file portal charged $50 on October 12, 2026. A paper amount is not confirmed for 2026.",
     "current_year_deadline": "2026-11-30",
     "regular_window": {
       "start": "2026-07-02",
       "end": "2026-11-30",
       "label": "July 2 through November 30, 2026",
       "source_url": "https://www2.santacruzcountyca.gov/AAB/Content/SupportFiles/Filing%20Deadlines%20and%20Appeal%20Information.pdf",
-      "verified_date": "2026-10-12"
+      "verified_date": "2026-10-13"
     },
     "deadline_note": "September 15 in some counties; November 30 where the roll is delivered late. Verify every year.",
     "supplemental_window": "Within 60 days of the supplemental notice date.",
@@ -76,21 +76,57 @@
     "paper_steps": [
       "Print BOE-305-AH in duplicate (two copies).",
       "Do not attach hearing evidence to the application.",
-      "Pay the paper fee recorded in this adapter ($30 in the 2021 local rules). Payable to County of Santa Cruz.",
+      "Pay the county fee (paper amount unconfirmed for 2026; the portal is $50). Payable to County of Santa Cruz.",
       "Hand-deliver during business hours or mail it to the Clerk of the Board at the filing address in this adapter.",
       "Keep a full copy of everything you submit."
     ]
   },
   "portal_sections": [
-    {"n": 1, "title": "Applicant information", "enter": "Name, email, phone, mailing address. Relationship: Owner."},
-    {"n": 2, "title": "Contact info", "enter": "Agent or attorney only. Skip if you are filing yourself."},
-    {"n": 3, "title": "Property ID", "enter": "Owner-occupied if true, APN, address, and property type."},
-    {"n": 4, "title": "Value", "enter": "Roll value and your opinion, each split into land, improvements, and total."},
-    {"n": 5, "title": "Assessment type", "enter": "Regular assessment, value as of January 1 of the current year."},
-    {"n": 6, "title": "Reason for filing", "enter": "Decline in value. The explanation box holds about 150 characters; attach the Statement of Facts at the DocuSign step."},
-    {"n": 7, "title": "Findings of fact", "enter": "Leave the default (not requested) unless you want written findings."},
-    {"n": 8, "title": "Claim for refund", "enter": "Yes, so a refund is automatic if you win."},
-    {"n": 9, "title": "Correspondence", "enter": "Mail or email."}
+    {
+      "n": 1,
+      "title": "Applicant information",
+      "enter": "Name, email, phone, mailing address. Relationship: Owner."
+    },
+    {
+      "n": 2,
+      "title": "Contact info",
+      "enter": "Agent or attorney only. Skip if you are filing yourself."
+    },
+    {
+      "n": 3,
+      "title": "Property ID",
+      "enter": "Owner-occupied if true, APN, address, and property type."
+    },
+    {
+      "n": 4,
+      "title": "Value",
+      "enter": "Roll value and your opinion, each split into land, improvements, and total."
+    },
+    {
+      "n": 5,
+      "title": "Assessment type",
+      "enter": "Regular assessment, value as of January 1 of the current year."
+    },
+    {
+      "n": 6,
+      "title": "Reason for filing",
+      "enter": "Decline in value. The explanation box holds about 150 characters; attach the Statement of Facts at the DocuSign step."
+    },
+    {
+      "n": 7,
+      "title": "Findings of fact",
+      "enter": "Leave the default (not requested) unless you want written findings."
+    },
+    {
+      "n": 8,
+      "title": "Claim for refund",
+      "enter": "Yes, so a refund is automatic if you win."
+    },
+    {
+      "n": 9,
+      "title": "Correspondence",
+      "enter": "Mail or email."
+    }
   ],
   "signature_steps": [
     {
@@ -98,7 +134,10 @@
       "id": "agent_authorization",
       "title": "Agent authorization",
       "who": "homeowner",
-      "required_for": ["dfy", "contingency"],
+      "required_for": [
+        "dfy",
+        "contingency"
+      ],
       "text": "The homeowner signs. Sherwood does not sign this as the owner. Santa Cruz County AAB Local Rules, Rule 6, allow an agent authorized by the applicant to file."
     },
     {
@@ -106,7 +145,11 @@
       "id": "perjury_and_statement",
       "title": "Application certification and Statement of Facts",
       "who": "homeowner",
-      "required_for": ["diy", "dfy", "contingency"],
+      "required_for": [
+        "diy",
+        "dfy",
+        "contingency"
+      ],
       "text": "The homeowner signs the application under penalty of perjury. Sherwood never signs that certification. On the e-file portal, the Statement of Facts is attached at the DocuSign step because the explanation box holds about 150 characters."
     },
     {
@@ -120,15 +163,28 @@
     }
   ],
   "agent_authorization": {
-    "doc_title": "Agent authorization",
-    "source": "Santa Cruz County AAB Local Rules, Rule 6. An agent authorized by the applicant may file. The pilot kit has no separate authorization form number.",
-    "verified": true
+    "doc_title": "Santa Cruz County Agent Authorization (SCC form) or application agent section",
+    "source": "AAB Local Rules Rule 6; Property Tax Rule 305(a). On the portal, enter the agent at Step 2 and attach the form at the DocuSign step. https://www2.santacruzcountyca.gov/AAB/Content/SupportFiles/Creating%20an%20Appeal%20(Step%20by%20Step%20Instructions).pdf",
+    "verified": true,
+    "rule305_fields": [
+      "execution date",
+      "years covered (max 4 consecutive calendar years from signing year)",
+      "specific parcels",
+      "agent name, address, phone",
+      "applicant signature and title",
+      "statement agent will give applicant a copy of the application"
+    ],
+    "max_years": 4,
+    "no_retroactive": true,
+    "revocation": "unconfirmed — no source; written notice to Clerk of the Board pending attorney confirmation"
   },
   "agent": {
     "agent_filing_allowed": true,
     "source": "Build brief: verified against Santa Cruz County AAB Local Rules, Rule 6. An agent authorized by the applicant may file.",
     "perjury": "The homeowner e-signs the certification. The service files and corresponds as agent and does not sign as the homeowner.",
-    "roles_note": "The build brief says to track who may represent (owner, spouse, child, agent, attorney) in each county. This kit verifies authorized-agent filing. It does not separately verify the other roles."
+    "roles_note": "The build brief says to track who may represent (owner, spouse, child, agent, attorney) in each county. This kit verifies authorized-agent filing. It does not separately verify the other roles.",
+    "registration_required": null,
+    "registration_note": "No county agent registration found; unconfirmed."
   },
   "hearing": {
     "format": "Not stated in the pilot kit. Use the format on the hearing notice and confirm it with the clerk.",
@@ -163,7 +219,7 @@
     "note": "Separate from the appeal. A one-time claim for a primary residence. About $86 a year at the pilot property's figures. Call the Assessor; there is not an appeal-style deadline on this claim in the kit.",
     "phone": "(831) 454-2002"
   },
-  "informal_review": "The pilot kit does not describe an informal review process. Outside the filing window, you can call the Assessor and ask whether they will look at the value before the next window. That call is not an appeal and Sherwood is not giving legal advice.",
+  "informal_review": "The Assessor accepts a Prop 8 decline-in-value review request (2026 residential form ASRR5: https://www.assessor.santacruzcountyca.gov/portals/39/asr/forms/ASRR5%20Residential%20RR%202026.pdf). It is free. Its deadline is unconfirmed. It does not extend the November 30 AAB deadline.",
   "stage_expectations": {
     "filed": [
       "Keep paying your property taxes on time. The appeal does not pause the bill.",
@@ -199,8 +255,21 @@
     ]
   },
   "timelines": [
-    {"id": "notice", "text": "Hearing notice at least 45 days before the hearing date."},
-    {"id": "decision", "text": "Up to 2 years from filing for the board to hear and decide."},
-    {"id": "supplemental", "text": "A supplemental assessment has its own window: 60 days from the notice date."}
-  ]
+    {
+      "id": "notice",
+      "text": "Hearing notice at least 45 days before the hearing date."
+    },
+    {
+      "id": "decision",
+      "text": "Up to 2 years from filing for the board to hear and decide."
+    },
+    {
+      "id": "supplemental",
+      "text": "A supplemental assessment has its own window: 60 days from the notice date."
+    }
+  ],
+  "fee_waiver": {
+    "available": true,
+    "url": null
+  }
 }

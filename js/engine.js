@@ -82,13 +82,21 @@ export function filingWindow(county, today, supplementalNoticeDate) {
   return { state: "unknown", kind: "regular", reasons, label: win && win.label };
 }
 
-export function deadlineBadge(county) {
+export function deadlineBadge(county, today) {
   const end = county && county.filing && county.filing.regular_window && county.filing.regular_window.end;
   if (!end || formatShortDay(end) === "not set") return "";
-  return `County filing deadline: ${formatShortDay(end)}`;
+  const label = `County filing deadline: ${formatShortDay(end)}`;
+  if (!(today instanceof Date)) return label;
+  const endDate = parseISODate(end);
+  if (!endDate) return label;
+  const day = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const diff = Math.round((Date.UTC(endDate.getFullYear(), endDate.getMonth(), endDate.getDate()) - Date.UTC(day.getFullYear(), day.getMonth(), day.getDate())) / 86400000);
+  if (diff < 0) return label;
+  if (diff === 0) return `${label} (last day)`;
+  return `${label} (${diff} day${diff === 1 ? "" : "s"} left)`;
 }
 
-/* Dates come only from a window whose start is still ahead. A passed window is not described as next, and no opening is promised. */
+/* A start still ahead is quoted from the file. A window that has ended names July 2 of the next year and does not promise that year's close date or an outcome. */
 export function nextWindowCopy(county, today) {
   const win = county && county.filing && county.filing.regular_window;
   const start = win && parseISODate(win.start);
@@ -97,6 +105,10 @@ export function nextWindowCopy(county, today) {
   if (start && start > day) {
     const through = end && end >= start ? ` through ${formatShortDay(end)}` : "";
     return `The next filing window in this county file is ${formatShortDay(start)}${through}. No outcome is promised.`;
+  }
+  if (end && end < day) {
+    const nextYear = end.getFullYear() + 1;
+    return `Filing closed ${formatShortDay(end)}. The next regular window opens July 2, ${nextYear}. This county file does not list that year's close date. No outcome is promised.`;
   }
   return "This county file does not list a future filing window. No opening date is promised.";
 }
@@ -154,12 +166,12 @@ export function decide(input) {
     };
   }
   if (county.status !== "verified") {
+    const why = county.status === "unconfirmed"
+      ? "This county file is unconfirmed. Sherwood will not file from it until a person verifies the adapter."
+      : "This county file is not verified. Sherwood will not file from it until a person verifies the adapter.";
     return {
       outcome: "borderline",
-      reasons: [
-        "This county file is an unverified template. Sherwood will not file from it until a person verifies the adapter.",
-        ...window.reasons
-      ],
+      reasons: [why, ...window.reasons],
       ...base
     };
   }

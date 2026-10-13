@@ -1,14 +1,17 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Cancel the annual monitor — Sherwood</title><link rel="stylesheet" href="style.css"></head><body>
+<title>Cancel the annual monitor — Sherwood</title><link rel="stylesheet" href="style.css"></head><body class="has-disclosure">
 <header><div class="wrap"><a class="logo" href="index.html">Sherwood</a><nav><a href="index.html">Check</a><a href="pricing.html">Pricing</a><a href="contact.html">Contact</a></nav></div></header>
 <main><div class="wrap">
+<div data-statutory-disclosure></div>
 <h1>Cancel the annual monitor</h1>
 <p id="cancel-status" class="lead">Opening this link cancels the renewal.</p>
 </div></main>
-<footer><div class="wrap"><p>Sherwood is not a law firm and does not provide legal advice.</p>
-<p>© 2026 Sherwood</p></div></footer>
+<footer><div class="wrap"><p>© 2026 Sherwood</p></div></footer>
 <script type="module">
 import { cancelMonitorLocal, cancelMonitorRemote, monitorByToken } from "./js/monitor.js";
+import { mountStatutoryDisclosure } from "./js/statutoryDisclosure.js";
+
+mountStatutoryDisclosure();
 
 const token = new URLSearchParams(location.search).get("token");
 const status = document.querySelector("#cancel-status");

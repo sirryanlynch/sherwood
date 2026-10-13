@@ -1,6 +1,8 @@
 import { backendEnabled, functionsUrl } from "./config.js";
 import { uid } from "./format.js";
+import { CARD_SAVE_NOTE } from "./pricing.js";
 import { retainUntil, shiftYears } from "./retention.js";
+import { STATUTORY_DISCLOSURE } from "./statutoryDisclosure.js";
 import { updateDb, loadDb } from "./store.js";
 
 export const MONITOR_TERMS = "The annual monitor costs $49 and renews automatically each year until you cancel. You can cancel online in one click before the renewal date. Sherwood emails a renewal notice 15 to 45 days before the renewal.";
@@ -8,7 +10,7 @@ export const MONITOR_TERMS = "The annual monitor costs $49 and renews automatica
 export function confirmationBody(record) {
   const link = `cancel.html?token=${encodeURIComponent(record.cancelToken)}`;
   return [
-    "Sherwood is not a law firm and this email is not legal advice.",
+    STATUTORY_DISCLOSURE,
     "",
     "Annual monitor confirmation",
     "",
@@ -27,6 +29,7 @@ export function monitorOfferHtml({ email, enrolled, cancelToken }) {
   return `
     <form id="monitor-form" class="wide">
       <p>${MONITOR_TERMS}</p>
+      <p>${CARD_SAVE_NOTE}</p>
       <label class="check"><input type="checkbox" name="renewalConsent"> I agree to these automatic renewal terms.</label>
       <label>Email<input name="email" type="email" required value="${escapeAttr(email || "")}" autocomplete="email"></label>
       <button class="btn" type="submit">Start the annual monitor</button>
@@ -40,7 +43,7 @@ function escapeAttr(value) {
   }[ch]));
 }
 
-export function enrollMonitor({ email, matterId, userId }) {
+export function enrollMonitor({ email, matterId, userId, setupIntentId }) {
   const now = new Date().toISOString();
   const record = {
     id: uid("mon"),
@@ -48,6 +51,7 @@ export function enrollMonitor({ email, matterId, userId }) {
     matterId: matterId || null,
     userId: userId || null,
     price: 49,
+    dueToday: 0,
     interval: "year",
     terms: MONITOR_TERMS,
     consented: true,
@@ -55,6 +59,10 @@ export function enrollMonitor({ email, matterId, userId }) {
     retainUntil: retainUntil(now),
     renewsOn: shiftYears(now, 1).slice(0, 10),
     cancelToken: uid("cancel"),
+    setupIntentId: setupIntentId || null,
+    chargeStatus: "card_saved",
+    paymentId: null,
+    paidAt: null,
     status: "active",
     renewalNoticeSent: false
   };

@@ -1,0 +1,163 @@
+{
+  "id": "alpine",
+  "county": "Alpine",
+  "state": "CA",
+  "status": "unconfirmed",
+  "status_label": "Unconfirmed",
+  "verified": null,
+  "appeals_board": {
+    "name": "unverified template",
+    "file_with": "unverified template",
+    "address": null,
+    "address_note": "unverified template"
+  },
+  "assessor_office": {
+    "address": null,
+    "email": null,
+    "phone": null,
+    "parcel_url": null,
+    "value_url": null
+  },
+  "filing": {
+    "method": null,
+    "efile": null,
+    "paper_available": true,
+    "portal_url": null,
+    "explanation_chars": null,
+    "portal_notes": [
+      "E-file availability unconfirmed"
+    ],
+    "filing_fee": null,
+    "efile_fee": {
+      "amount": null,
+      "currency": "USD",
+      "refundable": null,
+      "unit": "per application",
+      "label": "unverified template — fee not set. Do not quote a number."
+    },
+    "paper_fee": null,
+    "fee_conflict": null,
+    "current_year_deadline": "2026-09-15",
+    "regular_window": {
+      "start": "2026-07-02",
+      "end": "2026-09-15",
+      "label": "July 2 through September 15, 2026",
+      "source_url": "https://www.boe.ca.gov/proptaxes/pdf/lta26023.pdf",
+      "verified_date": "2026-10-13"
+    },
+    "deadline_note": "Certified by the county clerk to BOE (LTA 2026/023). Re-check every year.",
+    "supplemental_window": "unverified template",
+    "supplemental_days": null,
+    "form": "BOE-305-AH (county version)",
+    "one_application_per_apn_per_year": null,
+    "duplicate_paper_copies": null,
+    "do_not_attach_evidence_to_application": null,
+    "clerk": {
+      "phone": null,
+      "email": null,
+      "address": null
+    },
+    "paper_steps": []
+  },
+  "portal_sections": [],
+  "signature_steps": [
+    {
+      "round": 1,
+      "id": "agent_authorization",
+      "title": "Agent authorization",
+      "who": "homeowner",
+      "required_for": [
+        "dfy",
+        "contingency"
+      ],
+      "text": "unverified template — agent filing is not verified on this adapter"
+    },
+    {
+      "round": 2,
+      "id": "perjury_and_statement",
+      "title": "Application certification",
+      "who": "homeowner",
+      "required_for": [
+        "diy",
+        "dfy",
+        "contingency"
+      ],
+      "text": "unverified template — the homeowner signs the certification. Sherwood does not."
+    },
+    {
+      "round": 3,
+      "id": "stipulation",
+      "title": "Stipulation",
+      "who": "homeowner",
+      "required_for": [],
+      "product_step": true,
+      "text": "unverified template"
+    }
+  ],
+  "agent_authorization": {
+    "doc_title": "Agent authorization (Rule 305)",
+    "source": "https://www.boe.ca.gov/proptaxes/pdf/rules/Rule305.pdf",
+    "verified": false,
+    "max_years": 4,
+    "no_retroactive": true
+  },
+  "agent": {
+    "agent_filing_allowed": true,
+    "source": "Property Tax Rule 305 (statewide) https://www.boe.ca.gov/proptaxes/pdf/rules/Rule305.pdf",
+    "perjury": "The homeowner signs. Sherwood does not sign as the homeowner.",
+    "roles_note": "County-specific agent rules unconfirmed.",
+    "registration_required": null,
+    "registration_fee_annual": null,
+    "registration_source": null
+  },
+  "hearing": {
+    "format": "unverified template",
+    "notice": "unverified template",
+    "notice_minimum_days": null,
+    "decision_window": "unverified template",
+    "decision_years": null,
+    "evidence_copies": "unverified template",
+    "prep": [
+      "unverified template"
+    ]
+  },
+  "rules": [
+    "unverified template — no county rules are loaded"
+  ],
+  "valuation": {
+    "lien_date": "unverified template",
+    "note": "unverified template"
+  },
+  "homeowner_exemption": null,
+  "informal_review": "Unconfirmed for this county. A Prop 8 informal review with the Assessor is free statewide. It does not extend the AAB deadline.",
+  "stage_expectations": {
+    "filed": [
+      "unverified template — do not treat a simulated filing as a real county submission."
+    ],
+    "acknowledged": [
+      "unverified template"
+    ],
+    "assessor_review": [
+      "unverified template"
+    ],
+    "hearing_scheduled": [
+      "unverified template"
+    ],
+    "decision": [
+      "unverified template"
+    ],
+    "refund": [
+      "unverified template"
+    ],
+    "monitor": [
+      "unverified template"
+    ]
+  },
+  "timelines": [
+    {
+      "id": "deadline",
+      "text": "Template close date: November 30, 2026. Opening day is not set. Not a verified county."
+    }
+  ],
+  "notes": "County page not yet reviewed."
+}

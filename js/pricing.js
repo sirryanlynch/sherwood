@@ -1,24 +1,36 @@
+import { CONFIG } from "./config.js";
+
 /* Checkout offers these two only. Contingency is not a checkout plan.
    County filing fees come from filing.filing_fee on the county adapter.
-   We file it is $249 with that fee included. The DIY kit is $79, and the
-   county fee is extra only when filing_fee's amount is above zero. */
+   SHOW_199_PLUS_COUNTY_FEE stays off until counsel clears that display.
+   Neither plan charges at checkout. */
+export const CARD_SAVE_NOTE = "We'll save your card today. You won't be charged until the county confirms your appeal is filed.";
+
+export const DFY_INCLUDED_AMOUNT = 249;
+export const DFY_PLUS_FEE_AMOUNT = 199;
+
+export function dfyServiceAmount() {
+  return CONFIG.SHOW_199_PLUS_COUNTY_FEE === true ? DFY_PLUS_FEE_AMOUNT : DFY_INCLUDED_AMOUNT;
+}
+
 export const CHECKOUT_PLANS = [
   {
     id: "diy",
     name: "DIY kit",
     price: 79,
-    dueToday: 79,
+    dueToday: 0,
     filesAsAgent: false,
     timingFlag: "[DRAFT – payment timing pending attorney review]",
+    chargeNote: CARD_SAVE_NOTE,
     summary: "Comparable-sales method, value opinion from your numbers, Statement of Facts preview, and the filing checklist from your county adapter. You file."
   },
   {
     id: "dfy",
     name: "We file it",
-    price: 249,
-    dueToday: 249,
+    price: dfyServiceAmount(),
+    dueToday: 0,
     filesAsAgent: true,
-    chargeNote: "You won't be charged until the county confirms your filing.",
+    chargeNote: CARD_SAVE_NOTE,
     summary: "Everything in the kit. Sherwood files as your authorized agent after you sign this county's agent authorization. You sign the perjury certification yourself."
   }
 ];
@@ -48,6 +60,7 @@ export const MONITOR = {
   id: "monitor",
   name: "Annual monitor",
   price: 49,
+  dueToday: 0,
   interval: "year",
   summary: "We re-check your value every year and tell you when filing again makes sense."
 };
@@ -77,13 +90,34 @@ export function plainDollars(amount) {
   return `$${amount.toFixed(2)}`;
 }
 
+export function adapterFeeNotes(county) {
+  const filing = county && county.filing;
+  if (!filing) return [];
+  const notes = [];
+  const surcharge = filing.efile_fee && filing.efile_fee.surcharge;
+  if (typeof surcharge === "number" && surcharge > 0) {
+    notes.push(`Online payment surcharge on this adapter: ${plainDollars(surcharge)}.`);
+  }
+  if (filing.cutoff_time) notes.push(`Filing cutoff on this adapter: ${filing.cutoff_time}.`);
+  if (filing.postmark_ok === true) notes.push("This adapter says a postmark can count.");
+  return notes;
+}
+
 export function planPriceLines(county) {
   const fee = filingFeeAmount(county);
+  const service = dfyServiceAmount();
   const diyFee = fee == null ? "" : `+ ${plainDollars(fee)} county fee, paid when you file.`;
   const diyLine = fee == null ? "$79" : `$79 + ${plainDollars(fee)} county fee, paid when you file`;
-  const dfy = fee == null ? "$249" : "$249, county fee included.";
+  let dfy;
+  if (CONFIG.SHOW_199_PLUS_COUNTY_FEE === true) {
+    dfy = fee == null ? "$199 + county fee" : `$199 + ${plainDollars(fee)} county fee`;
+  } else if (fee == null) {
+    dfy = `$${service}`;
+  } else {
+    dfy = `$${service}, county fee included.`;
+  }
   const home = fee == null
-    ? "Check for free. If there's a case, file it yourself for $79, or we'll file it for you for $249."
+    ? `Check for free. If there's a case, file it yourself for $79, or we'll file it for you for ${dfy}`
     : `Check for free. If there's a case, file it yourself for $79 + ${plainDollars(fee)} county fee, paid when you file, or we'll file it for you for ${dfy}`;
-  return { fee, diy: "$79", diyFee, diyLine, dfy, home, feeNote: filingFeeNote(county) };
+  return { fee, diy: "$79", diyFee, diyLine, dfy, home, feeNote: filingFeeNote(county), service };
 }
