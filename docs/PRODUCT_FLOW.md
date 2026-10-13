@@ -7,14 +7,14 @@ The source of truth for Santa Cruz County is the October 2026 business kit: the 
 ## Journey
 
 1. **Free check** (`index.html`). Address and email only. The lead is stored in this browser. Visitor geolocation still fills marketing city/state lines and is not the property's county.
-2. **Numbers** (`values.html`). County, assessed value, the visitor's market-value estimate, optional tax bill, confidence, and an optional supplemental notice date.
+2. **Numbers** (`values.html`). County, assessed value, the visitor's market-value estimate, optional tax bill, confidence, and an optional supplemental notice date. The market field's helper text is "Not sure? Use your recent purchase price or skip." Skipping does not block the check.
 3. **Result** (`results.html`). One of four outcomes from `js/engine.js`.
 4. **Account** (`login.html`). Magic link, simulated. The link is shown on the page because no email is sent. Open it in the same tab.
-5. **Plan and pay** (`checkout.html`). DIY $79, done-for-you $249, or contingency at 35% with nothing due today. Those are the prices already published on the site. They sit inside the ranges in the build brief. The county fee is shown from the adapter and is not charged here.
+5. **Plan and pay** (`checkout.html`). Exactly two cards: DIY kit $79 and We file it $249. Each card shows that fee next to the estimated tax difference, labeled "Estimate from your numbers, if the county agrees to your value." If no tax bill was entered, the card says no dollar estimate is available. Contingency is not a checkout plan. The county fee is shown from the adapter and is not charged here. If the adapter's filing window is not open, checkout stops and does not take a payment.
 6. **Intake** (`intake.html`). Property confirm, occupancy, exemption question, condition notes, optional photo/PDF upload, and the authorization checkboxes.
 7. **Kit** (`kit.html`). Short explanation (150 characters where the adapter says so) and a Statement of Facts preview. The visitor approves it.
-8. **Signing** (`sign.html`). Round 1 agent authorization when the plan files as agent. Round 2 application certification plus the statement. Round 3 only if the visitor accepts a stipulation preview later.
-9. **Filing** (`filed.html`). Done-for-you and contingency on a verified e-file adapter: a simulated confirmation with filing ID, fee, portal URL, and clerk. DIY: the adapter's paper or portal checklist, and Sherwood does not submit.
+8. **Signing** (`sign.html`). Round 1 is the county's agent authorization when the plan files as agent. Before that round, a plain-language explainer says what is being signed, why the county needs it (from `agent_authorization` on the adapter), and the line "How to revoke: [pending verification]". Round 2 is the application certification plus the statement. Round 3 only if the visitor accepts a stipulation preview later.
+9. **Filing** (`filed.html`). We file it does not submit on its own. The filing button stays disabled, with an explanation, until the signed agent authorization is stored on the matter as `agentAuthorization`. DIY kit: the adapter's paper or portal checklist, and Sherwood does not submit.
 10. **Tracking** (`dashboard.html`). Stages, expectations, notices, notification preferences, annual monitor.
 11. **Ops** (`admin.html`). Pipeline, deadline list, review queue. This browser only.
 
@@ -22,9 +22,9 @@ The source of truth for Santa Cruz County is the October 2026 business kit: the 
 
 The engine does not look up the assessor and does not invent comparable sales.
 
-- **Off-season** if today is outside the adapter's regular window, unless a supplemental notice date falls inside `supplemental_days` on that adapter. Santa Cruz: July 2–November 30, 2026, and 60 days from a supplemental notice. The page offers a waitlist. Informal review is whatever `informal_review` says. For Santa Cruz the kit does not describe a procedure, so the page says to ask the assessor and gives that office's phone from the adapter.
-- **No-go** if the market-value estimate is not below the assessed value.
-- **Borderline → human review** if the county file is an unverified template, the window's start date is missing, the visitor marked the value as a guess, estimated savings are not above the adapter's filing fee, or (when no tax bill was entered) the gap is under 5% of assessed value. The 5% line is Sherwood's review rule, not a legal standard and not a county rule. Borderline matters sit in the ops queue until "Mark reviewed."
+- **Off-season** if today is outside the adapter's regular window, unless a supplemental notice date falls inside `supplemental_days` on that adapter. Santa Cruz: July 2–November 30, 2026, and 60 days from a supplemental notice. This is a waiting state, not a dead end. The page shows the window open date from `regular_window.start` (or says the adapter does not state an opening date), a "Remind me when filing opens" signup stored on the matter and in the local outbox, and the $49 annual monitor. Informal review stays the adapter's `informal_review` text. For Santa Cruz the kit does not describe a procedure, so the page still says to ask the assessor. There is no preview path into checkout.
+- **No-go** if a market-value estimate was entered and it is not below the assessed value.
+- **Borderline → human review** if market value was skipped, the county file is an unverified template, the window's start date is missing, the visitor marked the value as a guess, estimated savings are not above the adapter's filing fee, or (when no tax bill was entered) the gap is under 5% of assessed value. Skipping market value does not invent a reduction or a dollar estimate. The 5% line is Sherwood's review rule, not a legal standard and not a county rule. Borderline matters sit in the ops queue until "Mark reviewed." A closed window wins over a skip: the result is off-season, not borderline.
 - **Go** otherwise, when the adapter is verified and the window is open.
 
 Savings, when a tax bill was entered: `(assessed − market estimate) × (tax bill ÷ assessed)`. Labeled an estimate. The pilot property's 1.23% effective rate is not applied to anyone else's home. That 1.23% and the ~$1,955 figure stay on the case study, where they belong to that one filing.
@@ -51,9 +51,9 @@ Hearing support is the published "quoted per case" add-on. The button records a 
 
 | File | Status | What it is |
 |---|---|---|
-| `santa_cruz.json` | Verified 2026-10-12 | Full launch county from the kit. E-file portal, $50 portal fee that day, $30 paper fee from the 2021 local rules, November 30, 2026 deadline, Rule 6 agent filing. |
-| `template_sept15_paper.json` | unverified template | Not a real county. Paper only, closes September 15, 2026, no fee, no clerk, no portal. The brief says some counties close September 15 and does not name them. |
-| `template_efile_unverified.json` | unverified template | Not a real county. E-file shape, November 30 close, opening day unset, no fee and no portal URL. |
+| `santa_cruz.json` | Verified 2026-10-12 | Full launch county from the kit. E-file portal, $50 portal fee that day, $30 paper fee from the 2021 local rules, November 30, 2026 deadline, Rule 6 agent filing. `regular_window.source_url` is the e-file portal. `regular_window.verified_date` is 2026-10-12. `agent_authorization` is titled "Agent authorization"; the source is Rule 6, and the kit has no separate form number. |
+| `template_sept15_paper.json` | unverified template | Not a real county. Paper only, closes September 15, 2026, no fee, no clerk, no portal. `source_url` and `verified_date` are null. `agent_authorization.verified` is false. The brief says some counties close September 15 and does not name them. |
+| `template_efile_unverified.json` | unverified template | Not a real county. E-file shape, November 30 close, opening day unset, no fee and no portal URL. Deadline source and verified date are null. Agent authorization is unverified. |
 
 Fee conflict, kept on purpose: the pilot portal charged $50 on October 12, 2026, and the 2021 rules said $30 for paper. Both strings live on the Santa Cruz adapter. The product does not pick one number for every channel.
 
@@ -66,7 +66,7 @@ Agent roles: Rule 6 is the verified piece (an authorized agent may file). The br
 | Adapter | File | Demo behavior | Replace with |
 |---|---|---|---|
 | Auth | `js/adapters/auth.js` | Magic-link token in local storage, link shown on screen | Email provider and a real session |
-| Payments | `js/adapters/payments.js` | `simulated-stripe` record, no card number | Stripe Checkout or Billing. Contingency and the hearing quote still need a real billing rule |
+| Payments | `js/adapters/payments.js` | `simulated-stripe` record, no card number | Stripe Checkout or Billing. Contingency is not at checkout (coming soon, pending review). The hearing quote still needs a real billing rule |
 | DocuSign | `js/adapters/docusign.js` | Local envelope id and a typed name | DocuSign embedded signing. The round-3 document does not exist yet |
 | County e-file | `js/adapters/efile.js` | Local filing id if the adapter has a portal URL | The county portal. Santa Cruz: register, 9 sections, attach the statement at the DocuSign step, pay the portal fee |
 | Email/SMS | `js/adapters/notify.js` | Outbox in local storage | Transactional email and an SMS vendor, plus consent |
@@ -77,18 +77,21 @@ Also not integrated, and not faked with made-up comps:
 - MLS or a licensed comp feed (BatchData, ATTOM, or a Realtor partnership are named in the brief as options, not as a connected account).
 - A server-side notice parser.
 - Deadline reminders at 60/30/7 days.
-- Real contingency collection after a reduction.
+- Real contingency collection after a reduction. Contingency is mentioned on the pricing page as coming soon, pending review, and is not a checkout card.
 
-DIY never calls the e-file adapter. Unverified templates do not get a filing confirmation unless the visitor used the off-season "preview anyway" path, and even then a missing portal URL returns "not submitted."
+DIY never calls the e-file adapter. Unverified templates do not get a filing confirmation. A missing portal URL returns "not submitted." Checkout and the filing button both re-check `filingWindow` and stop when the adapter window is not open.
 
 ## Decisions
 
 - **Static demo, one browser.** A `sherwood_db_v1` object in `localStorage` holds users, matters, payments, envelopes, filings, and the outbox. The signed-in user and the current matter id are in `sessionStorage`. There is no account server. The ops page can only see this browser.
 - **County copy is data.** Marketing pages that used to type the Santa Cruz phone number now fill it from the adapter. The case study still tells the pilot story, including that one home's published figures ($158,915 reduction sought, about $1,955 a year, filed in a day, awaiting a decision).
 - **No invented comps.** The free check blurs a sample line and says sales were not pulled. The statement preview says the same.
-- **You sign the certification.** Round 2 is required for every plan. Round 1 is required only when the plan files as agent (done-for-you and contingency).
+- **You sign the certification.** Round 2 is required for every checkout plan. Round 1 is required only for We file it (plan id `dfy`). The document title, source, and verified flag come from `agent_authorization` on the county adapter. The signed record is `matter.agentAuthorization` (`doc_title`, `source`, `verified`, `signerName`, `signedAt`, `envelopeId`). The filing button reads that record and stays disabled until it exists. Revocation steps are not invented; the explainer uses the placeholder "How to revoke: [pending verification]".
+- **Two checkout plans.** DIY kit $79 and We file it $249. The comparison label on each card is "Estimate from your numbers, if the county agrees to your value." No outcome is promised. Contingency stays on the pricing page as "Coming soon, pending review."
+- **Closed window is a hard stop.** `regular_window` carries `source_url` and `verified_date`. Checkout cannot proceed when `filingWindow` is not `open`, including a window that has closed and a window whose start is missing. The off-season result does not link into checkout.
+- **Skip market value.** Empty market value, or the Skip control, is borderline human review when the window is open. It does not block, and it does not invent a statistic.
 - **Borderline does not auto-file.** Ops has to mark it reviewed. The demo path in the section below is a Go, so it does not stop there.
-- **Off-season still keeps the lead.** Waitlist flag on the matter. A separate preview link exists so a closed template county can still be walked, and it is labeled as a preview.
+- **Off-season still keeps the lead.** "Remind me when filing opens" sets `remindWhenOpen` on the matter. The $49 monitor can be recorded from that same screen.
 - **Refund policy is a placeholder** on `trust.html`. It is not a customer promise.
 - **Room 520 vs Room 500** and **$50 vs $30** are shown as conflicts from the kit, not smoothed over.
 
@@ -100,16 +103,16 @@ Use the verified Santa Cruz adapter while its window is open (through November 3
 2. On the numbers screen choose **Santa Cruz — Verified from the October 12, 2026 pilot kit**. Enter an assessed value above the market estimate. Leave confidence on "Sure enough to use." Submit.
 3. The result should say **Go**. Continue.
 4. On sign-in, create the link and open **Open the simulated magic link** in the same tab.
-5. Choose **Done-for-you filing** and simulate payment. No card is requested.
+5. Choose **We file it** ($249) and simulate payment. The other card is **DIY kit** ($79). No card is requested. Contingency is not on this screen. Each card shows the fee against the estimate, with the label "Estimate from your numbers, if the county agrees to your value."
 6. Complete intake. Photos are optional.
 7. Approve the kit.
-8. Sign round 1 (agent authorization), then round 2 (certification and statement). Type a name. Both screens say they are not DocuSign.
-9. The filing screen shows a simulated filing ID, the adapter's $50 e-file fee, and the Santa Cruz portal link. The portal is not contacted.
+8. Round 1 starts with the explainer (what you are signing, why Santa Cruz needs it, and "How to revoke: [pending verification]"). Continue, then sign agent authorization. Sign round 2 (certification and statement). Type a name. The signing screens say they are not DocuSign.
+9. The filing screen keeps **Record the filing** disabled until the agent authorization is stored on the appeal. After you sign, press the button. The confirmation shows a simulated filing ID, the adapter's $50 e-file fee, and the Santa Cruz portal link. The portal is not contacted. The page was not filed on load.
 10. Open **Track the appeal**. Read "What to expect now." Use **Advance one stage** to walk acknowledged → assessor review. Accept (round 3) or decline, then advance through hearing, decision, refund, and monitor. Enroll the monitor if you want the $49 record.
 11. Paste a sentence containing "hearing" into Notices and save. The keyword note should suggest the hearing stage.
 12. Open **Ops** (`admin.html`) and see the matter in the pipeline and Santa Cruz on the deadline list.
 
-To see the other outcomes: a market estimate at or above the assessed value is a no-go; a rough guess, or a gap under 5% with no tax bill, is borderline; **Unverified template — September 15, paper only** is off-season after September 15, 2026.
+To see the other outcomes: a market estimate at or above the assessed value is a no-go; leaving market value blank, pressing Skip, marking a rough guess, or a gap under 5% with no tax bill is borderline; **Unverified template — September 15, paper only** is off-season after September 15, 2026. That result shows "Remind me when filing opens", says the adapter does not state an opening date, and offers the $49 monitor. Opening checkout for that matter stops with no payment button.
 
 ## Open legal questions
 
@@ -117,7 +120,7 @@ From the build brief, section 9. The pilot did not answer these. They need a Cal
 
 - Unauthorized practice of law: where form preparation stops and legal advice starts. Customer copy on this site is written to stay on the form-preparation side and to say Sherwood is not a law firm.
 - Whether a non-attorney agent may represent a homeowner at an Assessment Appeals Board hearing in each target county, and any registration or qualification rules. Santa Cruz Rule 6, as cited in the brief, covers filing by an authorized agent. It is not treated here as permission to appear at a hearing. Hearing support stays "quoted per case."
-- Contingency-fee compliance for non-attorney tax representatives. The 35% plan is the published price and is not a legal opinion that the fee is allowed.
+- Contingency-fee compliance for non-attorney tax representatives. The 35% idea is not sold at checkout. The pricing page says "Coming soon, pending review." That is not a legal opinion that the fee is allowed.
 - Data licensing for MLS or comp data at commercial scale.
 - Privacy and CCPA handling of homeowner personal information. This demo avoids a server by keeping data in the browser, which is not a CCPA program.
 
@@ -127,7 +130,9 @@ A new county is a new JSON file plus a line in `data/counties/index.json`, then 
 
 - `filing.efile` and `portal_url` (submit vs paper steps)
 - `efile_fee.amount` / `paper_fee.amount` (null means "do not quote a number")
-- `regular_window.start` / `end` and `supplemental_days`
+- `regular_window.start` / `end`, plus `source_url` and `verified_date` (null until someone verifies that county)
+- `supplemental_days`
+- `agent_authorization.doc_title`, `source`, and `verified`
 - `signature_steps[].required_for`
 - `agent.agent_filing_allowed` (null on templates)
 - `hearing.format`, `notice_minimum_days`, `prep`

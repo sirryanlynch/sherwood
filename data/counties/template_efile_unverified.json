@@ -39,7 +39,9 @@
     "regular_window": {
       "start": null,
       "end": "2026-11-30",
-      "label": "Closes November 30, 2026 (unverified template — opening day is not set)"
+      "label": "Closes November 30, 2026 (unverified template — opening day is not set)",
+      "source_url": null,
+      "verified_date": null
     },
     "deadline_note": "Template only. Verify the real county every year.",
     "supplemental_window": "unverified template",
@@ -79,6 +81,11 @@
       "text": "unverified template"
     }
   ],
+  "agent_authorization": {
+    "doc_title": "unverified template",
+    "source": "unverified template",
+    "verified": false
+  },
   "agent": {
     "agent_filing_allowed": null,
     "source": "unverified template",

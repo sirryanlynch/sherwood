@@ -1,10 +1,11 @@
 /* Prices already published on this site. They sit inside the ranges
    suggested in the October 2026 build brief. County filing fees are not
    included; those come from the county adapter. */
-export const PLANS = [
+/* Checkout offers these two only. Contingency is not a checkout plan. */
+export const CHECKOUT_PLANS = [
   {
     id: "diy",
-    name: "DIY appeal kit",
+    name: "DIY kit",
     price: 79,
     dueToday: 79,
     filesAsAgent: false,
@@ -12,22 +13,27 @@ export const PLANS = [
   },
   {
     id: "dfy",
-    name: "Done-for-you filing",
+    name: "We file it",
     price: 249,
     dueToday: 249,
     filesAsAgent: true,
-    summary: "Everything in the kit. Sherwood files as your authorized agent after you e-sign. You sign the perjury certification yourself."
-  },
-  {
-    id: "contingency",
-    name: "Contingency",
-    price: null,
-    rate: 0.35,
-    dueToday: 0,
-    filesAsAgent: true,
-    summary: "Done-for-you filing. 35% of first-year savings if the assessment is reduced. If there is no reduction, you owe no Sherwood fee. Nothing is charged today."
+    summary: "Everything in the kit. Sherwood files as your authorized agent after you sign this county's agent authorization. You sign the perjury certification yourself."
   }
 ];
+
+export const PLANS = CHECKOUT_PLANS;
+
+/* Not sold at checkout. Kept so an older matter id still resolves. */
+export const CONTINGENCY = {
+  id: "contingency",
+  name: "Contingency",
+  price: null,
+  rate: 0.35,
+  dueToday: 0,
+  filesAsAgent: true,
+  checkout: false,
+  summary: "Coming soon, pending review. Not offered at checkout."
+};
 
 export const HEARING_ADDON = {
   id: "hearing",
@@ -45,5 +51,6 @@ export const MONITOR = {
 };
 
 export function planById(id) {
-  return PLANS.find(p => p.id === id) || null;
+  if (id === CONTINGENCY.id) return CONTINGENCY;
+  return CHECKOUT_PLANS.find(p => p.id === id) || null;
 }

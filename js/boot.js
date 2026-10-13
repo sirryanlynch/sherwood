@@ -20,7 +20,7 @@ async function fillLaunchFacts() {
     facts.innerHTML = `
       <p class="small muted">These lines are rendered from the Santa Cruz County adapter (${esc(county.status_label)}).</p>
       <ul>
-        <li>Regular window: ${esc(county.filing.regular_window.label)}. Deadline on the adapter: ${esc(formatDay(county.filing.current_year_deadline))}.</li>
+        <li>Regular window: ${esc(county.filing.regular_window.label)}. Deadline on the adapter: ${esc(formatDay(county.filing.current_year_deadline))}. Source: ${county.filing.regular_window.source_url ? `<a href="${esc(county.filing.regular_window.source_url)}">${esc(county.filing.regular_window.source_url)}</a>` : "not set"}. Verified: ${esc(formatDay(county.filing.regular_window.verified_date))}.</li>
         <li>E-file fee: ${esc(fee.label)}</li>
         <li>Paper fee: ${esc(paper.label)}</li>
         <li>${esc(county.filing.fee_conflict)}</li>

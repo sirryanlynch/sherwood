@@ -52,7 +52,9 @@
     "regular_window": {
       "start": "2026-07-02",
       "end": "2026-11-30",
-      "label": "July 2 through November 30, 2026"
+      "label": "July 2 through November 30, 2026",
+      "source_url": "https://www2.santacruzcountyca.gov/AAB/Home/Index",
+      "verified_date": "2026-10-12"
     },
     "deadline_note": "September 15 in some counties; November 30 where the roll is delivered late. Verify every year.",
     "supplemental_window": "Within 60 days of the supplemental notice date.",
@@ -112,6 +114,11 @@
       "text": "The pilot kit has no stipulation form. This step exists so a later offer has a place to be signed by the homeowner. It is not a county fact and it is not legal advice."
     }
   ],
+  "agent_authorization": {
+    "doc_title": "Agent authorization",
+    "source": "Santa Cruz County AAB Local Rules, Rule 6. An agent authorized by the applicant may file. The pilot kit has no separate authorization form number.",
+    "verified": true
+  },
   "agent": {
     "agent_filing_allowed": true,
     "source": "Build brief: verified against Santa Cruz County AAB Local Rules, Rule 6. An agent authorized by the applicant may file.",

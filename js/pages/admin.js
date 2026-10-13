@@ -26,7 +26,9 @@ function paint() {
       const days = Math.round(ms / 86400000);
       distance = days >= 0 ? `${days} days until the template or verified end date` : `${Math.abs(days)} days after that end date`;
     }
-    return `<li><b>${esc(county.county)}</b> — ${esc(county.status_label)}. ${esc(win.label || "no window")}. ${esc(distance)}. Deadline field: ${esc(formatDay(county.filing.current_year_deadline))}.</li>`;
+    const source = win.source_url ? `<a href="${esc(win.source_url)}">${esc(win.source_url)}</a>` : "source not set";
+    const verified = win.verified_date ? formatDay(win.verified_date) : "verified date not set";
+    return `<li><b>${esc(county.county)}</b> — ${esc(county.status_label)}. ${esc(win.label || "no window")}. ${esc(distance)}. Deadline field: ${esc(formatDay(county.filing.current_year_deadline))}. ${source}. Verified ${esc(verified)}.</li>`;
   }).join("");
   root.innerHTML = `
     <h1>Ops</h1>

@@ -11,11 +11,11 @@
 <label>County<select name="county" required></select></label>
 <div id="county-banner" class="note"></div>
 <label>Assessed value on the roll<input name="assessed" inputmode="decimal" required placeholder="$"></label>
-<label>Your estimate of market value<input name="market" inputmode="decimal" required placeholder="$"></label>
+<label>Your estimate of market value<input name="market" inputmode="decimal" placeholder="$"><span class="small muted">Not sure? Use your recent purchase price or skip.</span></label>
 <label>Total property tax on that bill (optional)<input name="tax" inputmode="decimal" placeholder="$ — used only to estimate savings"></label>
 <label>How sure is the market value?<select name="confidence"><option value="sure">Sure enough to use</option><option value="guess">A rough guess</option></select></label>
 <label>Supplemental notice date, if you got one<input name="supplemental" type="date"></label>
-<button class="btn" type="submit">See the result</button>
+<div class="cta"><button class="btn" type="submit">See the result</button><button class="btn ghost" type="submit" name="skip" value="1">Skip</button></div>
 </form>
 </div></main>
 <footer><div class="wrap"><p><b>Sherwood</b> · Property tax assessment appeals · <span data-geo="city">your area</span>, <span data-geo="region">your state</span></p>

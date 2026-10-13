@@ -27,7 +27,7 @@ export function savingsOf(assessed, reduction, tax) {
   };
 }
 
-function windowState(county, today, supplementalNoticeDate) {
+export function filingWindow(county, today, supplementalNoticeDate) {
   const win = county.filing && county.filing.regular_window;
   const reasons = [];
   const end = win && parseISODate(win.end);
@@ -84,13 +84,39 @@ export function decide(input) {
   if (!county) {
     return { outcome: "no_go", reasons: ["Choose a county that has an adapter."], window: null };
   }
-  if (assessed == null || market == null || assessed <= 0 || market < 0) {
-    return { outcome: "no_go", reasons: ["Enter the assessed value and your estimate of market value."], window: null };
+  if (assessed == null || assessed <= 0) {
+    return { outcome: "no_go", reasons: ["Enter the assessed value."], window: null };
+  }
+  const window = filingWindow(county, today, input.supplementalNoticeDate);
+  const fee = feeAmount(county);
+  const skipped = input.marketSkipped === true || market == null;
+  if (skipped) {
+    const savings = {
+      amount: null,
+      rate: null,
+      note: "No dollar estimate. Market value was skipped, so nothing was calculated."
+    };
+    if (window.state === "off_season") {
+      return { outcome: "off_season", reasons: window.reasons, reduction: null, savings, window, fee };
+    }
+    return {
+      outcome: "borderline",
+      reasons: [
+        "Market value was skipped. A person reviews this before Sherwood treats it as ready to file. No reduction was calculated.",
+        ...window.reasons
+      ],
+      reduction: null,
+      savings,
+      window,
+      fee
+    };
+  }
+  if (market < 0) {
+    return { outcome: "no_go", reasons: ["Enter a market value that is zero or more, or skip it."], window };
   }
   const reduction = assessed - market;
   const savings = savingsOf(assessed, reduction, input.tax);
-  const window = windowState(county, today, input.supplementalNoticeDate);
-  const base = { reduction, savings, window, fee: feeAmount(county) };
+  const base = { reduction, savings, window, fee };
 
   if (window.state === "off_season") {
     return { outcome: "off_season", reasons: window.reasons, ...base };

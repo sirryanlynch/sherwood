@@ -1,33 +1,39 @@
 import "../boot.js";
 import { paymentsAdapter } from "../adapters/payments.js";
-import { money, esc } from "../format.js";
-import { PLANS } from "../pricing.js";
+import { money, esc, formatDay } from "../format.js";
+import { CHECKOUT_PLANS } from "../pricing.js";
 import { getCounty } from "../counties.js";
+import { filingWindow } from "../engine.js";
 import { requireMatter, saveMatter } from "../store.js";
+
+const ESTIMATE_LABEL = "Estimate from your numbers, if the county agrees to your value.";
 
 const gate = requireMatter("checkout.html");
 if (gate) {
   const { matter, user } = gate;
-  if ((matter.outcome === "no_go" || matter.outcome === "off_season") && !matter.demoPreview) {
+  const county = await getCounty(matter.countyId);
+  const season = filingWindow(county, new Date(), matter.supplementalNoticeDate);
+  const root = document.querySelector("#checkout");
+  if (season.state !== "open") {
+    root.innerHTML = closedHtml(county, season);
+  } else if (matter.outcome === "no_go") {
     location.href = "results.html";
   } else {
-    const county = await getCounty(matter.countyId);
-    const root = document.querySelector("#checkout");
     const savings = matter.savings && matter.savings.amount;
     root.innerHTML = `
       <h1>Choose a plan</h1>
       <p class="lead">${esc(matter.address)}. Sherwood's price is separate from the county fee.</p>
       <form id="pay" class="wide">
-        ${PLANS.map((plan, i) => {
-          let price = plan.price == null ? "No Sherwood fee today" : money(plan.dueToday);
-          let extra = "";
-          if (plan.rate) {
-            extra = savings == null
-              ? "35% of first-year savings. We can't compute a dollar figure until a tax bill is on the check."
-              : `35% of the estimated ${money(savings)} would be about ${money(savings * plan.rate)}, and only if a reduction is granted.`;
-          }
-          return `<label class="check"><input type="radio" name="plan" value="${plan.id}" ${i === 1 ? "checked" : ""}> <span><b>${esc(plan.name)}</b> — ${esc(price)}<br><span class="muted">${esc(plan.summary)} ${esc(extra)}</span></span></label>`;
-        }).join("")}
+        <div class="plans">
+          ${CHECKOUT_PLANS.map(plan => `
+            <label class="card">
+              <input type="radio" name="plan" value="${plan.id}" required>
+              <h3>${esc(plan.name)}</h3>
+              <p><b>${esc(money(plan.dueToday))}</b> vs ${savings == null ? "no dollar estimate on this check" : esc(money(savings))}</p>
+              <p class="small muted">${esc(ESTIMATE_LABEL)}</p>
+              <p class="small muted">${esc(plan.summary)}</p>
+            </label>`).join("")}
+        </div>
         <div class="card">
           <h3>County fee, not charged here</h3>
           <p class="muted" style="margin:0">${esc(countyFeeText(county))}</p>
@@ -37,7 +43,14 @@ if (gate) {
       </form>`;
     document.querySelector("#pay").addEventListener("submit", async e => {
       e.preventDefault();
-      const plan = PLANS.find(p => p.id === new FormData(e.target).get("plan"));
+      if (!e.target.reportValidity()) return;
+      const plan = CHECKOUT_PLANS.find(p => p.id === new FormData(e.target).get("plan"));
+      if (!plan) return;
+      const live = filingWindow(county, new Date(), matter.supplementalNoticeDate);
+      if (live.state !== "open") {
+        root.innerHTML = closedHtml(county, live);
+        return;
+      }
       const payment = await paymentsAdapter.charge({
         userId: user.id,
         matterId: matter.id,
@@ -52,6 +65,25 @@ if (gate) {
       location.href = "intake.html";
     });
   }
+}
+
+function closedHtml(county, window) {
+  const win = (county.filing && county.filing.regular_window) || {};
+  const opens = win.start ? formatDay(win.start) : "This adapter does not state an opening date.";
+  const source = win.source_url ? `<a href="${esc(win.source_url)}">${esc(win.source_url)}</a>` : "not set on this adapter";
+  const verified = win.verified_date ? formatDay(win.verified_date) : "not set on this adapter";
+  const title = window.state === "off_season" ? "The filing window is closed" : "Checkout cannot continue";
+  return `
+    <h1>${esc(title)}</h1>
+    <p class="lead">Checkout cannot proceed. This county's filing window is not open on the adapter.</p>
+    <div class="card">
+      <p>${esc(window.label || "No window label on this adapter.")}</p>
+      <ul>${(window.reasons || []).map(r => `<li>${esc(r)}</li>`).join("")}</ul>
+      <p>Opens: ${esc(opens)}</p>
+      <p>Deadline source: ${source}</p>
+      <p>Verified: ${esc(verified)}</p>
+    </div>
+    <div class="cta"><a class="btn" href="results.html">Back to your result</a></div>`;
 }
 
 function countyFeeText(county) {

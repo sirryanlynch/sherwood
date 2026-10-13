@@ -41,12 +41,14 @@ form.addEventListener("submit", e => {
   e.preventDefault();
   form.querySelectorAll(".err").forEach(n => n.remove());
   const assessed = moneyToNumber(form.assessed.value);
-  const market = moneyToNumber(form.market.value);
+  const skipped = e.submitter && e.submitter.name === "skip";
+  const market = skipped ? null : moneyToNumber(form.market.value);
+  const marketSkipped = skipped || market == null;
   const tax = moneyToNumber(form.tax.value);
-  if (assessed == null || market == null) {
+  if (assessed == null) {
     const m = document.createElement("div");
     m.className = "err";
-    m.textContent = "Enter the assessed value and your estimate of market value.";
+    m.textContent = "Enter the assessed value.";
     form.querySelector("button").before(m);
     return;
   }
@@ -55,6 +57,7 @@ form.addEventListener("submit", e => {
     county,
     assessed,
     market,
+    marketSkipped,
     tax,
     confidence: form.confidence.value,
     supplementalNoticeDate: form.supplemental.value || null,
@@ -68,7 +71,8 @@ form.addEventListener("submit", e => {
     geo: { city: check.geoCity || "", region: check.geoRegion || "", inLaunchArea: check.inLaunchArea === true },
     countyId: county.id,
     assessed,
-    market,
+    market: marketSkipped ? null : market,
+    marketSkipped,
     tax,
     confidence: form.confidence.value,
     supplementalNoticeDate: form.supplemental.value || null,
