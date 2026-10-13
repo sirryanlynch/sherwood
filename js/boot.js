@@ -1,11 +1,13 @@
 import { getCounty, loadCounties } from "./counties.js";
 import { contactLine, esc, formatDay, money } from "./format.js";
+import { planPriceLines } from "./pricing.js";
 
 const SIM = "Simulated on this device. Payment, signatures, county filing, and email or SMS do not leave this browser.";
 
 async function fillLaunchFacts() {
   const slots = document.querySelectorAll("[data-fact]");
-  if (!slots.length && !document.getElementById("launch-facts") && !document.getElementById("launch-filing") && !document.getElementById("launch-fee")) return;
+  const needsPlans = document.getElementById("home-price") || document.getElementById("plan-diy-price") || document.getElementById("faq-prices") || document.getElementById("how-plans");
+  if (!slots.length && !document.getElementById("launch-facts") && !document.getElementById("launch-filing") && !document.getElementById("launch-fee") && !needsPlans) return;
   const county = await getCounty("santa_cruz");
   if (!county) return;
   slots.forEach(el => {
@@ -13,16 +15,21 @@ async function fillLaunchFacts() {
       el.textContent = contactLine(county.filing.clerk);
     }
   });
+  const lines = planPriceLines(county);
   const facts = document.getElementById("launch-facts");
   if (facts) {
     const fee = county.filing.efile_fee;
     const paper = county.filing.paper_fee;
+    const prices = lines.fee == null
+      ? `${lines.diy}. ${lines.dfy}.`
+      : `DIY kit ${lines.diy} ${lines.diyFee} We file it ${lines.dfy}`;
     facts.innerHTML = `
       <p class="small muted">These lines are rendered from the Santa Cruz County adapter (${esc(county.status_label)}).</p>
       <ul>
         <li>Regular window: ${esc(county.filing.regular_window.label)}. Deadline on the adapter: ${esc(formatDay(county.filing.current_year_deadline))}. Source: ${county.filing.regular_window.source_url ? `<a href="${esc(county.filing.regular_window.source_url)}">${esc(county.filing.regular_window.source_url)}</a>` : "not set"}. Verified: ${esc(formatDay(county.filing.regular_window.verified_date))}.</li>
-        <li>E-file fee: ${esc(fee.label)}</li>
-        <li>Paper fee: ${esc(paper.label)}</li>
+        <li>Sherwood prices: ${esc(prices)}</li>
+        <li>E-file fee recorded in the kit: ${esc(fee.label)}</li>
+        <li>Paper fee recorded in the kit: ${esc(paper.label)}</li>
         <li>${esc(county.filing.fee_conflict)}</li>
         <li>Portal: <a href="${esc(county.filing.portal_url)}">${esc(county.filing.portal_url)}</a></li>
         <li>Clerk: ${esc(contactLine(county.filing.clerk))}</li>
@@ -34,15 +41,21 @@ async function fillLaunchFacts() {
   }
   const filing = document.getElementById("launch-filing");
   if (filing) {
+    const prices = lines.fee == null
+      ? `${lines.diy}. ${lines.dfy}.`
+      : `DIY kit ${lines.diy} ${lines.diyFee} We file it ${lines.dfy}`;
     filing.innerHTML = `
       <p>Launch county, from the adapter: ${esc(county.county)} County. ${esc(county.filing.efile ? "E-file is the path used in the pilot." : "Paper.")}</p>
       <p>Portal: <a href="${esc(county.filing.portal_url)}">${esc(county.filing.portal_url)}</a></p>
-      <p>${esc(county.filing.efile_fee.label)}</p>
+      <p>${esc(prices)}</p>
       <p>${esc(county.agent.source)} ${esc(county.agent.perjury)}</p>`;
   }
+  paintPlanPrices(county);
   const feeBox = document.getElementById("launch-fee");
   if (feeBox) {
-    feeBox.textContent = `${county.filing.efile_fee.label} ${county.filing.fee_conflict} Paper: ${county.filing.paper_fee.label}`;
+    feeBox.textContent = lines.fee == null
+      ? ""
+      : `DIY kit ${lines.diy} ${lines.diyFee} We file it ${lines.dfy}`;
   }
   const calendar = document.getElementById("deadline-note");
   if (calendar) calendar.textContent = county.deadline_note || county.filing.deadline_note || "";
@@ -70,6 +83,30 @@ fillLaunchFacts().catch(err => {
   });
   console.error(err);
 });
+
+function paintPlanPrices(county) {
+  const lines = planPriceLines(county);
+  const home = document.getElementById("home-price");
+  if (home) home.textContent = lines.home;
+  const diy = document.getElementById("plan-diy-price");
+  if (diy) diy.textContent = lines.diy;
+  const note = document.getElementById("plan-diy-note");
+  if (note) note.textContent = lines.diyFee;
+  const dfy = document.getElementById("plan-dfy-price");
+  if (dfy) dfy.textContent = lines.dfy;
+  const faq = document.getElementById("faq-prices");
+  if (faq) {
+    faq.textContent = lines.fee == null
+      ? `DIY kit ${lines.diy}. We file it ${lines.dfy}.`
+      : `DIY kit ${lines.diy} ${lines.diyFee} We file it ${lines.dfy}`;
+  }
+  const how = document.getElementById("how-plans");
+  if (how) {
+    const diyBit = lines.diyFee ? `${lines.diy} ${lines.diyFee.replace(/\.$/, "")}` : lines.diy;
+    const dfyBit = lines.dfy.replace(/\.$/, "");
+    how.textContent = `A simulated magic link, then two plans: DIY kit (${diyBit}) or We file it (${dfyBit}). Checkout stops when that county's filing window is closed.`;
+  }
+}
 
 export async function countyOptions(select) {
   const counties = await loadCounties();

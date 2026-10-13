@@ -1,7 +1,7 @@
-/* Prices already published on this site. They sit inside the ranges
-   suggested in the October 2026 build brief. County filing fees are not
-   included; those come from the county adapter. */
-/* Checkout offers these two only. Contingency is not a checkout plan. */
+/* Checkout offers these two only. Contingency is not a checkout plan.
+   County filing fees come from filing.filing_fee on the county adapter.
+   We file it is $249 with that fee included. The DIY kit is $79, and the
+   county fee is extra only when filing_fee is a number above zero. */
 export const CHECKOUT_PLANS = [
   {
     id: "diy",
@@ -53,4 +53,27 @@ export const MONITOR = {
 export function planById(id) {
   if (id === CONTINGENCY.id) return CONTINGENCY;
   return CHECKOUT_PLANS.find(p => p.id === id) || null;
+}
+
+/* Positive filing_fee only. Zero and missing mean: do not mention a county fee. */
+export function filingFeeAmount(county) {
+  const raw = county && county.filing ? county.filing.filing_fee : undefined;
+  if (typeof raw !== "number" || raw <= 0) return null;
+  return raw;
+}
+
+export function plainDollars(amount) {
+  if (typeof amount !== "number") return "";
+  if (Number.isInteger(amount)) return `$${amount}`;
+  return `$${amount.toFixed(2)}`;
+}
+
+export function planPriceLines(county) {
+  const fee = filingFeeAmount(county);
+  const diyFee = fee == null ? "" : `+ ${plainDollars(fee)} county fee, paid when you file.`;
+  const dfy = fee == null ? "$249" : "$249, county fee included.";
+  const home = fee == null
+    ? "Check for free. If there's a case, file it yourself for $79, or we'll file it for you for $249."
+    : `Check for free. If there's a case, file it yourself for $79 + ${plainDollars(fee)} county fee, paid when you file, or we'll file it for you for ${dfy}`;
+  return { fee, diy: "$79", diyFee, dfy, home };
 }

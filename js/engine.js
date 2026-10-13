@@ -6,6 +6,7 @@ export const MATERIALITY_RATIO = 0.05;
 export function feeAmount(county) {
   const filing = county && county.filing;
   if (!filing) return null;
+  if (typeof filing.filing_fee === "number" && filing.filing_fee > 0) return filing.filing_fee;
   const preferred = filing.efile ? filing.efile_fee : filing.paper_fee;
   const amount = preferred && preferred.amount;
   return typeof amount === "number" ? amount : null;

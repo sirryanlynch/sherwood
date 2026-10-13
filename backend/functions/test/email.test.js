@@ -30,9 +30,8 @@ test("unused provider keys do not count as configured", () => {
     MAIL_POSTAL_ADDRESS: "1 Market St",
     MAIL_FROM: "Sherwood <reminders@example.com>",
     PUBLIC_FUNCTIONS_BASE_URL: "https://example.com",
-    RESEND_API_KEY: "unused",
-    SENDGRID_API_KEY: ""
+    RESEND_API_KEY: "unused"
   });
   assert.equal(cfg.ok, false);
-  assert.ok(cfg.missing.includes("RESEND_API_KEY or SENDGRID_API_KEY"));
+  assert.ok(cfg.missing.includes("RESEND_API_KEY"));
 });

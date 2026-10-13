@@ -1,6 +1,7 @@
 import "../boot.js";
 import { loadCounties } from "../counties.js";
 import { decide } from "../engine.js";
+import { planPriceLines } from "../pricing.js";
 import { esc, moneyToNumber } from "../format.js";
 import { currentPlace } from "../place-ui.js";
 import { currentMatter, newMatter, saveMatter } from "../store.js";
@@ -32,8 +33,7 @@ function showCounty() {
     county.template_warning,
     county.filing.regular_window && county.filing.regular_window.label,
     county.filing.efile ? "E-file flag is true on this adapter." : "E-file flag is false on this adapter (paper / mail).",
-    county.filing.efile_fee && county.filing.efile_fee.label,
-    county.filing.paper_fee && county.filing.paper_fee.label
+    planPriceLines(county).fee == null ? "" : `DIY kit ${planPriceLines(county).diy} ${planPriceLines(county).diyFee} We file it ${planPriceLines(county).dfy}`
   ].filter(Boolean);
   banner.innerHTML = bits.map(line => `<p>${esc(line)}</p>`).join("");
 }

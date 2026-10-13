@@ -9,13 +9,12 @@ function sendingConfig(env = process.env) {
   const from = String(env.MAIL_FROM || "").trim();
   const base = String(env.PUBLIC_FUNCTIONS_BASE_URL || "").trim().replace(/\/$/, "");
   const resend = usable(env.RESEND_API_KEY);
-  const sendgrid = usable(env.SENDGRID_API_KEY);
   const missing = [];
   if (!postal) missing.push("MAIL_POSTAL_ADDRESS");
   if (!from) missing.push("MAIL_FROM");
   if (!base) missing.push("PUBLIC_FUNCTIONS_BASE_URL");
-  if (!resend && !sendgrid) missing.push("RESEND_API_KEY or SENDGRID_API_KEY");
-  return { ok: missing.length === 0, missing, postal, from, base, resend, sendgrid };
+  if (!resend) missing.push("RESEND_API_KEY");
+  return { ok: missing.length === 0, missing, postal, from, base, resend };
 }
 
 function buildEmail({ kind, countyName, windowLabel, windowStart, windowEnd, confirmUrl, unsubscribeUrl, postal, outcome }) {
@@ -61,11 +60,6 @@ function buildEmail({ kind, countyName, windowLabel, windowStart, windowEnd, con
   return { subject, text: lines.join("\n") };
 }
 
-function fromAddress(from) {
-  const match = String(from).match(/<([^>]+)>/);
-  return (match ? match[1] : from).trim();
-}
-
 async function deliver({ to, subject, text }, env = process.env, fetchImpl = fetch) {
   const cfg = sendingConfig(env);
   if (!cfg.ok) {
@@ -75,27 +69,13 @@ async function deliver({ to, subject, text }, env = process.env, fetchImpl = fet
   }
   if (!text.includes(cfg.postal)) throw new Error("Email is missing the postal address");
   if (!/Unsubscribe:\s+\S+/.test(text)) throw new Error("Email is missing an unsubscribe link");
-  if (cfg.resend) {
-    const res = await fetchImpl("https://api.resend.com/emails", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${cfg.resend}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ from: cfg.from, to: [to], subject, text })
-    });
-    if (!res.ok) throw new Error(`Resend returned ${res.status}`);
-    return { provider: "resend" };
-  }
-  const res = await fetchImpl("https://api.sendgrid.com/v3/mail/send", {
+  const res = await fetchImpl("https://api.resend.com/emails", {
     method: "POST",
-    headers: { Authorization: `Bearer ${cfg.sendgrid}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      personalizations: [{ to: [{ email: to }] }],
-      from: { email: fromAddress(cfg.from) },
-      subject,
-      content: [{ type: "text/plain", value: text }]
-    })
+    headers: { Authorization: `Bearer ${cfg.resend}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ from: cfg.from, to: [to], subject, text })
   });
-  if (!res.ok) throw new Error(`SendGrid returned ${res.status}`);
-  return { provider: "sendgrid" };
+  if (!res.ok) throw new Error(`Resend returned ${res.status}`);
+  return { provider: "resend" };
 }
 
 module.exports = { sendingConfig, buildEmail, deliver };

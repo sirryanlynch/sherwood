@@ -6,11 +6,11 @@ The source of truth for Santa Cruz County is the October 2026 business kit: the 
 
 ## Journey
 
-1. **Free check** (`index.html`). Address only. Email is asked after the result. The headline stays “Think your property is assessed too high?” An IP lookup may fill the state. It does not put the IP city in the headline, and a city alone does not choose the launch or non-launch screen. A county name from the lookup can. `?county=santa-cruz` overrides the lookup, a saved choice, and the typed address for that tab. After an address is typed, that address’s city or county overrides the IP result. A “Showing results for” control can change the county in one click, and that choice is stored in this browser. If the place is still ambiguous, the page shows the county picker and does not show prices. Santa Cruz County shows the $79 / $249 line and the button “Check my property”. Any other confirmed county shows a reminder signup and no prices.
+1. **Free check** (`index.html`). Address only. Email is asked after the result. The headline stays “Think your property is assessed too high?” An IP lookup may fill the state. It does not put the IP city in the headline, and a city alone does not choose the launch or non-launch screen. A county name from the lookup can. `?county=santa-cruz` overrides the lookup, a saved choice, and the typed address for that tab. After an address is typed, that address’s city or county overrides the IP result. A “Showing results for” control can change the county in one click, and that choice is stored in this browser. If the place is still ambiguous, the page shows the county picker and does not show prices. Santa Cruz County shows the $79 line with “+ $50 county fee, paid when you file” and “$249, county fee included,” plus the button “Check my property”. The $50 is `filing_fee` on that adapter. Any other confirmed county shows a reminder signup and no prices.
 2. **Numbers** (`values.html`). County, assessed value, the visitor's market-value estimate, optional tax bill, confidence, and an optional supplemental notice date. The market field's helper text is "Not sure? Use your recent purchase price or skip." Skipping does not block the check.
 3. **Result** (`results.html`). One of four outcomes from `js/engine.js`. Email is collected here, with the privacy line, to save the result or to request a filing-window reminder. The legal disclaimer sits above the path into checkout.
 4. **Account** (`login.html`). Magic link, simulated. The link is shown on the page because no email is sent. Open it in the same tab.
-5. **Plan and pay** (`checkout.html`). Exactly two cards: DIY kit $79 and We file it $249. Each card shows that fee next to the estimated tax difference, labeled "Estimate from your numbers, if the county agrees to your value." If no tax bill was entered, the card says no dollar estimate is available. Contingency is not a checkout plan. The county fee is shown from the adapter and is not charged here. If the adapter's filing window is not open, checkout stops and does not take a payment.
+5. **Plan and pay** (`checkout.html`). Exactly two cards: DIY kit $79 and We file it $249. When the county adapter's `filing_fee` is above zero, the DIY card adds “+ $50 county fee, paid when you file” (the amount comes from that field) and the We file it card reads “$249, county fee included.” A `filing_fee` of 0 or missing hides that line. Each card shows the price next to the estimated tax difference, labeled "Estimate from your numbers, if the county agrees to your value." If no tax bill was entered, the card says no dollar estimate is available. Contingency is not a checkout plan. If the adapter's filing window is not open, checkout stops and does not take a payment.
 6. **Intake** (`intake.html`). Property confirm, occupancy, exemption question, condition notes, optional photo/PDF upload, and the authorization checkboxes.
 7. **Kit** (`kit.html`). Short explanation (150 characters where the adapter says so) and a Statement of Facts preview. The visitor approves it.
 8. **Signing** (`sign.html`). Round 1 is the county's agent authorization when the plan files as agent. Before that round, a plain-language explainer says what is being signed, why the county needs it (from `agent_authorization` on the adapter), and the line "How to revoke: [pending verification]". Round 2 is the application certification plus the statement. Round 3 only if the visitor accepts a stipulation preview later.
@@ -87,12 +87,12 @@ DIY never calls the e-file adapter. Unverified templates do not get a filing con
 - **County copy is data.** Marketing pages that used to type the Santa Cruz phone number now fill it from the adapter. The case study still tells the pilot story, including that one home's published figures ($158,915 reduction sought, about $1,955 a year, filed in a day, awaiting a decision).
 - **No invented comps.** The free check blurs a sample line and says sales were not pulled. The statement preview says the same.
 - **You sign the certification.** Round 2 is required for every checkout plan. Round 1 is required only for We file it (plan id `dfy`). The document title, source, and verified flag come from `agent_authorization` on the county adapter. The signed record is `matter.agentAuthorization` (`doc_title`, `source`, `verified`, `signerName`, `signedAt`, `envelopeId`). The filing button reads that record and stays disabled until it exists. Revocation steps are not invented; the explainer uses the placeholder "How to revoke: [pending verification]".
-- **Two checkout plans.** DIY kit $79 and We file it $249. The comparison label on each card is "Estimate from your numbers, if the county agrees to your value." No outcome is promised. Contingency stays on the pricing page as "Coming soon, pending review."
+- **Two checkout plans.** DIY kit $79 and We file it $249. Santa Cruz `filing_fee` is 50, so the DIY card reads “+ $50 county fee, paid when you file” and We file it reads “$249, county fee included.” The same lines are on the pricing page, the FAQ, the home launch line, and the filing confirmation. A missing or zero `filing_fee` hides every county-fee line. The comparison label on each card is "Estimate from your numbers, if the county agrees to your value." No outcome is promised. Contingency stays on the pricing page as "Coming soon, pending review."
 - **Closed window is a hard stop.** `regular_window` carries `source_url` and `verified_date`. Checkout cannot proceed when `filingWindow` is not `open`, including a window that has closed and a window whose start is missing. The off-season result does not link into checkout.
 - **Skip market value.** Empty market value, or the Skip control, is borderline human review when the window is open. It does not block, and it does not invent a statistic.
 - **Borderline does not auto-file.** Ops has to mark it reviewed. The demo path in the section below is a Go, so it does not stop there.
 - **Off-season still keeps the lead.** "Remind me when filing opens" sets `remindWhenOpen` on the matter. The $49 monitor can be recorded from that same screen.
-- **Refund policy is a placeholder** on `trust.html`. It is not a customer promise.
+- **Refund policy is a draft.** `trust.html` and the pricing page mark the county-fee answers “[DRAFT – pending attorney review]”. They cover a cancel after Sherwood has filed, and a county rejection. They do not state an outcome.
 - **Room 520 vs Room 500** and **$50 vs $30** are shown as conflicts from the kit, not smoothed over.
 
 ## Demo path
@@ -103,7 +103,7 @@ Use the verified Santa Cruz adapter while its window is open (through November 3
 2. On the numbers screen choose **Santa Cruz — Verified from the October 12, 2026 pilot kit**. Enter an assessed value above the market estimate. Leave confidence on "Sure enough to use." Submit.
 3. The result should say **Go**. Continue.
 4. On sign-in, create the link and open **Open the simulated magic link** in the same tab.
-5. Choose **We file it** ($249) and simulate payment. The other card is **DIY kit** ($79). No card is requested. Contingency is not on this screen. Each card shows the fee against the estimate, with the label "Estimate from your numbers, if the county agrees to your value."
+5. Choose **We file it** (“$249, county fee included.”) and simulate payment. The other card is **DIY kit** ($79, “+ $50 county fee, paid when you file.”). No card is requested. Contingency is not on this screen. Each card shows the price against the estimate, with the label "Estimate from your numbers, if the county agrees to your value."
 6. Complete intake. Photos are optional.
 7. Approve the kit.
 8. Round 1 starts with the explainer (what you are signing, why Santa Cruz needs it, and "How to revoke: [pending verification]"). Continue, then sign agent authorization. Sign round 2 (certification and statement). Type a name. The signing screens say they are not DocuSign.
@@ -129,7 +129,8 @@ From the build brief, section 9. The pilot did not answer these. They need a Cal
 A new county is a new JSON file plus a line in `data/counties/index.json`, then a verified test filing before `status` may be `verified`. The UI already branches on:
 
 - `filing.efile` and `portal_url` (submit vs paper steps)
-- `efile_fee.amount` / `paper_fee.amount` (null means "do not quote a number")
+- `filing.filing_fee` (a number above zero is the county fee on the plan cards; 0 or missing hides that line)
+- `efile_fee.amount` / `paper_fee.amount` (null means "do not quote a number"; these stay as kit facts)
 - `regular_window.start` / `end`, plus `source_url` and `verified_date` (null until someone verifies that county)
 - `supplemental_days`
 - `agent_authorization.doc_title`, `source`, and `verified`
@@ -145,18 +146,18 @@ Until `status` is `verified`, the engine will not return Go.
 
 The first screen does not ask for an email. `js/place.js` decides the county in this order: the `?county=` parameter (kept for the browser tab), a property address the visitor typed, a county they picked in “Showing results for”, then an IP lookup that uses a county name only. An IP city such as Cupertino does not choose a variant and is not written into the headline. The state may still fill `data-geo="region"`.
 
-Launch copy (Santa Cruz County) names the $79 and $249 prices. Any other confirmed county hides prices and offers a reminder. An ambiguous lookup shows the county picker and the check, without prices.
+Launch copy (Santa Cruz County) names the $79 and $249 prices with the county-fee line from `filing_fee`. Any other confirmed county hides prices and offers a reminder. An ambiguous lookup shows the county picker and the check, without prices.
 
 Every email field has the sentence “We use your email and approximate location only to run your check and send what you ask for.” linking to `privacy.html`. That page is marked “Draft, pending review” and lists address, email, IP-based approximate location, signatures, and payment via a processor. Deletion requests go through `contact.html`.
 
 The long disclaimer is in the footer and again immediately before checkout (`checkout.html`, and on the result when checkout is the next step).
 
-`trust.html` has a “Who we are” block. Founder name, bio, Santa Cruz tie, and contact are `[pending]`. The sample packet is `sample-packet.html`, labeled sample, with placeholder names and numbers only.
+`trust.html` has a “Who we are” block. Founder name, bio, and photo are `[pending]`, along with the Santa Cruz tie and contact. The sample packet is `sample-packet.html`. It uses a fictional property (42 Example Lane, Fictional City) and is not the pilot.
 
 ## Reminders backend
 
 `backend/` is the Firebase project: rules, indexes, and Node 20 functions. `js/config.js` holds `FUNCTIONS_BASE_URL`. While that string is empty, reminder and result emails stay in this browser and no request is made.
 
-When it is set, the site POSTs to `createReminder` (outside a launch county, or when the filing window is closed) and `createLead` (email me this result). Checkout can POST `markConverted`. The function stores marketing consent with `consent_source`, `consent_requested_at`, and `confirmed_at`. `confirmed_at` is set only from the double opt-in link. A daily job in America/Los_Angeles sends a 14-day heads-up, an open-window note, and a 14-day deadline nudge if the reminder is confirmed and not converted. Dates come from the county adapter. Mail is not sent unless `MAIL_POSTAL_ADDRESS`, `MAIL_FROM`, a provider key, and `PUBLIC_FUNCTIONS_BASE_URL` are set. Every email includes an unsubscribe link, that postal address, and a not-legal-advice line.
+When it is set, the site POSTs to `createReminder` (outside a launch county, or when the filing window is closed) and `createLead` (email me this result). Checkout can POST `markConverted`. The function stores marketing consent with `consent_source`, `consent_requested_at`, and `confirmed_at`. `confirmed_at` is set only from the double opt-in link. A daily job in America/Los_Angeles sends a 14-day heads-up, an open-window note, and a 14-day deadline nudge if the reminder is confirmed and not converted. Dates come from the county adapter. Mail goes out through Resend. It is not sent unless `MAIL_POSTAL_ADDRESS`, `MAIL_FROM`, `RESEND_API_KEY`, and `PUBLIC_FUNCTIONS_BASE_URL` are set. Every email includes an unsubscribe link, that postal address, and a not-legal-advice line.
 
 Setup steps for the owner are in `backend/README.md`. The GitHub workflow deploys rules and functions on a push to `main` that touches `backend/`, and it skips when `FIREBASE_SERVICE_ACCOUNT` or `FIREBASE_PROJECT_ID` is missing.

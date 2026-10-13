@@ -1,7 +1,7 @@
 import "../boot.js";
 import { paymentsAdapter } from "../adapters/payments.js";
 import { money, esc, formatDay } from "../format.js";
-import { CHECKOUT_PLANS } from "../pricing.js";
+import { CHECKOUT_PLANS, planPriceLines } from "../pricing.js";
 import { getCounty } from "../counties.js";
 import { filingWindow } from "../engine.js";
 import { slugForCountyId } from "../place.js";
@@ -22,23 +22,13 @@ if (gate) {
     location.href = "results.html";
   } else {
     const savings = matter.savings && matter.savings.amount;
+    const lines = planPriceLines(county);
     root.innerHTML = `
       <h1>Choose a plan</h1>
-      <p class="lead">${esc(matter.address)}. Sherwood's price is separate from the county fee.</p>
+      <p class="lead">${esc(matter.address)}</p>
       <form id="pay" class="wide">
         <div class="plans">
-          ${CHECKOUT_PLANS.map(plan => `
-            <label class="card">
-              <input type="radio" name="plan" value="${plan.id}" required>
-              <h3>${esc(plan.name)}</h3>
-              <p><b>${esc(money(plan.dueToday))}</b> vs ${savings == null ? "no dollar estimate on this check" : esc(money(savings))}</p>
-              <p class="small muted">${esc(ESTIMATE_LABEL)}</p>
-              <p class="small muted">${esc(plan.summary)}</p>
-            </label>`).join("")}
-        </div>
-        <div class="card">
-          <h3>County fee, not charged here</h3>
-          <p class="muted" style="margin:0">${esc(countyFeeText(county))}</p>
+          ${CHECKOUT_PLANS.map(plan => cardHtml(plan, lines, savings)).join("")}
         </div>
         <p class="small muted">Simulated Stripe. There is no card field. Pressing the button writes a local payment record only.</p>
         <button class="btn" type="submit">Simulate payment and continue</button>
@@ -92,9 +82,18 @@ function closedHtml(county, window) {
     <div class="cta"><a class="btn" href="results.html">Back to your result</a></div>`;
 }
 
-function countyFeeText(county) {
-  const filing = county.filing || {};
-  if (filing.efile && filing.efile_fee) return filing.efile_fee.label || "E-file fee is not a number on this adapter.";
-  if (filing.paper_fee) return filing.paper_fee.label || "Paper fee is not a number on this adapter.";
-  return "This adapter has no fee to show.";
+function cardHtml(plan, lines, savings) {
+  const price = plan.id === "dfy" ? lines.dfy : lines.diy;
+  const fee = plan.id === "diy" && lines.diyFee ? `<p>${esc(lines.diyFee)}</p>` : "";
+  const versus = savings == null ? "no dollar estimate on this check" : money(savings);
+  return `
+    <label class="card">
+      <input type="radio" name="plan" value="${plan.id}" required>
+      <h3>${esc(plan.name)}</h3>
+      <p><b>${esc(price)}</b></p>
+      ${fee}
+      <p>vs ${esc(versus)}</p>
+      <p class="small muted">${esc(ESTIMATE_LABEL)}</p>
+      <p class="small muted">${esc(plan.summary)}</p>
+    </label>`;
 }

@@ -2,9 +2,9 @@ import "../boot.js";
 import { efileAdapter } from "../adapters/efile.js";
 import { notify } from "../adapters/notify.js";
 import { getCounty } from "../counties.js";
-import { contactLine, esc, money } from "../format.js";
+import { contactLine, esc } from "../format.js";
 import { filingWindow } from "../engine.js";
-import { planById } from "../pricing.js";
+import { planById, planPriceLines } from "../pricing.js";
 import { requireMatter, saveMatter } from "../store.js";
 
 const gate = requireMatter("filed.html");
@@ -106,7 +106,10 @@ function stepsHtml(county) {
 }
 
 function paintFiled(root, matter, county) {
-  const fee = matter.filing.fee == null ? "Fee amount is not a number on this adapter." : `${money(matter.filing.fee)} — ${matter.filing.feeLabel || ""}`;
+  const lines = planPriceLines(county);
+  const fee = lines.fee == null
+    ? ""
+    : (matter.planId === "dfy" ? lines.dfy : `${lines.diy} ${lines.diyFee}`);
   const auth = matter.agentAuthorization;
   const authLine = auth
     ? `<p>Agent authorization on this appeal: ${esc(auth.doc_title)}, signed by ${esc(auth.signerName)} at ${esc(auth.signedAt)}.</p>`
@@ -117,7 +120,7 @@ function paintFiled(root, matter, county) {
     <div class="card">
       <p>Filing ID: <b>${esc(matter.filing.id)}</b></p>
       <p>Recorded at: ${esc(matter.filing.filedAt)}</p>
-      <p>County fee shown from the adapter: ${esc(fee)}</p>
+      ${fee ? `<p>${esc(fee)}</p>` : ""}
       <p>Portal: <a href="${esc(matter.filing.portalUrl)}">${esc(matter.filing.portalUrl)}</a></p>
       <p>Clerk: ${esc(contactLine(county.filing.clerk))}</p>
       ${authLine}

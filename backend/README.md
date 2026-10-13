@@ -22,16 +22,14 @@ The Cloud Functions runtime is Node 20. Scheduled functions need the **Blaze** p
    firebase functions:secrets:set MAIL_POSTAL_ADDRESS --project YOUR_PROJECT_ID
    firebase functions:secrets:set MAIL_FROM --project YOUR_PROJECT_ID
    firebase functions:secrets:set RESEND_API_KEY --project YOUR_PROJECT_ID
-   firebase functions:secrets:set SENDGRID_API_KEY --project YOUR_PROJECT_ID
    firebase functions:secrets:set PUBLIC_FUNCTIONS_BASE_URL --project YOUR_PROJECT_ID
    ```
 
    - `MAIL_POSTAL_ADDRESS` — a real postal address. Every email includes it. If it is missing, the function stores the reminder and does not send.
    - `MAIL_FROM` — a verified sender, for example `Sherwood <reminders@yourdomain.com>`.
-   - `RESEND_API_KEY` — the Resend key, or the literal `unused` if you use SendGrid instead.
-   - `SENDGRID_API_KEY` — the SendGrid key, or the literal `unused` if you use Resend instead.
+   - `RESEND_API_KEY` — the Resend API key. Mail is not sent when this secret is missing. The literal `unused` does not count as a key.
    - `PUBLIC_FUNCTIONS_BASE_URL` — the functions origin with no trailing slash, `https://us-central1-YOUR_PROJECT_ID.cloudfunctions.net`. Confirm and unsubscribe links are built from it.
-7. A verified sending domain at Resend or SendGrid. The `MAIL_FROM` address has to be on that domain. Without that, the provider will reject the send.
+7. A verified sending domain at Resend. The `MAIL_FROM` address has to be on that domain. Without that, Resend will reject the send.
 8. After the first successful deploy, set `js/config.js`:
    - `FUNCTIONS_BASE_URL` to the same origin as `PUBLIC_FUNCTIONS_BASE_URL`.
    - `FIREBASE.projectId` (and the other web-app fields if you later add App Check). The Pages site does not read Firestore directly.

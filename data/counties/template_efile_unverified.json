@@ -26,6 +26,7 @@
     "portal_url": null,
     "explanation_chars": null,
     "portal_notes": ["unverified template — portal URL is intentionally empty"],
+    "filing_fee": null,
     "efile_fee": {
       "amount": null,
       "currency": "USD",

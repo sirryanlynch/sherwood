@@ -26,6 +26,7 @@
     "portal_url": null,
     "explanation_chars": null,
     "portal_notes": ["unverified template — paper only, no portal URL"],
+    "filing_fee": null,
     "efile_fee": null,
     "paper_fee": {
       "amount": null,

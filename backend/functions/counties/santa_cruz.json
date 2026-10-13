@@ -31,6 +31,7 @@
       "A transient 'Failure to find valid APN' notice appeared in the pilot and then cleared. Retry before treating it as a rejection.",
       "A fee waiver is on the portal for applicants who receive public benefits or are low-income."
     ],
+    "filing_fee": 50,
     "efile_fee": {
       "amount": 50,
       "currency": "USD",

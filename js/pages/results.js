@@ -5,9 +5,15 @@ import { getCounty } from "../counties.js";
 import { contactLine, esc, formatDay, money } from "../format.js";
 import { slugForCountyId } from "../place.js";
 import { reminderMessage } from "../place-ui.js";
-import { MONITOR } from "../pricing.js";
+import { MONITOR, planPriceLines } from "../pricing.js";
 import { createLead, createReminder } from "../reminders.js";
 import { currentMatter, saveMatter } from "../store.js";
+
+function priceLine(county) {
+  const lines = planPriceLines(county);
+  if (lines.fee == null) return "";
+  return `<p>DIY kit ${esc(lines.diy)} ${esc(lines.diyFee)} We file it ${esc(lines.dfy)}</p>`;
+}
 
 const root = document.querySelector("#results");
 const matter = currentMatter();
@@ -98,7 +104,7 @@ function render(matter, county) {
       ${savingsHtml}
       <p class="small muted">Window: ${esc(matter.window && matter.window.label || "not set")}. Adapter deadline: ${esc(formatDay(county.filing.current_year_deadline))}.</p>
       <p class="small muted">Deadline source: ${source}. Verified: ${esc(verified)}.</p>
-      <p>County fee on this adapter: ${esc((county.filing.efile && county.filing.efile_fee && county.filing.efile_fee.label) || (county.filing.paper_fee && county.filing.paper_fee.label) || "No fee is set. Do not quote one.")}</p>
+      ${priceLine(county)}
       <ul>${(matter.reasons || []).map(r => `<li>${esc(r)}</li>`).join("")}</ul>
     </div>
     ${next}
