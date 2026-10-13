@@ -164,7 +164,7 @@ document.querySelectorAll("form[data-kind]").forEach(form=>{
     const sent = await send(kind, data);
     if(kind==="check"){
       sessionStorage.setItem("sherwood_check", JSON.stringify(data));
-      location.href = "results.html"; return;
+      location.href = "values.html"; return;
     }
     form.outerHTML = `<div class="ok" role="status"><b>Received.</b> ${form.dataset.thanks || "We'll be in touch by email."}${sent?"":" (Saved on this device; we couldn't reach the server — please try again later.)"}</div>`;
   });

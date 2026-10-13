@@ -1,0 +1,194 @@
+{
+  "id": "santa_cruz",
+  "county": "Santa Cruz",
+  "state": "CA",
+  "status": "verified",
+  "status_label": "Verified from the October 12, 2026 pilot kit",
+  "verified": "2026-10-12",
+  "appeals_board": {
+    "name": "Assessment Appeals Board",
+    "file_with": "Clerk of the Board",
+    "address": "701 Ocean Street, Room 520, Santa Cruz, CA 95060",
+    "address_note": "Filing address per the county adapter and the pilot filing guide (AAB Local Rules). The cover-letter template and one checklist line say Room 500. This product shows Room 520 and does not resolve that conflict."
+  },
+  "assessor_office": {
+    "address": "701 Ocean Street, Room 130, Santa Cruz, CA 95060",
+    "email": "asrwebmail@co.santa-cruz.ca.us",
+    "phone": "(831) 454-2002",
+    "parcel_url": "https://www2.santacruzcountyca.gov/ASR/ParcelList",
+    "value_url": "https://www2.santacruzcountyca.gov/ASR/ValueandTaxes"
+  },
+  "filing": {
+    "method": "efile",
+    "efile": true,
+    "paper_available": true,
+    "portal_url": "https://www2.santacruzcountyca.gov/AAB/Home/Index",
+    "explanation_chars": 150,
+    "portal_notes": [
+      "Register, then file online. The pilot filing used a 9-section application.",
+      "The explanation field fits only about 150 characters. Attach the Statement of Facts at the DocuSign step.",
+      "The portal has no roll-year field for a regular assessment; the current year is implied.",
+      "A transient 'Failure to find valid APN' notice appeared in the pilot and then cleared. Retry before treating it as a rejection.",
+      "A fee waiver is on the portal for applicants who receive public benefits or are low-income."
+    ],
+    "efile_fee": {
+      "amount": 50,
+      "currency": "USD",
+      "refundable": false,
+      "unit": "per application",
+      "as_of": "2026-10-12",
+      "label": "$50.00 nonrefundable per application via the e-file portal (portal price as of the October 12, 2026 filing)."
+    },
+    "paper_fee": {
+      "amount": 30,
+      "currency": "USD",
+      "refundable": false,
+      "unit": "per application",
+      "payable_to": "County of Santa Cruz",
+      "label": "$30.00 nonrefundable processing fee for paper filing, per the 2021 AAB Local Rules, Rule 7, as recorded in the pilot filing guide. Check or money order payable to County of Santa Cruz. Cash is accepted in person. The 2021 rulebook and the 2026 portal price are different; e-file uses the portal fee."
+    },
+    "fee_conflict": "The e-file portal charged $50 on October 12, 2026. The 2021 local rules said $30. Do not hardcode one number for every year.",
+    "current_year_deadline": "2026-11-30",
+    "regular_window": {
+      "start": "2026-07-02",
+      "end": "2026-11-30",
+      "label": "July 2 through November 30, 2026"
+    },
+    "deadline_note": "September 15 in some counties; November 30 where the roll is delivered late. Verify every year.",
+    "supplemental_window": "Within 60 days of the supplemental notice date.",
+    "supplemental_days": 60,
+    "form": "BOE-305-AH (Application for Changed Assessment, the statewide California form). Use this county's filing path, not another county's branded copy.",
+    "one_application_per_apn_per_year": true,
+    "duplicate_paper_copies": 2,
+    "do_not_attach_evidence_to_application": true,
+    "clerk": {
+      "phone": "(831) 454-2323",
+      "email": "AssessmentAppeals@santacruzcountyca.gov",
+      "address": "701 Ocean St., Room 520, Santa Cruz, CA 95060"
+    },
+    "paper_steps": [
+      "Print BOE-305-AH in duplicate (two copies).",
+      "Do not attach hearing evidence to the application.",
+      "Pay the paper fee recorded in this adapter ($30 in the 2021 local rules). Payable to County of Santa Cruz.",
+      "Hand-deliver during business hours or mail it to the Clerk of the Board at the filing address in this adapter.",
+      "Keep a full copy of everything you submit."
+    ]
+  },
+  "portal_sections": [
+    {"n": 1, "title": "Applicant information", "enter": "Name, email, phone, mailing address. Relationship: Owner."},
+    {"n": 2, "title": "Contact info", "enter": "Agent or attorney only. Skip if you are filing yourself."},
+    {"n": 3, "title": "Property ID", "enter": "Owner-occupied if true, APN, address, and property type."},
+    {"n": 4, "title": "Value", "enter": "Roll value and your opinion, each split into land, improvements, and total."},
+    {"n": 5, "title": "Assessment type", "enter": "Regular assessment, value as of January 1 of the current year."},
+    {"n": 6, "title": "Reason for filing", "enter": "Decline in value. The explanation box holds about 150 characters; attach the Statement of Facts at the DocuSign step."},
+    {"n": 7, "title": "Findings of fact", "enter": "Leave the default (not requested) unless you want written findings."},
+    {"n": 8, "title": "Claim for refund", "enter": "Yes, so a refund is automatic if you win."},
+    {"n": 9, "title": "Correspondence", "enter": "Mail or email."}
+  ],
+  "signature_steps": [
+    {
+      "round": 1,
+      "id": "agent_authorization",
+      "title": "Agent authorization",
+      "who": "homeowner",
+      "required_for": ["dfy", "contingency"],
+      "text": "The homeowner signs. Sherwood does not sign this as the owner. Santa Cruz County AAB Local Rules, Rule 6, allow an agent authorized by the applicant to file."
+    },
+    {
+      "round": 2,
+      "id": "perjury_and_statement",
+      "title": "Application certification and Statement of Facts",
+      "who": "homeowner",
+      "required_for": ["diy", "dfy", "contingency"],
+      "text": "The homeowner signs the application under penalty of perjury. Sherwood never signs that certification. On the e-file portal, the Statement of Facts is attached at the DocuSign step because the explanation box holds about 150 characters."
+    },
+    {
+      "round": 3,
+      "id": "stipulation",
+      "title": "Stipulation, only if the assessor offers one",
+      "who": "homeowner",
+      "required_for": [],
+      "product_step": true,
+      "text": "The pilot kit has no stipulation form. This step exists so a later offer has a place to be signed by the homeowner. It is not a county fact and it is not legal advice."
+    }
+  ],
+  "agent": {
+    "agent_filing_allowed": true,
+    "source": "Build brief: verified against Santa Cruz County AAB Local Rules, Rule 6. An agent authorized by the applicant may file.",
+    "perjury": "The homeowner e-signs the certification. The service files and corresponds as agent and does not sign as the homeowner.",
+    "roles_note": "The build brief says to track who may represent (owner, spouse, child, agent, attorney) in each county. This kit verifies authorized-agent filing. It does not separately verify the other roles."
+  },
+  "hearing": {
+    "format": "Not stated in the pilot kit. Use the format on the hearing notice and confirm it with the clerk.",
+    "notice": "You get a hearing notice at least 45 days before the hearing date.",
+    "notice_minimum_days": 45,
+    "decision_window": "The board has 2 years from filing to hear and decide.",
+    "decision_years": 2,
+    "evidence_copies": "The customer guide says to bring 3 printed copies of the Statement of Facts. The filing guide says to ask the clerk how many, because some counties want more.",
+    "prep": [
+      "Read the hearing notice, including the format.",
+      "Bring 3 printed copies of the Statement of Facts, and ask the clerk if more are required.",
+      "Do not attach that evidence to the application itself.",
+      "Comparable sales are the core evidence: closer and more similar sales are stronger.",
+      "You can withdraw before the hearing. If the assessor has said they will argue for a higher value, withdrawal may need their agreement."
+    ]
+  },
+  "rules": [
+    "Filing the appeal does not relieve the obligation to pay taxes on time.",
+    "The board has 2 years from filing to hear and decide.",
+    "If a reduction is granted, a proportionate refund of taxes paid is issued.",
+    "The board can increase, decrease, or leave the assessment unchanged.",
+    "The board's decision is final (no reconsideration). Further review is via superior court.",
+    "Applications may be amended until 5:00 p.m. on the last timely filing day."
+  ],
+  "valuation": {
+    "lien_date": "January 1",
+    "note": "Comparable sales should bracket the January 1 lien date of the assessment year being appealed."
+  },
+  "homeowner_exemption": {
+    "assessed_reduction": 7000,
+    "approx_annual_dollars": 86,
+    "note": "Separate from the appeal. A one-time claim for a primary residence. About $86 a year at the pilot property's figures. Call the Assessor; there is not an appeal-style deadline on this claim in the kit.",
+    "phone": "(831) 454-2002"
+  },
+  "informal_review": "The pilot kit does not describe an informal review process. Outside the filing window, you can call the Assessor and ask whether they will look at the value before the next window. That call is not an appeal and Sherwood is not giving legal advice.",
+  "stage_expectations": {
+    "filed": [
+      "Keep paying your property taxes on time. The appeal does not pause the bill.",
+      "If you win, tax you already paid comes back as a refund when the claim-for-refund box was marked.",
+      "The board has 2 years from filing to hear and decide."
+    ],
+    "acknowledged": [
+      "Waiting on the county is normal. The board has up to two years.",
+      "Watch for mail or email. The pilot portal lets you pick mail or email for correspondence."
+    ],
+    "assessor_review": [
+      "The assessor may discuss value with you. The pilot kit does not include a stipulation form.",
+      "Any agreement is your decision. Sherwood does not tell you to accept or decline.",
+      "You would sign a stipulation yourself. Sherwood does not sign it as you."
+    ],
+    "hearing_scheduled": [
+      "The notice should arrive at least 45 days before the hearing.",
+      "The format is whatever the notice says. This kit does not state in-person versus remote.",
+      "Bring 3 printed copies of the Statement of Facts, and confirm the count with the clerk.",
+      "Keep paying the tax bill."
+    ],
+    "decision": [
+      "The board can increase, decrease, or leave the assessment unchanged.",
+      "The decision is final. Further review is via superior court, not a second hearing."
+    ],
+    "refund": [
+      "If a reduction is granted, a proportionate refund of taxes paid is issued.",
+      "The customer guide also says that if the decision lands before a payment is due, the bill is corrected instead."
+    ],
+    "monitor": [
+      "The next filing window is a new application. One application per parcel per year.",
+      "Deadlines change. This adapter's regular window is July 2 through November 30, 2026, and it has to be re-checked next year."
+    ]
+  },
+  "timelines": [
+    {"id": "notice", "text": "Hearing notice at least 45 days before the hearing date."},
+    {"id": "decision", "text": "Up to 2 years from filing for the board to hear and decide."},
+    {"id": "supplemental", "text": "A supplemental assessment has its own window: 60 days from the notice date."}
+  ]
+}

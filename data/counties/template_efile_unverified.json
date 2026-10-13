@@ -1,0 +1,113 @@
+{
+  "id": "template_efile_unverified",
+  "county": "Unverified template — e-file shape",
+  "state": "CA",
+  "status": "unverified template",
+  "status_label": "unverified template",
+  "verified": null,
+  "template_warning": "This is not a real county. It shows the e-file adapter shape with a November 30 close and no verified fee, portal, or clerk. The build brief says November 30 is used where the roll is delivered late. Do not quote this file as a county's rules.",
+  "appeals_board": {
+    "name": "unverified template",
+    "file_with": "unverified template",
+    "address": null,
+    "address_note": "unverified template"
+  },
+  "assessor_office": {
+    "address": null,
+    "email": null,
+    "phone": null,
+    "parcel_url": null,
+    "value_url": null
+  },
+  "filing": {
+    "method": "efile",
+    "efile": true,
+    "paper_available": false,
+    "portal_url": null,
+    "explanation_chars": null,
+    "portal_notes": ["unverified template — portal URL is intentionally empty"],
+    "efile_fee": {
+      "amount": null,
+      "currency": "USD",
+      "refundable": null,
+      "unit": "per application",
+      "label": "unverified template — fee not set. Do not quote a number."
+    },
+    "paper_fee": null,
+    "fee_conflict": null,
+    "current_year_deadline": "2026-11-30",
+    "regular_window": {
+      "start": null,
+      "end": "2026-11-30",
+      "label": "Closes November 30, 2026 (unverified template — opening day is not set)"
+    },
+    "deadline_note": "Template only. Verify the real county every year.",
+    "supplemental_window": "unverified template",
+    "supplemental_days": null,
+    "form": "unverified template — confirm the form before anyone files",
+    "one_application_per_apn_per_year": null,
+    "duplicate_paper_copies": null,
+    "do_not_attach_evidence_to_application": null,
+    "clerk": {"phone": null, "email": null, "address": null},
+    "paper_steps": []
+  },
+  "portal_sections": [],
+  "signature_steps": [
+    {
+      "round": 1,
+      "id": "agent_authorization",
+      "title": "Agent authorization (unverified template)",
+      "who": "homeowner",
+      "required_for": ["dfy", "contingency"],
+      "text": "unverified template — agent filing is not verified on this adapter"
+    },
+    {
+      "round": 2,
+      "id": "perjury_and_statement",
+      "title": "Application certification (unverified template)",
+      "who": "homeowner",
+      "required_for": ["diy", "dfy", "contingency"],
+      "text": "unverified template — the homeowner signs the certification. Sherwood does not."
+    },
+    {
+      "round": 3,
+      "id": "stipulation",
+      "title": "Stipulation (unverified template)",
+      "who": "homeowner",
+      "required_for": [],
+      "product_step": true,
+      "text": "unverified template"
+    }
+  ],
+  "agent": {
+    "agent_filing_allowed": null,
+    "source": "unverified template",
+    "perjury": "The homeowner signs. Sherwood does not sign as the homeowner.",
+    "roles_note": "unverified template"
+  },
+  "hearing": {
+    "format": "unverified template",
+    "notice": "unverified template",
+    "notice_minimum_days": null,
+    "decision_window": "unverified template",
+    "decision_years": null,
+    "evidence_copies": "unverified template",
+    "prep": ["unverified template"]
+  },
+  "rules": ["unverified template — no county rules are loaded"],
+  "valuation": {"lien_date": "unverified template", "note": "unverified template"},
+  "homeowner_exemption": null,
+  "informal_review": "unverified template — no informal review steps and no assessor phone.",
+  "stage_expectations": {
+    "filed": ["unverified template — do not treat a simulated filing as a real county submission."],
+    "acknowledged": ["unverified template"],
+    "assessor_review": ["unverified template"],
+    "hearing_scheduled": ["unverified template"],
+    "decision": ["unverified template"],
+    "refund": ["unverified template"],
+    "monitor": ["unverified template"]
+  },
+  "timelines": [
+    {"id": "deadline", "text": "Template close date: November 30, 2026. Opening day is not set. Not a verified county."}
+  ]
+}

@@ -1,0 +1,28 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Your numbers — Sherwood</title><link rel="stylesheet" href="style.css"></head><body>
+<header><div class="wrap"><a class="logo" href="index.html">Sherwood</a><nav><a href="index.html">Check</a><a href="how-it-works.html">How it works</a><a href="pricing.html">Pricing</a><a href="case-study.html">Pilot case</a><a href="faq.html">FAQ</a><a href="contact.html">Contact</a></nav></div></header>
+<main><div class="wrap">
+<p class="banner" data-sim></p>
+<p data-progress="Check"></p>
+<p class="muted small">For <span id="for-address">your property</span></p>
+<h1>The numbers on your bill</h1>
+<p class="lead">We do not look up the assessor record in this demo. Use the figures on your tax bill and your own sense of what the home would sell for. The county you pick loads the deadline and the fee.</p>
+<form id="values-form" class="wide">
+<label>County<select name="county" required></select></label>
+<div id="county-banner" class="note"></div>
+<label>Assessed value on the roll<input name="assessed" inputmode="decimal" required placeholder="$"></label>
+<label>Your estimate of market value<input name="market" inputmode="decimal" required placeholder="$"></label>
+<label>Total property tax on that bill (optional)<input name="tax" inputmode="decimal" placeholder="$ — used only to estimate savings"></label>
+<label>How sure is the market value?<select name="confidence"><option value="sure">Sure enough to use</option><option value="guess">A rough guess</option></select></label>
+<label>Supplemental notice date, if you got one<input name="supplemental" type="date"></label>
+<button class="btn" type="submit">See the result</button>
+</form>
+</div></main>
+<footer><div class="wrap"><p><b>Sherwood</b> · Property tax assessment appeals · <span data-geo="city">your area</span>, <span data-geo="region">your state</span></p>
+<p>Sherwood is not a law firm and does not provide legal advice. You sign the application's certification. Results are not guaranteed.</p>
+<p>Launch-county clerk, from the adapter: <span data-fact="santa_cruz.clerk">loading…</span></p>
+<p><a href="trust.html">Trust and data</a> · <a href="dashboard.html">Your appeal</a> · <a href="admin.html">Ops</a></p>
+<p>© 2026 Sherwood</p></div></footer>
+<script src="app.js"></script>
+<script type="module" src="js/pages/values.js"></script>
+</body></html>
