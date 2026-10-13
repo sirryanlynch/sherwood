@@ -36,10 +36,18 @@ export function isoDay(date) {
   return `${d.getFullYear()}-${m}-${day}`;
 }
 
+const SHORT_MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
 export function formatDay(value) {
   const d = parseISODate(value) || (value instanceof Date ? value : null);
   if (!d) return "not set";
   return d.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+}
+
+export function formatShortDay(value) {
+  const d = parseISODate(value) || (value instanceof Date && !Number.isNaN(value.getTime()) ? value : null);
+  if (!d) return "not set";
+  return `${SHORT_MONTHS[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
 }
 
 export function uid(prefix) {

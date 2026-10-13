@@ -23,7 +23,23 @@ const LAUNCH_ZIPS = new Set([
   "95067", "95073", "95076", "95077"
 ]);
 
-export function headlinePlace() {
+function titleCity(value) {
+  return String(value || "").trim().split(/\s+/).filter(Boolean).map(word => {
+    return word.charAt(0).toUpperCase() + word.slice(1);
+  }).join(" ");
+}
+
+/* Headline city only. A typed address or ?county= may name a city.
+   An IP lookup never does, including when that lookup chose the county. */
+export function headlinePlace(input) {
+  if (!input || typeof input !== "object") return "your";
+  const param = input.param;
+  if (param && (param.slug === "santa-cruz" || param.id === "santa_cruz")) return "Santa Cruz";
+  const address = String(input.address || "").trim();
+  if (!address) return "your";
+  const parsed = parseAddressPlace(address);
+  if (parsed.city) return titleCity(parsed.city);
+  if (parsed.status === "launch" && parsed.source === "address") return "Santa Cruz";
   return "your";
 }
 

@@ -1,6 +1,6 @@
 import { getCounty, loadCounties } from "./counties.js";
 import { contactLine, esc, formatDay, money } from "./format.js";
-import { planPriceLines } from "./pricing.js";
+import { filingFeeNote, planPriceLines } from "./pricing.js";
 
 const SIM = "Simulated on this device. Payment, signatures, county filing, and email or SMS do not leave this browser.";
 
@@ -89,9 +89,9 @@ function paintPlanPrices(county) {
   const home = document.getElementById("home-price");
   if (home) home.textContent = lines.home;
   const diy = document.getElementById("plan-diy-price");
-  if (diy) diy.textContent = lines.diy;
-  const note = document.getElementById("plan-diy-note");
-  if (note) note.textContent = lines.diyFee;
+  if (diy) diy.textContent = lines.diyLine;
+  const feeNote = document.getElementById("filing-fee-note");
+  if (feeNote) feeNote.textContent = filingFeeNote(county);
   const dfy = document.getElementById("plan-dfy-price");
   if (dfy) dfy.textContent = lines.dfy;
   const faq = document.getElementById("faq-prices");

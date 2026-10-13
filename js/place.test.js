@@ -4,8 +4,18 @@ import {
   headlinePlace, parseAddressPlace, classifyIp, resolvePlace, countyBySlug, displayLabel
 } from "./place.js";
 
-test("headline never uses an IP city", () => {
+test("headline uses a typed city or a county param, never an IP city", () => {
   assert.equal(headlinePlace(), "your");
+  assert.equal(headlinePlace({ ipCity: "Cupertino" }), "your");
+  assert.equal(headlinePlace({
+    address: "1 Infinite Loop, Cupertino, CA 95014",
+    ipCity: "Santa Cruz"
+  }), "Cupertino");
+  assert.equal(headlinePlace({
+    param: countyBySlug("santa-cruz"),
+    ipCity: "Cupertino"
+  }), "Santa Cruz");
+  assert.equal(headlinePlace({ address: "95060" }), "Santa Cruz");
 });
 
 test("Cupertino with no county is ambiguous", () => {

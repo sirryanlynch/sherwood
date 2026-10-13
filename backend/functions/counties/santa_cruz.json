@@ -31,7 +31,11 @@
       "A transient 'Failure to find valid APN' notice appeared in the pilot and then cleared. Retry before treating it as a rejection.",
       "A fee waiver is on the portal for applicants who receive public benefits or are low-income."
     ],
-    "filing_fee": 50,
+    "filing_fee": {
+      "amount": 50,
+      "refundable": false,
+      "note": "The county fee is non-refundable. Fee waivers exist."
+    },
     "efile_fee": {
       "amount": 50,
       "currency": "USD",
@@ -54,7 +58,7 @@
       "start": "2026-07-02",
       "end": "2026-11-30",
       "label": "July 2 through November 30, 2026",
-      "source_url": "https://www2.santacruzcountyca.gov/AAB/Home/Index",
+      "source_url": "https://www2.santacruzcountyca.gov/AAB/Content/SupportFiles/Filing%20Deadlines%20and%20Appeal%20Information.pdf",
       "verified_date": "2026-10-12"
     },
     "deadline_note": "September 15 in some counties; November 30 where the roll is delivered late. Verify every year.",

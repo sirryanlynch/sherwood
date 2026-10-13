@@ -1,9 +1,10 @@
 import "../boot.js";
 import { paymentsAdapter } from "../adapters/payments.js";
+import { readAttribution } from "../attribution.js";
 import { money, esc, formatDay } from "../format.js";
 import { CHECKOUT_PLANS, planPriceLines } from "../pricing.js";
 import { getCounty } from "../counties.js";
-import { filingWindow } from "../engine.js";
+import { deadlineBadge, filingWindow, nextWindowCopy } from "../engine.js";
 import { slugForCountyId } from "../place.js";
 import { markConverted } from "../reminders.js";
 import { requireMatter, saveMatter } from "../store.js";
@@ -23,8 +24,10 @@ if (gate) {
   } else {
     const savings = matter.savings && matter.savings.amount;
     const lines = planPriceLines(county);
+    const deadline = deadlineBadge(county);
     root.innerHTML = `
       <h1>Choose a plan</h1>
+      ${deadline ? `<p class="badge">${esc(deadline)}</p>` : ""}
       <p class="lead">${esc(matter.address)}</p>
       <form id="pay" class="wide">
         <div class="plans">
@@ -43,13 +46,16 @@ if (gate) {
         root.innerHTML = closedHtml(county, live);
         return;
       }
+      matter.attribution = matter.attribution || readAttribution();
       const payment = await paymentsAdapter.charge({
         userId: user.id,
         matterId: matter.id,
         plan,
-        amount: plan.dueToday
+        amount: plan.dueToday,
+        attribution: matter.attribution
       });
       matter.userId = user.id;
+      matter.src = payment.src;
       matter.planId = plan.id;
       matter.paymentId = payment.id;
       matter.paidAt = payment.createdAt;
@@ -65,7 +71,6 @@ if (gate) {
 
 function closedHtml(county, window) {
   const win = (county.filing && county.filing.regular_window) || {};
-  const opens = win.start ? formatDay(win.start) : "This adapter does not state an opening date.";
   const source = win.source_url ? `<a href="${esc(win.source_url)}">${esc(win.source_url)}</a>` : "not set on this adapter";
   const verified = win.verified_date ? formatDay(win.verified_date) : "not set on this adapter";
   const title = window.state === "off_season" ? "The filing window is closed" : "Checkout cannot continue";
@@ -73,9 +78,8 @@ function closedHtml(county, window) {
     <h1>${esc(title)}</h1>
     <p class="lead">Checkout cannot proceed. This county's filing window is not open on the adapter.</p>
     <div class="card">
-      <p>${esc(window.label || "No window label on this adapter.")}</p>
+      <p>${esc(nextWindowCopy(county, new Date()))}</p>
       <ul>${(window.reasons || []).map(r => `<li>${esc(r)}</li>`).join("")}</ul>
-      <p>Opens: ${esc(opens)}</p>
       <p>Deadline source: ${source}</p>
       <p>Verified: ${esc(verified)}</p>
     </div>
@@ -83,15 +87,15 @@ function closedHtml(county, window) {
 }
 
 function cardHtml(plan, lines, savings) {
-  const price = plan.id === "dfy" ? lines.dfy : lines.diy;
-  const fee = plan.id === "diy" && lines.diyFee ? `<p>${esc(lines.diyFee)}</p>` : "";
+  const price = plan.id === "dfy" ? lines.dfy : lines.diyLine;
+  const waiver = plan.id === "diy" && lines.feeNote ? `<p class="small muted">${esc(lines.feeNote)}</p>` : "";
   const versus = savings == null ? "no dollar estimate on this check" : money(savings);
   return `
     <label class="card">
       <input type="radio" name="plan" value="${plan.id}" required>
       <h3>${esc(plan.name)}</h3>
       <p><b>${esc(price)}</b></p>
-      ${fee}
+      ${waiver}
       <p>vs ${esc(versus)}</p>
       ${plan.chargeNote ? `<p>${esc(plan.chargeNote)}</p>` : ""}
       <p class="small muted">${esc(ESTIMATE_LABEL)}</p>

@@ -2,6 +2,7 @@ import "../boot.js";
 import { efileAdapter } from "../adapters/efile.js";
 import { notify } from "../adapters/notify.js";
 import { getCounty } from "../counties.js";
+import { AGENT_CONTACT, OWNER_COPY_LINE, signedDateText } from "../authorization.js";
 import { contactLine, esc } from "../format.js";
 import { filingWindow } from "../engine.js";
 import { planById, planPriceLines } from "../pricing.js";
@@ -112,7 +113,14 @@ function paintFiled(root, matter, county) {
     : (matter.planId === "dfy" ? lines.dfy : `${lines.diy} ${lines.diyFee}`);
   const auth = matter.agentAuthorization;
   const authLine = auth
-    ? `<p>Agent authorization on this appeal: ${esc(auth.doc_title)}, signed by ${esc(auth.signerName)} at ${esc(auth.signedAt)}.</p>`
+    ? `<p>Agent authorization on this appeal: ${esc(auth.doc_title)}, signed by ${esc(auth.signerName)}.</p>
+       <p>Parcel: ${esc(auth.parcel || "not stored on this appeal")}.</p>
+       <p>Tax years covered: ${esc((auth.taxYears || []).join(", ") || "not stored on this appeal")}. Up to 4.</p>
+       <p>${esc(OWNER_COPY_LINE)}</p>
+       <p>Date signed: ${esc(signedDateText(auth.signedAt) || "not stored")}. This is the day it was signed. It was not backdated.</p>
+       <p>Agent name: ${esc(auth.agentName || AGENT_CONTACT.name)}</p>
+       <p>Agent address: ${esc(auth.agentAddress || AGENT_CONTACT.address)}</p>
+       <p>Agent phone: ${esc(auth.agentPhone || AGENT_CONTACT.phone)}</p>`
     : `<p>No agent authorization is stored on this appeal.</p>`;
   root.innerHTML = `
     <h1>Filing recorded</h1>

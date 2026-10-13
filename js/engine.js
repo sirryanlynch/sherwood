@@ -1,4 +1,4 @@
-import { asDate, parseISODate, money } from "./format.js";
+import { asDate, formatShortDay, parseISODate, money } from "./format.js";
 
 /* Product review rule, not a legal standard and not a county rule. */
 export const MATERIALITY_RATIO = 0.05;
@@ -6,7 +6,9 @@ export const MATERIALITY_RATIO = 0.05;
 export function feeAmount(county) {
   const filing = county && county.filing;
   if (!filing) return null;
-  if (typeof filing.filing_fee === "number" && filing.filing_fee > 0) return filing.filing_fee;
+  const listed = filing.filing_fee;
+  const listedAmount = typeof listed === "number" ? listed : listed && listed.amount;
+  if (typeof listedAmount === "number" && listedAmount > 0) return listedAmount;
   const preferred = filing.efile ? filing.efile_fee : filing.paper_fee;
   const amount = preferred && preferred.amount;
   return typeof amount === "number" ? amount : null;
@@ -68,13 +70,35 @@ export function filingWindow(county, today, supplementalNoticeDate) {
   if (regular === "open") {
     return { state: "open", kind: "regular", reasons, label: win.label };
   }
-  if (regular === "closed" || regular === "before" || supplemental === "closed") {
-    const label = (win && win.label) || "not set";
-    reasons.unshift(`Today is outside the regular filing window on this adapter (${label}).`);
-    return { state: "off_season", kind: regular, reasons, label };
+  if (regular === "before") {
+    reasons.unshift("The filing window on this adapter has not opened.");
+    return { state: "off_season", kind: regular, reasons, label: win && win.label };
+  }
+  if (regular === "closed" || supplemental === "closed") {
+    reasons.unshift("The filing window on this adapter is closed.");
+    return { state: "off_season", kind: regular === "closed" ? "closed" : regular, reasons, label: "" };
   }
   reasons.unshift("This adapter does not say when the filing window opens, so Sherwood will not treat it as open.");
   return { state: "unknown", kind: "regular", reasons, label: win && win.label };
+}
+
+export function deadlineBadge(county) {
+  const end = county && county.filing && county.filing.regular_window && county.filing.regular_window.end;
+  if (!end || formatShortDay(end) === "not set") return "";
+  return `Filing deadline: ${formatShortDay(end)}`;
+}
+
+/* Dates come only from a window whose start is still ahead. A passed window is not described as next, and no opening is promised. */
+export function nextWindowCopy(county, today) {
+  const win = county && county.filing && county.filing.regular_window;
+  const start = win && parseISODate(win.start);
+  const end = win && parseISODate(win.end);
+  const day = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  if (start && start > day) {
+    const through = end && end >= start ? ` through ${formatShortDay(end)}` : "";
+    return `The next filing window in this county file is ${formatShortDay(start)}${through}. No outcome is promised.`;
+  }
+  return "This county file does not list a future filing window. No opening date is promised.";
 }
 
 export function decide(input) {

@@ -2,6 +2,7 @@ import "../boot.js";
 import { paymentsAdapter } from "../adapters/payments.js";
 import { notify } from "../adapters/notify.js";
 import { getCounty } from "../counties.js";
+import { deadlineBadge, nextWindowCopy } from "../engine.js";
 import { contactLine, esc, formatDay, money } from "../format.js";
 import { slugForCountyId } from "../place.js";
 import { reminderMessage } from "../place-ui.js";
@@ -12,7 +13,7 @@ import { currentMatter, saveMatter } from "../store.js";
 function priceLine(county) {
   const lines = planPriceLines(county);
   if (lines.fee == null) return "";
-  return `<p>DIY kit ${esc(lines.diy)} ${esc(lines.diyFee)} We file it ${esc(lines.dfy)}</p>`;
+  return `<p>DIY kit ${esc(lines.diyLine)}. We file it ${esc(lines.dfy)}</p>`;
 }
 
 const root = document.querySelector("#results");
@@ -73,11 +74,10 @@ function render(matter, county) {
       ${emailForm(matter, privacy)}
       <div class="cta"><a class="btn ghost" href="how-it-works.html">See how a case moves when the numbers support it</a></div>`;
   } else {
-    const opens = win.start ? formatDay(win.start) : "This adapter does not state an opening date.";
     next = `
       <div class="card">
         <h2>Filing opens later</h2>
-        <p>The window on this adapter opens: <b>${esc(opens)}</b>.</p>
+        <p>${esc(nextWindowCopy(county, new Date()))}</p>
         <p class="small muted">Deadline source: ${source}. Verified: ${esc(verified)}.</p>
         <form id="remind-form" class="wide">
           <label>Email<input name="email" type="email" required value="${esc(matter.email || "")}" placeholder="you@example.com"></label>
@@ -96,13 +96,15 @@ function render(matter, county) {
       <p class="small muted">Assessor contact from the adapter: ${esc(contactLine(county.assessor_office))}</p>`;
   }
 
+  const deadline = matter.window && matter.window.state === "open" ? deadlineBadge(county) : "";
   root.innerHTML = `
     <p class="badge">${esc(labels[matter.outcome] || matter.outcome)}</p>
+    ${deadline ? `<p class="badge">${esc(deadline)}</p>` : ""}
     <h1>Your check</h1>
     <p class="lead">For ${esc(matter.address)}. County adapter: ${esc(county.county)} (${esc(county.status_label)}).</p>
     <div class="card">
       ${savingsHtml}
-      <p class="small muted">Window: ${esc(matter.window && matter.window.label || "not set")}. Adapter deadline: ${esc(formatDay(county.filing.current_year_deadline))}.</p>
+      <p class="small muted">${matter.outcome === "off_season" ? esc(nextWindowCopy(county, new Date())) : `Window: ${esc(matter.window && matter.window.label || "not set")}. Adapter deadline: ${esc(formatDay(county.filing.current_year_deadline))}.`}</p>
       <p class="small muted">Deadline source: ${source}. Verified: ${esc(verified)}.</p>
       ${priceLine(county)}
       <ul>${(matter.reasons || []).map(r => `<li>${esc(r)}</li>`).join("")}</ul>
@@ -125,7 +127,6 @@ function render(matter, county) {
       const email = String(new FormData(remind).get("email") || "").trim();
       if (!remind.reportValidity()) return;
       matter.email = email;
-      const opens = win.start || null;
       const result = await createReminder({
         email,
         county_slug: slugForCountyId(matter.countyId),
@@ -133,14 +134,14 @@ function render(matter, county) {
         marketing_consent: true,
         consent_source: "results_off_season"
       });
-      matter.remindWhenOpen = { at: new Date().toISOString(), email, openDate: opens, simulated: !!result.simulated };
+      matter.remindWhenOpen = { at: new Date().toISOString(), email, openDate: null, simulated: !!result.simulated };
       saveMatter(matter);
       await notify.outbox({
         channel: "email",
         to: email,
         kind: "remind_when_open",
         simulated: true,
-        body: `Reminder request stored for ${email}. ${result.simulated ? "No email was sent." : reminderMessage(result)} Opening date on the adapter: ${opens ? formatDay(opens) : "not set"}.`
+        body: `Reminder request stored for ${email}. ${result.simulated ? "No email was sent." : reminderMessage(result)} ${nextWindowCopy(county, new Date())}`
       });
       remind.querySelector("button").disabled = true;
       const ok = document.querySelector("#remind-ok");

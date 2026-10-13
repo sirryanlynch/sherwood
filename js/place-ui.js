@@ -1,6 +1,6 @@
 import {
   CHOICE_KEY, addressKey, choiceFromCounty, classifyIp, countyBySlug, displayLabel,
-  otherChoice, parseAddressPlace, resolvePlace
+  headlinePlace, otherChoice, parseAddressPlace, resolvePlace
 } from "./place.js";
 import { createReminder } from "./reminders.js";
 
@@ -67,7 +67,7 @@ function renderBar(place) {
   document.querySelectorAll("[data-place-bar]").forEach(host => {
     const openPicker = place.status === "ambiguous";
     host.innerHTML = `
-      <p class="place-bar">Showing results for: <strong>${escapeHtml(displayLabel(place))}</strong> - <button type="button" data-place-change>change</button></p>
+      <p class="place-bar">Showing results for ${escapeHtml(displayLabel(place))} · <button type="button" data-place-change>change</button></p>
       <div class="place-picker" data-place-picker ${openPicker ? "" : "hidden"}>
         <label>County
           <select data-place-select>
@@ -116,8 +116,16 @@ function escapeHtml(value) {
   }[ch]));
 }
 
+function paintHeadline(address) {
+  const city = headlinePlace({ param: paramCounty(), address });
+  document.querySelectorAll("[data-headline-city]").forEach(el => {
+    el.textContent = city;
+  });
+}
+
 function paint(place) {
   renderBar(place);
+  paintHeadline(currentAddress());
   const launch = document.querySelector("#home-launch");
   const other = document.querySelector("#home-other");
   const ambiguous = document.querySelector("#home-ambiguous");
@@ -128,7 +136,7 @@ function paint(place) {
   const check = document.querySelector("#check-form");
   const under = document.querySelector("#home-under");
   if (check) check.hidden = place.status === "other" && !check.dataset.forced;
-  if (under) under.hidden = place.status !== "launch";
+  if (under && check) under.hidden = check.hidden;
 }
 
 function showCheckAnyway() {
@@ -137,6 +145,8 @@ function showCheckAnyway() {
   if (!check) return;
   check.dataset.forced = "1";
   check.hidden = false;
+  const under = document.querySelector("#home-under");
+  if (under) under.hidden = false;
   if (other) other.hidden = false;
 }
 
@@ -190,6 +200,11 @@ export async function startPlace() {
   paint(place);
   const show = document.querySelector("#show-check");
   if (show) show.addEventListener("click", showCheckAnyway);
+  const addressInput = document.querySelector("#check-form input[name=address]");
+  if (addressInput && !addressInput.dataset.headlineBound) {
+    addressInput.dataset.headlineBound = "1";
+    addressInput.addEventListener("input", () => paintHeadline(currentAddress()));
+  }
   bindReminder();
   if (param || (readStored() && readStored().source === "user")) return place;
   let geo = readIp();

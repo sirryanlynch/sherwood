@@ -1,7 +1,7 @@
 /* Checkout offers these two only. Contingency is not a checkout plan.
    County filing fees come from filing.filing_fee on the county adapter.
    We file it is $249 with that fee included. The DIY kit is $79, and the
-   county fee is extra only when filing_fee is a number above zero. */
+   county fee is extra only when filing_fee's amount is above zero. */
 export const CHECKOUT_PLANS = [
   {
     id: "diy",
@@ -59,8 +59,15 @@ export function planById(id) {
 /* Positive filing_fee only. Zero and missing mean: do not mention a county fee. */
 export function filingFeeAmount(county) {
   const raw = county && county.filing ? county.filing.filing_fee : undefined;
-  if (typeof raw !== "number" || raw <= 0) return null;
-  return raw;
+  const amount = typeof raw === "number" ? raw : raw && raw.amount;
+  if (typeof amount !== "number" || amount <= 0) return null;
+  return amount;
+}
+
+export function filingFeeNote(county) {
+  const raw = county && county.filing ? county.filing.filing_fee : undefined;
+  if (!raw || typeof raw !== "object") return "";
+  return typeof raw.note === "string" ? raw.note : "";
 }
 
 export function plainDollars(amount) {
@@ -72,9 +79,10 @@ export function plainDollars(amount) {
 export function planPriceLines(county) {
   const fee = filingFeeAmount(county);
   const diyFee = fee == null ? "" : `+ ${plainDollars(fee)} county fee, paid when you file.`;
+  const diyLine = fee == null ? "$79" : `$79 + ${plainDollars(fee)} county fee, paid when you file`;
   const dfy = fee == null ? "$249" : "$249, county fee included.";
   const home = fee == null
     ? "Check for free. If there's a case, file it yourself for $79, or we'll file it for you for $249."
     : `Check for free. If there's a case, file it yourself for $79 + ${plainDollars(fee)} county fee, paid when you file, or we'll file it for you for ${dfy}`;
-  return { fee, diy: "$79", diyFee, dfy, home };
+  return { fee, diy: "$79", diyFee, diyLine, dfy, home, feeNote: filingFeeNote(county) };
 }
