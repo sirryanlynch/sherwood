@@ -52,13 +52,18 @@ export function signedDateText(iso) {
   return shown;
 }
 
-/* Rule 305 fields the product stores. Agent contact may be the pending placeholders. */
+export function pendingAgentContact(value) {
+  return String(value || "").trim() === "[pending]";
+}
+
+/* Rule 305 fields the product stores. Literal [pending] agent contact is not a real detail. */
 export function authorizationReady(auth, county) {
   if (!auth || !auth.signedAt || !String(auth.signerName || "").trim()) return false;
   if (!String(auth.signerTitle || "").trim()) return false;
   if (!String(auth.parcel || "").trim()) return false;
   if (!auth.ownerGetsCopy) return false;
   if (!String(auth.agentName || "").trim() || !String(auth.agentAddress || "").trim() || !String(auth.agentPhone || "").trim()) return false;
+  if (pendingAgentContact(auth.agentName) || pendingAgentContact(auth.agentAddress) || pendingAgentContact(auth.agentPhone)) return false;
   const years = Array.isArray(auth.taxYears) ? auth.taxYears : [];
   if (!years.length || years.length > 4) return false;
   const options = county && county.agent_authorization && county.agent_authorization.local_rule_6 && county.agent_authorization.local_rule_6.options;

@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import { paymentsAdapter } from "./adapters/payments.js";
 import { authorizationReady, signedBeforeFiling } from "./authorization.js";
+import { STATUTORY_DISCLOSURE } from "./statutoryDisclosure.js";
 import { deadlineBadge } from "./engine.js";
 import { purchaseOffer } from "./offer.js";
 import { CARD_SAVE_NOTE, planPriceLines } from "./pricing.js";
@@ -109,15 +110,18 @@ test("agent authorization needs a title and a signature before the filing time",
     signerTitle: "Owner",
     parcel: "1 Main, APN 1",
     ownerGetsCopy: true,
-    agentName: "[pending]",
-    agentAddress: "[pending]",
-    agentPhone: "[pending]",
+    agentName: "Ada Agent",
+    agentAddress: "1 Agent Way, Santa Cruz, CA 95060",
+    agentPhone: "(831) 555-0100",
     taxYears: [2026]
   };
   assert.equal(authorizationReady(auth), true);
   assert.equal(authorizationReady({ ...auth, signerTitle: "" }), false);
+  assert.equal(authorizationReady({ ...auth, agentName: "[pending]", agentAddress: "[pending]", agentPhone: "[pending]" }), false);
+  assert.equal(authorizationReady({ ...auth, agentPhone: "[pending]" }), false);
   assert.equal(signedBeforeFiling(auth, "2026-10-13T13:00:00.000Z"), true);
   assert.equal(signedBeforeFiling(auth, "2026-10-13T11:00:00.000Z"), false);
+  assert.equal(signedBeforeFiling({ ...auth, agentName: "[pending]" }, "2026-10-13T13:00:00.000Z"), false);
 });
 
 test("every page mounts the disclosure outside a collapsible, larger than the headline", () => {
@@ -128,8 +132,13 @@ test("every page mounts the disclosure outside a collapsible, larger than the he
   assert.match(css, /--type-max:20px/);
   for (const name of pages) {
     const html = readFileSync(new URL(`../${name}`, import.meta.url), "utf8");
-    assert.ok(html.includes("data-statutory-disclosure"), name);
+    const match = html.match(/<div class="statutory-disclosure"[^>]*>\s*<p><b>([\s\S]*?)<\/b><\/p>\s*<\/div>/);
+    assert.equal(match && match[1], STATUTORY_DISCLOSURE, name);
+    const boxAt = html.indexOf('class="statutory-disclosure"');
+    const headerAt = html.indexOf("<header");
+    assert.ok(boxAt >= 0 && headerAt > boxAt, name);
     assert.ok(html.includes("has-disclosure"), name);
-    assert.equal(/<details[\s\S]*data-statutory-disclosure/.test(html), false, name);
+    assert.equal(html.includes("data-statutory-disclosure"), false, name);
+    assert.equal(/<details[\s\S]*statutory-disclosure/.test(html), false, name);
   }
 });

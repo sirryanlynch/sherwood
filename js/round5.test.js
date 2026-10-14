@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { STATUTORY_DISCLOSURE, statutoryDisclosureHtml } from "./statutoryDisclosure.js";
 import { AUTHORIZATION_RETENTION, retainUntil } from "./retention.js";
 import { MONITOR_TERMS, monitorOfferHtml } from "./monitor.js";
-import { CHECKOUT_PLANS } from "./pricing.js";
+import { CHECKOUT_PLANS, DIY_HOLD_NOTE } from "./pricing.js";
 
 const read = (path) => readFileSync(new URL(path, import.meta.url), "utf8");
 
@@ -17,12 +17,15 @@ test("the statutory disclosure is one sentence, shared with reminder email", () 
   assert.equal(STATUTORY_DISCLOSURE.startsWith("THIS ASSESSMENT REDUCTION FILING SERVICE"), true);
 });
 
-test("home and the Santa Cruz landing mount the disclosure above the headline", () => {
+test("home and the Santa Cruz landing put the disclosure above the header", () => {
   for (const file of ["../index.html", "../santa-cruz/index.html", "../pricing.html", "../faq.html"]) {
     const html = read(file);
-    const mount = html.indexOf("data-statutory-disclosure");
+    const match = html.match(/<div class="statutory-disclosure"[^>]*>\s*<p><b>([\s\S]*?)<\/b><\/p>\s*<\/div>/);
+    assert.equal(match && match[1], STATUTORY_DISCLOSURE, file);
+    const box = html.indexOf('class="statutory-disclosure"');
+    const header = html.indexOf("<header");
     const h1 = html.indexOf("<h1");
-    assert.ok(mount > 0 && mount < h1, file);
+    assert.ok(box > 0 && box < header && header < h1, file);
     assert.equal(html.includes('class="has-disclosure"') || html.includes("has-disclosure "), true);
   }
   const css = read("../style.css");
@@ -46,5 +49,7 @@ test("the monitor offer is unchecked and the $249 card waits for county confirma
   assert.equal(dfy.chargeNote, "We'll save your card today. You won't be charged until the county confirms your appeal is filed.");
   assert.equal(dfy.dueToday, 0);
   assert.equal(diy.dueToday, 0);
+  assert.equal(diy.chargeNote, DIY_HOLD_NOTE);
+  assert.equal(diy.chargeNote, "Card saved. Not charged while payment timing is under attorney review.");
   assert.equal(diy.timingFlag, "[DRAFT – payment timing pending attorney review]");
 });

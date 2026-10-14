@@ -2,7 +2,7 @@ import "../boot.js";
 import { efileAdapter } from "../adapters/efile.js";
 import { notify } from "../adapters/notify.js";
 import { getCounty } from "../counties.js";
-import { AGENT_CONTACT, OWNER_COPY_LINE, authorizationReady, signedBeforeFiling, signedDateText } from "../authorization.js";
+import { AGENT_CONTACT, OWNER_COPY_LINE, authorizationReady, pendingAgentContact, signedBeforeFiling, signedDateText } from "../authorization.js";
 import { AUTHORIZATION_RETENTION } from "../retention.js";
 import { contactLine, esc } from "../format.js";
 import { filingWindow } from "../engine.js";
@@ -44,6 +44,8 @@ function paintGate(root, matter, user, county) {
   if (!signed) {
     const title = doc.doc_title || "the agent authorization";
     const source = doc.source || "This adapter does not define an agent authorization document.";
+    const pending = auth && (pendingAgentContact(auth.agentName) || pendingAgentContact(auth.agentAddress) || pendingAgentContact(auth.agentPhone));
+    if (pending) blocks.push("Agent name, address, and phone are still [pending]. Filing stays off until those are real details.");
     blocks.push(`Filing stays off until the agent authorization is complete: date signed, tax years (4 at most), parcel, agent name, address, and phone, and your signature and title. ${title}. ${source}`);
   }
   if (!certOk) blocks.push("The homeowner certification is not signed yet.");

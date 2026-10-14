@@ -1,9 +1,10 @@
 import { CONFIG } from "./config.js";
 import { deadlineBadge, filingWindow } from "./engine.js";
-import { esc, parseISODate } from "./format.js";
+import { esc, isoDay, parseISODate } from "./format.js";
 
 export const EFILE_LEAD_DAYS = 3;
 export const PAPER_LEAD_DAYS = 7;
+export const ORDER_CUTOFF_LEAD_DAYS = 5;
 
 export function paperFiling(county) {
   const filing = county && county.filing;
@@ -19,11 +20,18 @@ export function registrationBlocksDfy(county) {
 
 const SHORT_MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-/* Santa Cruz product cutoff. Other counties do not use this date. */
+/* Santa Cruz uses order_cutoff. Every other county closes We file it orders
+   5 days before regular_window.end. The cutoff day itself is still open. */
 export function orderCutoffIso(county) {
-  if (!county || county.id !== "santa_cruz") return "";
-  const iso = String(CONFIG.order_cutoff || "");
-  return /^\d{4}-\d{2}-\d{2}$/.test(iso) ? iso : "";
+  if (county && county.id === "santa_cruz") {
+    const iso = String(CONFIG.order_cutoff || "");
+    if (/^\d{4}-\d{2}-\d{2}$/.test(iso)) return iso;
+  }
+  const endIso = county && county.filing && county.filing.regular_window && county.filing.regular_window.end;
+  const end = parseISODate(endIso);
+  if (!end) return "";
+  const cutoff = new Date(end.getFullYear(), end.getMonth(), end.getDate() - ORDER_CUTOFF_LEAD_DAYS);
+  return isoDay(cutoff);
 }
 
 /* True after the cutoff calendar day. The cutoff day itself is still open. */

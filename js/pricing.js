@@ -5,6 +5,7 @@ import { CONFIG } from "./config.js";
    SHOW_199_PLUS_COUNTY_FEE stays off until counsel clears that display.
    Neither plan charges at checkout. */
 export const CARD_SAVE_NOTE = "We'll save your card today. You won't be charged until the county confirms your appeal is filed.";
+export const DIY_HOLD_NOTE = "Card saved. Not charged while payment timing is under attorney review.";
 
 export const DFY_INCLUDED_AMOUNT = 249;
 export const DFY_PLUS_FEE_AMOUNT = 199;
@@ -21,7 +22,7 @@ export const CHECKOUT_PLANS = [
     dueToday: 0,
     filesAsAgent: false,
     timingFlag: "[DRAFT – payment timing pending attorney review]",
-    chargeNote: CARD_SAVE_NOTE,
+    chargeNote: DIY_HOLD_NOTE,
     summary: "Comparable-sales method, value opinion from your numbers, Statement of Facts preview, and the filing checklist from your county adapter. You file."
   },
   {

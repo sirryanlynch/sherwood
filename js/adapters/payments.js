@@ -71,25 +71,5 @@ export const paymentsAdapter = {
     };
     updateDb(db => { db.payments.push(charge); });
     return charge;
-  },
-  async charge({ userId, matterId, plan, amount, attribution }) {
-    const touch = attribution || readAttribution();
-    const payment = {
-      id: uid("pay"),
-      provider: "stripe",
-      object: "charge",
-      simulated: true,
-      userId,
-      matterId,
-      planId: plan && plan.id,
-      amount,
-      currency: "USD",
-      status: "succeeded",
-      createdAt: new Date().toISOString(),
-      src: touch && touch.src || null,
-      attribution: touch || null
-    };
-    updateDb(db => { db.payments.push(payment); });
-    return payment;
   }
 };

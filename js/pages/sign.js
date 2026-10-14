@@ -1,7 +1,7 @@
 import "../boot.js";
 import { docusignAdapter } from "../adapters/docusign.js";
 import {
-  AGENT_CONTACT, OWNER_COPY_LINE, authorizationReady, normalizeTaxYears, parcelLabel, signedDateText, taxYearChoices
+  AGENT_CONTACT, OWNER_COPY_LINE, normalizeTaxYears, parcelLabel, signedDateText, taxYearChoices
 } from "../authorization.js";
 import { getCounty } from "../counties.js";
 import { esc, formatShortDay } from "../format.js";
@@ -176,7 +176,6 @@ function paintForm(root, matter, county, step, round, envelope) {
         retainUntil: retainUntil(signedAt),
         retention: AUTHORIZATION_RETENTION
       };
-      if (!authorizationReady(matter.agentAuthorization, county)) return;
     }
     if (round === 3) matter.stipulationDecision = "Accepted in the demo. The signature is simulated and there is no stipulation form in the pilot kit.";
     saveMatter(matter);

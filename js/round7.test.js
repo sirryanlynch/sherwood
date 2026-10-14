@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import { authorizationReady } from "./authorization.js";
+import { STATUTORY_DISCLOSURE } from "./statutoryDisclosure.js";
 import { CONFIG } from "./config.js";
 import { deadlineBadge } from "./engine.js";
 import {
@@ -84,12 +85,13 @@ test("Santa Cruz agent authorization offers both Local Rule 6 paths", () => {
     signerTitle: "Owner",
     parcel: "1 Main, APN 1",
     ownerGetsCopy: true,
-    agentName: "[pending]",
-    agentAddress: "[pending]",
-    agentPhone: "[pending]",
+    agentName: "Ada Agent",
+    agentAddress: "1 Agent Way, Santa Cruz, CA 95060",
+    agentPhone: "(831) 555-0100",
     taxYears: [2026]
   };
   assert.equal(authorizationReady(auth, county), false);
+  assert.equal(authorizationReady({ ...auth, agentName: "[pending]", agentAddress: "[pending]", agentPhone: "[pending]", rule6Option: "county_form" }, county), false);
   assert.equal(authorizationReady({ ...auth, rule6Option: "county_form" }, county), true);
   assert.equal(authorizationReady({ ...auth, rule6Option: "application_section" }, county), true);
 });
@@ -131,9 +133,11 @@ test("San Diego, San Mateo, and Santa Barbara landings stay unlisted", () => {
   for (const path of ["san-diego/index.html", "san-mateo/index.html", "santa-barbara/index.html"]) {
     const html = read(path);
     assert.match(html, /name="robots" content="noindex"/);
-    assert.match(html, /data-statutory-disclosure/);
+    const match = html.match(/<div class="statutory-disclosure"[^>]*>\s*<p><b>([\s\S]*?)<\/b><\/p>\s*<\/div>/);
+    assert.equal(match && match[1], STATUTORY_DISCLOSURE);
+    assert.ok(html.indexOf('class="statutory-disclosure"') < html.indexOf("<header"));
     assert.match(html, /has-disclosure/);
-    assert.equal(/<details[\s\S]*data-statutory-disclosure/.test(html), false);
+    assert.equal(/<details[\s\S]*statutory-disclosure/.test(html), false);
   }
   assert.match(read("santa-barbara/index.html"), /\$249, county fee included/);
   const linked = readdirSync(new URL("../", import.meta.url))

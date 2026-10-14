@@ -1,5 +1,6 @@
 import "../boot.js";
 import { paymentsAdapter } from "../adapters/payments.js";
+import { chargeReady, chargeSavedCardIfReady } from "../chargeGate.js";
 import { planById } from "../pricing.js";
 import { loadCounties } from "../counties.js";
 import { formatDay, esc, parseISODate } from "../format.js";
@@ -37,7 +38,7 @@ function paint() {
     <h1>Ops</h1>
     <p class="lead">This view reads appeals saved in this browser. It is not a secure admin and it is not on a server.</p>
     <h2>Mark filed, then charge</h2>
-    <p class="small muted">We file it saves a card. This step records the county confirmation, then a charge success or a charge failure.</p>
+    <p class="small muted">We file it saves a card. The charge runs only when this appeal already has a filing time, a filing ID, and a county confirmation. This step does not record the confirmation.</p>
     ${chargeQueue(db.matters)}
     <h2>Signed agent authorizations</h2>
     <p>${esc(AUTHORIZATION_RETENTION)}</p>
@@ -57,20 +58,18 @@ function paint() {
       const id = button.getAttribute("data-charge");
       const fail = button.getAttribute("data-fail") === "1";
       const current = loadDb().matters.find(m => m.id === id);
-      if (!current || current.chargeStatus === "succeeded") return;
-      const charge = await paymentsAdapter.chargeSavedCard({
+      const charge = await chargeSavedCardIfReady(current, () => paymentsAdapter.chargeSavedCard({
         userId: current.userId,
         matterId: current.id,
         setupIntentId: current.setupIntentId,
         amount: (planById(current.planId) && planById(current.planId).price) || 249,
         fail,
         attribution: current.attribution
-      });
+      }));
+      if (!charge) return;
       const next = loadDb();
       const matter = next.matters.find(m => m.id === id);
       if (!matter) return;
-      matter.countyConfirmedAt = new Date().toISOString();
-      if (!matter.stage) matter.stage = "filed";
       matter.chargeStatus = charge.status;
       matter.charge = {
         id: charge.id,
@@ -117,9 +116,13 @@ function chargeQueue(matters) {
     const done = matter.chargeStatus === "succeeded";
     const status = matter.chargeStatus || "not_charged";
     const detail = matter.charge && matter.charge.reason ? ` ${matter.charge.reason}` : "";
+    const ready = chargeReady(matter);
+    const buttons = ready
+      ? `<button class="btn" type="button" data-charge="${esc(matter.id)}" ${done ? "disabled" : ""}>Mark filed, then charge</button>
+      <button class="btn ghost" type="button" data-charge="${esc(matter.id)}" data-fail="1" ${done ? "disabled" : ""}>Record a failed charge</button>`
+      : `<p class="small muted">The charge stays off until this appeal has a filing time, a filing ID, and a county confirmation.</p>`;
     return `<div class="card"><p><b>${esc(matter.address)}</b></p><p>Charge: ${esc(status)}.${esc(detail)}</p>
-      <button class="btn" type="button" data-charge="${esc(matter.id)}" ${done ? "disabled" : ""}>Mark filed, then charge</button>
-      <button class="btn ghost" type="button" data-charge="${esc(matter.id)}" data-fail="1" ${done ? "disabled" : ""}>Record a failed charge</button></div>`;
+      ${buttons}</div>`;
   }).join("");
 }
 

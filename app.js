@@ -1,9 +1,7 @@
 import { captureFirstTouch } from "./js/attribution.js";
 import { startPlace, rememberAddress } from "./js/place-ui.js";
-import { mountStatutoryDisclosure } from "./js/statutoryDisclosure.js";
 
 captureFirstTouch();
-mountStatutoryDisclosure();
 
 const FORM_ENDPOINT = "";
 
