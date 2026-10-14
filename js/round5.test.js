@@ -20,17 +20,20 @@ test("the statutory disclosure is one sentence, shared with reminder email", () 
 test("home and the Santa Cruz landing put the disclosure above the header", () => {
   for (const file of ["../index.html", "../santa-cruz/index.html", "../pricing.html", "../faq.html"]) {
     const html = read(file);
-    const match = html.match(/<div class="statutory-disclosure"[^>]*>\s*<p><b>([\s\S]*?)<\/b><\/p>\s*<\/div>/);
+    const match = html.match(/<div class="statutory-disclosure[^"]*"[^>]*>\s*<p><b>([\s\S]*?)<\/b><\/p>\s*<\/div>/);
     assert.equal(match && match[1], STATUTORY_DISCLOSURE, file);
-    const box = html.indexOf('class="statutory-disclosure"');
+    const box = html.indexOf('class="statutory-disclosure');
     const header = html.indexOf("<header");
     const h1 = html.indexOf("<h1");
     assert.ok(box > 0 && box < header && header < h1, file);
     assert.equal(html.includes('class="has-disclosure"') || html.includes("has-disclosure "), true);
   }
   const css = read("../style.css");
-  assert.match(css, /\.statutory-disclosure\{[^}]*border:4px solid #111/);
-  assert.match(css, /--type-disclosure:34px/);
+  assert.match(css, /\.disclosure\{[^}]*border:1px solid currentColor/);
+  assert.match(css, /\.disclosure\{[^}]*padding:11px 16px/);
+  assert.match(css, /\.disclosure\{[^}]*text-transform:none/);
+  assert.match(css, /--fs-disclosure:20px/);
+  assert.match(css, /@media \(max-width:480px\)\{:root\{--fs-disclosure:18px/);
 });
 
 test("consent and signed authorizations are kept 3 years", () => {

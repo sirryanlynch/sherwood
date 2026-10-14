@@ -128,13 +128,14 @@ test("every page mounts the disclosure outside a collapsible, larger than the he
   const pages = readdirSync(new URL("../", import.meta.url)).filter(name => name.endsWith(".html"));
   pages.push("santa-cruz/index.html", "san-diego/index.html", "san-mateo/index.html", "santa-barbara/index.html", "scz/index.html");
   const css = readFileSync(new URL("../style.css", import.meta.url), "utf8");
-  assert.match(css, /--type-disclosure:34px/);
-  assert.match(css, /--type-max:20px/);
+  assert.match(css, /--fs-disclosure:20px/);
+  assert.match(css, /--fs-h1:18px/);
+  assert.match(css, /@media \(max-width:480px\)\{:root\{--fs-disclosure:18px;--fs-h1:17px/);
   for (const name of pages) {
     const html = readFileSync(new URL(`../${name}`, import.meta.url), "utf8");
-    const match = html.match(/<div class="statutory-disclosure"[^>]*>\s*<p><b>([\s\S]*?)<\/b><\/p>\s*<\/div>/);
+    const match = html.match(/<div class="statutory-disclosure[^"]*"[^>]*>\s*<p><b>([\s\S]*?)<\/b><\/p>\s*<\/div>/);
     assert.equal(match && match[1], STATUTORY_DISCLOSURE, name);
-    const boxAt = html.indexOf('class="statutory-disclosure"');
+    const boxAt = html.indexOf('class="statutory-disclosure');
     const headerAt = html.indexOf("<header");
     assert.ok(boxAt >= 0, name);
     if (headerAt !== -1) assert.ok(headerAt > boxAt, name);

@@ -6,7 +6,7 @@ const { getFirestore, FieldValue } = require("firebase-admin/firestore");
 const { getAppCheck } = require("firebase-admin/app-check");
 const { validateReminderInput, validateLeadInput, validateConvertedInput, validateMonitorInput, nextRate } = require("./validate");
 const { buildEmail, deliver, sendingConfig } = require("./email");
-const { statutoryDisclosureHtml } = require("./disclosure");
+const { statutoryDisclosureHtml, logoHtml, H1_PX, BODY_PX } = require("./disclosure");
 const { dueNotices, campaignFinished, renewalNoticeDue, laToday, windowOf } = require("./window");
 const { retainUntil, renewsOn } = require("./retention");
 const { loadBundled, findCounty } = require("./counties");
@@ -434,5 +434,5 @@ exports.sendDueReminders = onSchedule({
 function page(title, body) {
   const esc = String(body).replace(/[&<>]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[ch]));
   const safeTitle = String(title).replace(/[&<>]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[ch]));
-  return `<!doctype html><meta charset="utf-8"><title>${safeTitle}</title>${statutoryDisclosureHtml()}<h1 style="font-size:20px;line-height:1.35;font-weight:700">${safeTitle}</h1><p>${esc}</p>`;
+  return `<!doctype html><meta charset="utf-8"><title>${safeTitle}</title>${statutoryDisclosureHtml()}${logoHtml()}<h1 style="font-size:${H1_PX}px;line-height:1.3;font-weight:700">${safeTitle}</h1><p style="font-size:${BODY_PX}px;line-height:1.5">${esc}</p>`;
 }

@@ -45,7 +45,7 @@ test("src=postcard-scz is stored from the Santa Cruz forward", () => {
   assert.match(html, new RegExp(`http-equiv="refresh" content="0; url=${dest.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"`));
   assert.match(html, /location\.replace\("\.\.\/santa-cruz\/\?county=santa-cruz&src=postcard-scz"\)/);
   const linkAt = html.indexOf(`<a href="${dest}">`);
-  const boxAt = html.indexOf('class="statutory-disclosure"');
+  const boxAt = html.indexOf('class="statutory-disclosure');
   assert.ok(boxAt >= 0 && linkAt > boxAt);
   const store = memory();
   const touch = captureFirstTouch("?county=santa-cruz&src=postcard-scz", store);

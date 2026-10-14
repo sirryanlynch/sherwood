@@ -68,7 +68,7 @@ node scripts/seed-counties.mjs
 - `markConverted` — POST `{ email, county_slug }` after checkout. Sets `converted_at` so the deadline nudge is skipped.
 - `sendDueReminders` — every day at 08:00 America/Los_Angeles. For confirmed reminders still `pending`, it sends at most one of each: during the 14 days before the adapter open date, once while the window is open, and during the 14 days before the adapter deadline if `converted_at` is empty. The message prints the county deadline as a fixed date, or a day count computed from the send date. A missing open date is not invented. After the deadline date, `status` becomes `sent`.
 
-Every outgoing email starts with the B&P 17537.9 assessment-reduction disclosure, in bold, inside a 4px border, at 34px. Headings are 20px. The message includes the unsubscribe link and `MAIL_POSTAL_ADDRESS`.
+Every outgoing email starts with the B&P 17537.9 assessment-reduction disclosure, in bold, inside a 1px border, at 20px. The logo is an image. Headings are 18px and body text is 16px. The message includes the unsubscribe link and `MAIL_POSTAL_ADDRESS`.
 
 `createMonitor` stores automatic-renewal consent with `retain_until` three years out. It sends the `monitor_confirm` template. `cancelMonitor?token=` cancels in one click and keeps the record. The daily job sends `renewal` when today is 15 to 45 days before `renews_on`. Signed agent authorizations are kept 3 years (`retention.js`). The scheduler does not delete those records.
 

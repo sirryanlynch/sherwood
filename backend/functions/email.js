@@ -1,4 +1,4 @@
-const { STATUTORY_DISCLOSURE, statutoryDisclosureHtml } = require("./disclosure");
+const { STATUTORY_DISCLOSURE, statutoryDisclosureHtml, logoHtml, DISCLOSURE_PX, H1_PX, BODY_PX } = require("./disclosure");
 
 const REMINDER_KINDS = new Set(["confirm", "heads_up_14", "open_day", "deadline_14"]);
 
@@ -20,9 +20,6 @@ function sendingConfig(env = process.env) {
   if (!resend) missing.push("RESEND_API_KEY");
   return { ok: missing.length === 0, missing, postal, from, base, resend };
 }
-
-const DISCLOSURE_PX = 34;
-const HEADING_PX = 20;
 
 function escapeHtml(value) {
   return String(value ?? "").replace(/[&<>"']/g, ch => ({
@@ -133,16 +130,17 @@ function buildEmail({ kind, countyName, windowLabel, windowStart, windowEnd, con
     STATUTORY_DISCLOSURE, "", heading, "", body, "", String(postal).trim(), `Unsubscribe: ${unsubscribeUrl}`
   ].join("\n");
   const html = [
-    `<div style="font-family:-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif;color:#111">`,
+    `<div style="font-family:-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif;color:#111;font-size:${BODY_PX}px;line-height:1.5">`,
     statutoryDisclosureHtml(),
-    `<h1 style="font-size:${HEADING_PX}px;line-height:1.35;font-weight:700;margin:0 0 32px">${escapeHtml(heading)}</h1>`,
-    ...lines.map(line => `<p style="font-size:16px;line-height:1.5;margin:0 0 12px">${escapeHtml(line)}</p>`),
-    `<p style="font-size:16px;line-height:1.5;margin:24px 0 0">${escapeHtml(String(postal).trim())}</p>`,
-    `<p style="font-size:16px;line-height:1.5;margin:12px 0 0">Unsubscribe: ${escapeHtml(unsubscribeUrl)}</p>`,
+    logoHtml(),
+    `<h1 style="font-size:${H1_PX}px;line-height:1.3;font-weight:700;margin:0 0 32px">${escapeHtml(heading)}</h1>`,
+    ...lines.map(line => `<p style="font-size:${BODY_PX}px;line-height:1.5;margin:0 0 12px">${escapeHtml(line)}</p>`),
+    `<p style="font-size:${BODY_PX}px;line-height:1.5;margin:24px 0 0">${escapeHtml(String(postal).trim())}</p>`,
+    `<p style="font-size:${BODY_PX}px;line-height:1.5;margin:12px 0 0">Unsubscribe: ${escapeHtml(unsubscribeUrl)}</p>`,
     `</div>`
   ].join("");
   const subject = heading;
-  return { subject, text, html, disclosurePx: DISCLOSURE_PX, headingPx: HEADING_PX };
+  return { subject, text, html, disclosurePx: DISCLOSURE_PX, headingPx: H1_PX };
 }
 
 async function deliver({ to, subject, text, html }, env = process.env, fetchImpl = fetch) {
