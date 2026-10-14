@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { chargeReady, countyFeeUncaptured, recordCountyConfirmation } from "./chargeGate.js";
 import { CONFIG } from "./config.js";
-import { purchaseOffer } from "./offer.js";
+import { offerMessage, purchaseOffer, reminderButtonLabel, reminderOnly } from "./offer.js";
 import { CHECKOUT_PLANS, HEARING_STATEMENT, planById } from "./pricing.js";
 
 const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
@@ -26,6 +26,34 @@ test("DIY is disabled, including the Los Angeles override, and is not offered", 
   assert.equal(read("how-it-works.html").includes("DIY kit"), false);
   assert.equal(read("kit.html").includes("DIY"), false);
   assert.equal(HEARING_STATEMENT, "We prepare your evidence, file your appeal, and work toward an informal reduction or settlement with the Assessor. If your case goes to a hearing, you attend (in person or by video where the county allows) using a hearing packet we prepare. If no one attends, the board will deny the appeal.");
+  assert.equal(/<td><b>Contingency<\/b>/.test(read("pricing.html")), false);
+  assert.equal(read("pricing.html").toLowerCase().includes("coming soon"), false);
+  const paper = purchaseOffer(readCounty("sacramento"), oct13);
+  assert.equal(paper.paper, true);
+  assert.equal(paper.diy, false);
+  assert.equal(paper.dfy, false);
+  assert.equal(offerMessage(readCounty("sacramento"), paper).toLowerCase().includes("mail it yourself"), false);
+  assert.equal(read("js/pages/results.js").includes("Or mail it yourself"), false);
+  assert.equal(read("js/pages/values.js").includes("paper / mail"), false);
+  assert.equal(read("js/pages/values.js").includes("Or mail it yourself"), false);
+  for (const id of ["los_angeles", "san_diego", "san_mateo", "santa_barbara"]) {
+    const offer = purchaseOffer(readCounty(id), oct13);
+    assert.equal(reminderOnly(offer), true, id);
+    assert.equal(reminderButtonLabel(offer), "Remind me", id);
+  }
+  assert.equal(reminderOnly(paper), false);
+  assert.equal(reminderButtonLabel(paper), "Email me a reminder");
+  for (const path of ["san-diego/index.html", "san-mateo/index.html", "santa-barbara/index.html"]) {
+    const html = read(path);
+    assert.match(html, />Remind me</);
+    assert.equal(html.includes("we'll file it for you for $249"), false);
+    assert.equal(html.includes("Check my property"), false);
+    assert.equal(html.includes("Check a property anyway"), false);
+    assert.equal((html.match(/<button/g) || []).length, 1, path);
+  }
+  const results = read("js/pages/results.js");
+  assert.match(results, /reminderOnly\(offer\)/);
+  assert.equal(results.includes("Or mail it yourself"), false);
 });
 
 test("ops records a county confirmation, and a simulated filing still cannot be charged", () => {

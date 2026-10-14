@@ -5,7 +5,7 @@ import { money, esc, formatDay } from "../format.js";
 import { CHECKOUT_PLANS, HEARING_STATEMENT, adapterFeeNotes, hearingAckHtml, hearingAckState, planPriceLines } from "../pricing.js";
 import { getCounty } from "../counties.js";
 import { filingWindow, nextWindowCopy } from "../engine.js";
-import { offerMessage, orderBadgeHtml, purchaseOffer } from "../offer.js";
+import { offerMessage, orderBadgeHtml, purchaseOffer, reminderButtonLabel, reminderOnly } from "../offer.js";
 import { slugForCountyId } from "../place.js";
 import { markConverted, createReminder } from "../reminders.js";
 import { reminderMessage } from "../place-ui.js";
@@ -126,11 +126,13 @@ function closedHtml(county, window, offer) {
       <p>Verified: ${esc(verified)}</p>
       <form id="remind-form" class="wide">
         <label>Email<input name="email" type="email" required placeholder="you@example.com"></label>
-        <button class="btn" type="submit">Email me a reminder</button>
+        <button class="btn" type="submit">${esc(reminderButtonLabel(offer))}</button>
         <p id="remind-ok" class="small muted" hidden></p>
       </form>
     </div>
-    <div class="cta"><a class="btn ghost" href="results.html">Back to your result</a></div>`;
+    ${reminderOnly(offer)
+      ? `<p><a href="results.html">Back to your result</a></p>`
+      : `<div class="cta"><a class="btn ghost" href="results.html">Back to your result</a></div>`}`;
 }
 
 function bindReminder(root, matter, county) {

@@ -139,7 +139,9 @@ test("San Diego, San Mateo, and Santa Barbara landings stay unlisted", () => {
     assert.match(html, /has-disclosure/);
     assert.equal(/<details[\s\S]*statutory-disclosure/.test(html), false);
   }
-  assert.match(read("santa-barbara/index.html"), /Check for free\. If there's a case, we'll file it for you for \$249\./);
+  assert.match(read("santa-barbara/index.html"), />Remind me</);
+  assert.equal(read("santa-barbara/index.html").includes("we'll file it for you for $249"), false);
+  assert.equal(read("santa-barbara/index.html").includes("Check a property anyway"), false);
   assert.equal(read("santa-barbara/index.html").includes("$79"), false);
   const linked = readdirSync(new URL("../", import.meta.url))
     .filter(name => name.endsWith(".html"))

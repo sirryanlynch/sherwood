@@ -137,16 +137,20 @@ function paint(place) {
   if (!launch) return;
   const here = onThisLanding(place);
   const heldBack = place.status === "preview" && !here;
-  launch.hidden = place.status !== "launch" && !here;
-  other.hidden = place.status !== "other" && !heldBack;
-  ambiguous.hidden = place.status !== "ambiguous";
+  const remindOnlyLanding = here;
+  if (launch) launch.hidden = remindOnlyLanding || (place.status !== "launch" && !here);
+  if (other) other.hidden = remindOnlyLanding ? false : (place.status !== "other" && !heldBack);
+  if (ambiguous) ambiguous.hidden = place.status !== "ambiguous" || remindOnlyLanding;
   const check = document.querySelector("#check-form");
   const under = document.querySelector("#home-under");
-  if (check) check.hidden = (place.status === "other" || heldBack) && !check.dataset.forced;
+  if (check) check.hidden = remindOnlyLanding || ((place.status === "other" || heldBack) && !check.dataset.forced);
   if (under && check) under.hidden = check.hidden;
+  const showCheck = document.querySelector("#show-check");
+  if (showCheck) showCheck.hidden = remindOnlyLanding;
 }
 
 function showCheckAnyway() {
+  if (document.body && document.body.getAttribute("data-landing")) return;
   const check = document.querySelector("#check-form");
   const other = document.querySelector("#home-other");
   if (!check) return;

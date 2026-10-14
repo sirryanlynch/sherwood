@@ -4,7 +4,7 @@ import { getCounty } from "../counties.js";
 import { paymentsAdapter } from "../adapters/payments.js";
 import { nextWindowCopy } from "../engine.js";
 import { contactLine, esc, formatDay, money } from "../format.js";
-import { offerMessage, orderBadgeHtml, purchaseOffer } from "../offer.js";
+import { offerMessage, orderBadgeHtml, purchaseOffer, reminderButtonLabel, reminderOnly } from "../offer.js";
 import { slugForCountyId } from "../place.js";
 import { reminderMessage } from "../place-ui.js";
 import { confirmationBody, createMonitorRemote, enrollMonitor, monitorOfferHtml } from "../monitor.js";
@@ -76,7 +76,22 @@ function render(matter, county) {
   const privacy = `<p class="privacy-note">We use your email and approximate location only to run your check and send what you ask for. <a href="privacy.html">Privacy policy</a>.</p>`;
   const canBuy = offer.diy || offer.dfy;
   let next = "";
-  if (matter.outcome === "go" && canBuy) {
+  if (reminderOnly(offer)) {
+    const copy = offer.closed || matter.outcome === "off_season"
+      ? nextWindowCopy(county, new Date())
+      : (offerMessage(county, offer) || "Purchase is not available for this county.");
+    const informal = (offer.closed || matter.outcome === "off_season") && county.informal_review
+      ? `<h3>Free informal review</h3><p>${esc(county.informal_review)}</p>`
+      : "";
+    next = `
+      <div class="card">
+        <h2>Reminder only</h2>
+        <p>${esc(copy)}</p>
+        ${informal}
+        <p class="small muted">Deadline source: ${source}. Verified: ${esc(verified)}.</p>
+        ${remindForm(matter, privacy, reminderButtonLabel(offer))}
+      </div>`;
+  } else if (matter.outcome === "go" && canBuy) {
     next = `${emailForm(matter, privacy)}
       <div class="cta"><a class="btn" href="login.html?next=checkout.html">Create an account and choose a plan</a></div>`;
   } else if (matter.outcome === "borderline" && canBuy) {
@@ -95,7 +110,7 @@ function render(matter, county) {
         <p>${esc(nextWindowCopy(county, new Date()))}</p>
         ${county.informal_review ? `<h3>Free informal review</h3><p>${esc(county.informal_review)}</p>` : ""}
         <p class="small muted">Deadline source: ${source}. Verified: ${esc(verified)}.</p>
-        ${remindForm(matter, privacy, "Remind me when filing opens")}
+        ${remindForm(matter, privacy, reminderButtonLabel(offer))}
       </div>
       <div class="card">
         <h3>Annual monitor</h3>
@@ -109,7 +124,7 @@ function render(matter, county) {
         <h2>Reminder only</h2>
         <p>${esc(offerMessage(county, offer) || "Purchase is not available for this county.")}</p>
         <p class="small muted">Deadline source: ${source}. Verified: ${esc(verified)}.</p>
-        ${remindForm(matter, privacy, "Email me a reminder")}
+        ${remindForm(matter, privacy, reminderButtonLabel(offer))}
       </div>`;
   }
 

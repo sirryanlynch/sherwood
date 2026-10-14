@@ -155,3 +155,14 @@ export function offerMessage(county, offer) {
   }
   return "";
 }
+
+/* Los Angeles and the hidden test counties sell nothing. One reminder button. */
+export function reminderOnly(offer) {
+  return !!(offer && !offer.diy && !offer.dfy && (offer.losAngeles || offer.landingOff));
+}
+
+export function reminderButtonLabel(offer) {
+  if (reminderOnly(offer)) return "Remind me";
+  if (offer && offer.closed) return "Remind me when filing opens";
+  return "Email me a reminder";
+}
