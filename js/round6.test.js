@@ -128,9 +128,9 @@ test("every page mounts the disclosure outside a collapsible, larger than the he
   const pages = readdirSync(new URL("../", import.meta.url)).filter(name => name.endsWith(".html"));
   pages.push("santa-cruz/index.html", "san-diego/index.html", "san-mateo/index.html", "santa-barbara/index.html", "scz/index.html", "sc/index.html");
   const css = readFileSync(new URL("../style.css", import.meta.url), "utf8");
-  assert.match(css, /--fs-disclosure:20px/);
-  assert.match(css, /--fs-h1:18px/);
-  assert.match(css, /@media \(max-width:480px\)\{:root\{--fs-disclosure:18px;--fs-h1:17px/);
+  assert.match(css, /--fs-disclosure:16px/);
+  assert.match(css, /--fs-h1:15px/);
+  assert.match(css, /@media \(max-width:480px\)\{:root\{--fs-disclosure:15px;--fs-h1:14px/);
   for (const name of pages) {
     const html = readFileSync(new URL(`../${name}`, import.meta.url), "utf8");
     const match = html.match(/<div class="statutory-disclosure[^"]*"[^>]*>\s*<p><b>([\s\S]*?)<\/b><\/p>\s*<\/div>/);

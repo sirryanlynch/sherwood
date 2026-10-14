@@ -112,11 +112,11 @@ export function adapterFeeNotes(county) {
   return notes;
 }
 
+export const HOME_LINE = "Check for free. If there's a case, we'll file it for you for $249.";
+
 export function planPriceLines(county) {
   const fee = filingFeeAmount(county);
   const service = dfyServiceAmount();
-  const diyFee = fee == null ? "" : `+ ${plainDollars(fee)} county fee, paid when you file.`;
-  const diyLine = fee == null ? "$79" : `$79 + ${plainDollars(fee)} county fee, paid when you file`;
   let dfy;
   if (CONFIG.SHOW_199_PLUS_COUNTY_FEE === true) {
     dfy = fee == null ? "$199 + county fee" : `$199 + ${plainDollars(fee)} county fee`;
@@ -125,15 +125,10 @@ export function planPriceLines(county) {
   } else {
     dfy = `$${service}, county fee included.`;
   }
-  const home = fee == null
-    ? `Check for free. If there's a case, file it yourself for $79, or we'll file it for you for ${dfy}`
-    : `Check for free. If there's a case, file it yourself for $79 + ${plainDollars(fee)} county fee, paid when you file, or we'll file it for you for ${dfy}`;
-  return { fee, diy: "$79", diyFee, diyLine, dfy, home, feeNote: filingFeeNote(county), service };
+  return { fee, diy: "", diyFee: "", diyLine: "", dfy, home: HOME_LINE, feeNote: filingFeeNote(county), service };
 }
 
-/* Unlisted landings show the same $249 total as Santa Cruz while SHOW_199_PLUS_COUNTY_FEE is off.
-   A missing or zero county fee is a plain total, with no fee line. A positive fee says it is included. */
-export function landingHomeLine(county) {
-  const home = planPriceLines(county).home;
-  return home.endsWith(".") ? home : `${home}.`;
+/* Every landing uses the same hero. A county fee stays on the We file it line. */
+export function landingHomeLine() {
+  return HOME_LINE;
 }

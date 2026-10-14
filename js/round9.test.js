@@ -13,9 +13,9 @@ const require = createRequire(import.meta.url);
 const { buildEmail } = require("../backend/functions/email.js");
 
 const ROOT = fileURLToPath(new URL("../", import.meta.url));
-const SCALE = ":root{--fs-disclosure:20px;--fs-h1:18px;--fs-h2:17px;--fs-body:16px;--fs-small:14px;--fs-micro:12px}";
-const MOBILE_SCALE = "@media (max-width:480px){:root{--fs-disclosure:18px;--fs-h1:17px;--fs-h2:16px;--fs-body:15px}}";
-const DISCLOSURE_RULE = ".disclosure{font-size:var(--fs-disclosure);font-weight:700;line-height:1.35;text-transform:none;border:1px solid currentColor;padding:11px 16px}";
+const SCALE = ":root{--fs-disclosure:16px;--fs-h1:15px;--fs-h2:14px;--fs-body:14px;--fs-small:14px;--fs-micro:12px}";
+const MOBILE_SCALE = "@media (max-width:480px){:root{--fs-disclosure:15px;--fs-h1:14px}}";
+const DISCLOSURE_RULE = ".disclosure{font-size:var(--fs-disclosure);font-weight:700;line-height:1.35;text-transform:none;border:1px solid #c9d3de;background:#f3f5f8;color:#3e556e;padding:8px 16px}";
 
 const read = (path) => readFileSync(new URL(path, import.meta.url), "utf8");
 
@@ -34,6 +34,7 @@ test("the design type scale is in the stylesheet and the logo is an image", () =
   assert.ok(css.includes("h1{font-size:var(--fs-h1);font-weight:700;line-height:1.3}"));
   assert.ok(css.includes("h2,h3,.card-title,.price{font-size:var(--fs-h2);font-weight:600;line-height:1.3}"));
   assert.ok(css.includes("body,p,button,.btn,.badge{font-size:var(--fs-body);line-height:1.5}"));
+  assert.ok(css.includes("html{font-size:14px}"));
   assert.equal(css.includes("--type-disclosure"), false);
   assert.equal(css.includes("34px"), false);
 
@@ -183,6 +184,23 @@ function connect(wsUrl) {
 
 const MEASURE = `(() => {
   const expected = ${JSON.stringify(STATUTORY_DISCLOSURE)};
+  const channel = c => {
+    const v = c / 255;
+    return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+  };
+  const luminance = rgb => {
+    const m = String(rgb).match(/[\\d.]+/g);
+    if (!m || m.length < 3) return null;
+    return 0.2126 * channel(Number(m[0])) + 0.7152 * channel(Number(m[1])) + 0.0722 * channel(Number(m[2]));
+  };
+  const contrast = (a, b) => {
+    const L1 = luminance(a);
+    const L2 = luminance(b);
+    if (L1 == null || L2 == null) return 0;
+    const hi = Math.max(L1, L2);
+    const lo = Math.min(L1, L2);
+    return (hi + 0.05) / (lo + 0.05);
+  };
   const box = document.querySelector(".statutory-disclosure");
   if (!box) return { error: "missing disclosure" };
   const px = el => parseFloat(getComputedStyle(el).fontSize);
@@ -215,6 +233,9 @@ const MEASURE = `(() => {
     borderTopWidth: cs.borderTopWidth,
     paddingTop: cs.paddingTop,
     paddingLeft: cs.paddingLeft,
+    color: cs.color,
+    backgroundColor: cs.backgroundColor,
+    contrast: contrast(cs.color, cs.backgroundColor),
     collapsed: !!box.closest("details"),
     wording: box.textContent.replace(/\\s+/g, " ").trim() === expected,
     logoImg: !logo || !!logo.querySelector("img"),
@@ -244,8 +265,8 @@ test("disclosure computed font-size is larger than every other element", async (
     ws = client.ws;
     await client.ready;
     const viewports = [
-      { name: "desktop", width: 1280, height: 900, mobile: false, box: 20, h1: 18, h2: 17, body: 16 },
-      { name: "mobile", width: 375, height: 812, mobile: true, box: 18, h1: 17, h2: 16, body: 15 }
+      { name: "desktop", width: 1280, height: 900, mobile: false, box: 16, h1: 15, h2: 14, body: 14 },
+      { name: "mobile", width: 375, height: 812, mobile: true, box: 15, h1: 14, h2: 14, body: 14 }
     ];
     const targets = pageNames().map(name => ({
       name,
@@ -279,13 +300,14 @@ test("disclosure computed font-size is larger than every other element", async (
         assert.equal(measured.collapsed, false, label);
         assert.equal(measured.textTransform, "none", label);
         assert.equal(measured.borderTopWidth, "1px", label);
-        assert.equal(measured.paddingTop, "11px", label);
+        assert.equal(measured.paddingTop, "8px", label);
         assert.equal(measured.paddingLeft, "16px", label);
+        assert.ok(measured.contrast >= 7, `${label} contrast ${measured.contrast}`);
         assert.equal(measured.logoImg, true, label);
         assert.equal(measured.logoText, "", label);
-        const expectBox = target.email ? 20 : viewport.box;
-        const expectH1 = target.email ? 18 : viewport.h1;
-        const expectBody = target.email ? 16 : viewport.body;
+        const expectBox = target.email ? 16 : viewport.box;
+        const expectH1 = target.email ? 15 : viewport.h1;
+        const expectBody = target.email ? 14 : viewport.body;
         assert.equal(measured.boxSize, expectBox, label);
         assert.equal(measured.textSize, expectBox, `${label} disclosure text`);
         if (!target.email && measured.h1 != null) assert.equal(measured.h1, expectH1, `${label} h1`);

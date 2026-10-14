@@ -5,7 +5,7 @@ import { money, esc, formatDay } from "../format.js";
 import { CHECKOUT_PLANS, HEARING_STATEMENT, adapterFeeNotes, hearingAckHtml, hearingAckState, planPriceLines } from "../pricing.js";
 import { getCounty } from "../counties.js";
 import { filingWindow, nextWindowCopy } from "../engine.js";
-import { mountOrderCountdowns, offerMessage, orderBadgeHtml, purchaseOffer } from "../offer.js";
+import { offerMessage, orderBadgeHtml, purchaseOffer } from "../offer.js";
 import { slugForCountyId } from "../place.js";
 import { markConverted, createReminder } from "../reminders.js";
 import { reminderMessage } from "../place-ui.js";
@@ -24,7 +24,6 @@ if (gate) {
   const root = document.querySelector("#checkout");
   if (!plans.length) {
     root.innerHTML = closedHtml(county, season, offer);
-    mountOrderCountdowns(root);
     bindReminder(root, matter, county);
   } else if (matter.outcome === "no_go") {
     location.href = "results.html";
@@ -62,7 +61,6 @@ if (gate) {
       const stillOpen = plan.id === "dfy" ? liveOffer.dfy : liveOffer.diy;
       if (!stillOpen) {
         root.innerHTML = closedHtml(county, filingWindow(county, new Date(), matter.supplementalNoticeDate), liveOffer);
-        mountOrderCountdowns(root);
         bindReminder(root, matter, county);
         return;
       }
@@ -94,7 +92,6 @@ if (gate) {
       }
       location.href = "intake.html";
     });
-    mountOrderCountdowns(root);
   }
 }
 
@@ -170,7 +167,7 @@ function syncHearingAck(form) {
 }
 
 function cardHtml(plan, lines, savings) {
-  const price = plan.id === "dfy" ? lines.dfy : lines.diyLine;
+  const price = plan.id === "dfy" ? lines.dfy : "";
   const waiver = plan.id === "diy" && lines.feeNote ? `<p class="small muted">${esc(lines.feeNote)}</p>` : "";
   const estimate = savings == null
     ? "No dollar estimate on this check."
@@ -180,7 +177,7 @@ function cardHtml(plan, lines, savings) {
     <label class="card">
       <input type="radio" name="plan" value="${plan.id}" required>
       <h3>${esc(plan.name)}</h3>
-      <p><b>${esc(price)}</b></p>
+      ${price ? `<p><b>${esc(price)}</b></p>` : ""}
       ${flag}
       ${waiver}
       <p>${esc(estimate)}</p>

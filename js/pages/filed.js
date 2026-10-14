@@ -120,9 +120,7 @@ function stepsHtml(county) {
 
 function paintFiled(root, matter, county) {
   const lines = planPriceLines(county);
-  const fee = lines.fee == null
-    ? ""
-    : (matter.planId === "dfy" ? lines.dfy : `${lines.diy} ${lines.diyFee}`);
+  const fee = matter.planId === "dfy" ? lines.dfy : "";
   const auth = matter.agentAuthorization;
   const authLine = auth
     ? `<p>Agent authorization on this appeal: ${esc(auth.doc_title)}, signed by ${esc(auth.signerName)}.</p>

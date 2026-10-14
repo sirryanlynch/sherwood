@@ -34,7 +34,6 @@ function showCounty() {
   const offer = purchaseOffer(county, new Date());
   const lines = planPriceLines(county);
   const prices = [];
-  if (offer.diy) prices.push(`DIY kit ${lines.diyLine}`);
   if (offer.dfy) prices.push(`We file it ${lines.dfy}`);
   const bits = [
     county.template_warning,

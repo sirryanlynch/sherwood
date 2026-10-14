@@ -42,7 +42,9 @@ test("a passed window names the next July 2 and does not promise a close date", 
 
 test("the pricing line combines the DIY fee", () => {
   const lines = planPriceLines(county);
-  assert.equal(lines.diyLine, "$79 + $50 county fee, paid when you file");
+  assert.equal(lines.home, "Check for free. If there's a case, we'll file it for you for $249.");
+  assert.equal(lines.diyLine, "");
+  assert.equal(lines.diy, "");
   assert.equal(lines.feeNote, "The county fee is non-refundable. Fee waivers exist.");
   assert.equal(county.filing.filing_fee.refundable, false);
   assert.equal(county.filing.regular_window.source_url, "https://www2.santacruzcountyca.gov/AAB/Content/SupportFiles/Filing%20Deadlines%20and%20Appeal%20Information.pdf");

@@ -30,12 +30,14 @@ test("home and the Santa Cruz landing put the disclosure above the header", () =
     assert.equal(html.includes('class="has-disclosure"') || html.includes("has-disclosure "), true);
   }
   const css = read("../style.css");
-  assert.match(css, /\.disclosure\{[^}]*border:1px solid currentColor/);
-  assert.match(css, /\.disclosure\{[^}]*padding:11px 16px/);
+  assert.match(css, /\.disclosure\{[^}]*border:1px solid #c9d3de/);
+  assert.match(css, /\.disclosure\{[^}]*background:#f3f5f8/);
+  assert.match(css, /\.disclosure\{[^}]*color:#3e556e/);
+  assert.match(css, /\.disclosure\{[^}]*padding:8px 16px/);
   assert.match(css, /\.disclosure\{[^}]*text-transform:none/);
   assert.equal(/text-transform:\s*uppercase/.test(css), false);
-  assert.match(css, /--fs-disclosure:20px/);
-  assert.match(css, /@media \(max-width:480px\)\{:root\{--fs-disclosure:18px/);
+  assert.match(css, /--fs-disclosure:16px/);
+  assert.match(css, /@media \(max-width:480px\)\{:root\{--fs-disclosure:15px/);
 });
 
 test("consent and signed authorizations are kept 3 years", () => {

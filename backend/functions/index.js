@@ -434,5 +434,5 @@ exports.sendDueReminders = onSchedule({
 function page(title, body) {
   const esc = String(body).replace(/[&<>]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[ch]));
   const safeTitle = String(title).replace(/[&<>]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[ch]));
-  return `<!doctype html><meta charset="utf-8"><title>${safeTitle}</title>${statutoryDisclosureHtml()}${logoHtml()}<h1 style="font-size:${H1_PX}px;line-height:1.3;font-weight:700">${safeTitle}</h1><p style="font-size:${BODY_PX}px;line-height:1.5">${esc}</p>`;
+  return `<!doctype html><meta charset="utf-8"><title>${safeTitle}</title><style>html,body{font-size:${BODY_PX}px}</style>${statutoryDisclosureHtml()}${logoHtml()}<h1 style="font-size:${H1_PX}px;line-height:1.3;font-weight:700">${safeTitle}</h1><p style="font-size:${BODY_PX}px;line-height:1.5">${esc}</p>`;
 }

@@ -6,9 +6,9 @@ import { STATUTORY_DISCLOSURE } from "./statutoryDisclosure.js";
 import { CONFIG } from "./config.js";
 import { deadlineBadge } from "./engine.js";
 import {
-  marginBlocksDfy, offerMessage, orderBadgeHtml, orderCloseLine, orderCountdownText, orderCutoffIso, pastOrderCutoff, purchaseOffer
+  marginBlocksDfy, offerMessage, orderBadgeHtml, orderCloseLine, orderCutoffIso, pastOrderCutoff, purchaseOffer
 } from "./offer.js";
-import { landingHomeLine, planPriceLines } from "./pricing.js";
+import { HOME_LINE, landingHomeLine, planPriceLines } from "./pricing.js";
 import { countyBySlug, headlinePlace } from "./place.js";
 
 const readCounty = (name) => JSON.parse(readFileSync(new URL(`../data/counties/${name}.json`, import.meta.url), "utf8"));
@@ -38,7 +38,7 @@ test("Kern, Stanislaus, Tulare, and Yolo record their own forms, and Stanislaus 
   assert.equal(statuses.filter(status => status === "verified").length, 1);
 });
 
-test("Santa Cruz We file it stops at the end of Nov 25 and the badge counts down to that day", () => {
+test("Santa Cruz We file it stops at the end of Nov 25 and the close line is a fixed date", () => {
   assert.equal(CONFIG.order_cutoff, "2026-11-25");
   const county = readCounty("santa_cruz");
   assert.equal(orderCutoffIso(county), "2026-11-25");
@@ -48,15 +48,14 @@ test("Santa Cruz We file it stops at the end of Nov 25 and the badge counts down
   assert.equal(purchaseOffer(county, nov26).dfy, false);
   assert.equal(purchaseOffer(county, nov26).diy, true);
   assert.equal(deadlineBadge(county), "County filing deadline: Nov 30, 2026");
-  assert.equal(orderCloseLine(county), "We file it orders close Nov 25");
+  assert.equal(orderCloseLine(county), "Orders for us to file close Nov 25, 2026.");
   const badge = orderBadgeHtml(county);
   assert.match(badge, /County filing deadline: Nov 30, 2026/);
-  assert.match(badge, /We file it orders close Nov 25/);
-  assert.match(badge, /data-order-countdown="2026-11-25"/);
+  assert.match(badge, /Orders for us to file close Nov 25, 2026\./);
+  assert.equal(badge.includes("data-order-countdown"), false);
   assert.equal(/\d+ days left/.test(badge), false);
-  const noon = orderCountdownText("2026-11-25", new Date(2026, 10, 25, 12, 0, 0));
-  assert.equal(noon, "0 days, 12 hours, 0 minutes, 0 seconds");
-  assert.equal(orderCountdownText("2026-11-25", nov26), "We file it orders are closed.");
+  assert.equal(orderCloseLine(readCounty("alameda")), "Orders for us to file close Sep 10, 2026.");
+  assert.equal(read("js/offer.js").includes("setInterval"), false);
   assert.match(read("santa-cruz/index.html"), /data-order-badge/);
   assert.match(read("index.html"), /data-order-badge/);
 });
@@ -116,19 +115,20 @@ test("San Diego, San Mateo, and Santa Barbara landings stay unlisted", () => {
   assert.equal(purchaseOffer({ ...mateo, status: "verified" }, oct13).dfy, false);
   assert.equal(purchaseOffer({ ...barbara, status: "verified" }, oct13).dfy, false);
   const diegoLine = landingHomeLine(diego);
-  assert.equal(diegoLine, "Check for free. If there's a case, file it yourself for $79, or we'll file it for you for $249.");
+  assert.equal(diegoLine, HOME_LINE);
   assert.equal(/county fee|included/i.test(diegoLine), false);
+  assert.equal(/\$79/.test(diegoLine), false);
   assert.equal(planPriceLines(diego).fee, null);
   assert.equal(planPriceLines(diego).dfy, "$249");
   const mateoLine = landingHomeLine(mateo);
-  assert.match(mateoLine, /\$79 \+ \$30 county fee, paid when you file/);
-  assert.match(mateoLine, /\$249, county fee included/);
+  assert.equal(mateoLine, HOME_LINE);
+  assert.match(planPriceLines(mateo).dfy, /\$249, county fee included/);
   assert.equal(mateo.filing.fee_confirmed.amount, 30);
   assert.equal(mateo.filing.fee_confirmed.source_url, "https://www.smcgov.org/ceo/assessment-appeals-board");
   assert.equal(mateo.filing.efile_fee.source_url, "https://www.smcgov.org/ceo/assessment-appeals-board");
   const barbaraLine = landingHomeLine(barbara);
-  assert.match(barbaraLine, /\$79 \+ \$65 county fee, paid when you file/);
-  assert.match(barbaraLine, /\$249, county fee included/);
+  assert.equal(barbaraLine, HOME_LINE);
+  assert.match(planPriceLines(barbara).dfy, /\$249, county fee included/);
   assert.equal(planPriceLines(barbara).fee, 65);
   for (const path of ["san-diego/index.html", "san-mateo/index.html", "santa-barbara/index.html"]) {
     const html = read(path);
@@ -139,7 +139,8 @@ test("San Diego, San Mateo, and Santa Barbara landings stay unlisted", () => {
     assert.match(html, /has-disclosure/);
     assert.equal(/<details[\s\S]*statutory-disclosure/.test(html), false);
   }
-  assert.match(read("santa-barbara/index.html"), /\$249, county fee included/);
+  assert.match(read("santa-barbara/index.html"), /Check for free\. If there's a case, we'll file it for you for \$249\./);
+  assert.equal(read("santa-barbara/index.html").includes("$79"), false);
   const linked = readdirSync(new URL("../", import.meta.url))
     .filter(name => name.endsWith(".html"))
     .filter(name => /san-diego\/|san-mateo\/|santa-barbara\//.test(read(name)));

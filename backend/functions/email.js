@@ -1,4 +1,4 @@
-const { STATUTORY_DISCLOSURE, statutoryDisclosureHtml, logoHtml, DISCLOSURE_PX, H1_PX, BODY_PX } = require("./disclosure");
+const { STATUTORY_DISCLOSURE, statutoryDisclosureHtml, logoHtml, DISCLOSURE_PX, H1_PX, BODY_PX, ORDER_CLOSE_SENTENCE } = require("./disclosure");
 
 const REMINDER_KINDS = new Set(["confirm", "heads_up_14", "open_day", "deadline_14"]);
 
@@ -49,26 +49,17 @@ function daysBetween(fromIso, toIso) {
   return Math.round(ms / 86400000);
 }
 
-/* Fixed county date. A day count is added only when `today` is the send date. */
-function deadlineLine(windowEnd, today) {
+/* Fixed county date. No remaining-day count. */
+function deadlineLine(windowEnd) {
   const label = formatShortDay(windowEnd);
   if (!label) return "";
-  const fixed = `County filing deadline: ${label}`;
-  if (!today) return fixed;
-  const days = daysBetween(today, windowEnd);
-  if (days == null || days < 0) return fixed;
-  if (days === 0) return `${fixed} (last day)`;
-  return `${fixed} (${days} day${days === 1 ? "" : "s"} left)`;
+  return `County filing deadline: ${label}`;
 }
 
-function openingLine(name, windowStart, today) {
+function openingLine(name, windowStart) {
   const label = formatShortDay(windowStart);
   if (!label) return windowStart ? `The adapter opening date is ${windowStart}.` : "";
-  if (!today) return `The filing window on the ${name} adapter opens ${label}.`;
-  const days = daysBetween(today, windowStart);
-  if (days == null || days < 0) return `The filing window on the ${name} adapter opens ${label}.`;
-  if (days === 0) return `The filing window on the ${name} adapter opens ${label} (today).`;
-  return `The filing window on the ${name} adapter opens ${label} (${days} day${days === 1 ? "" : "s"} from this email).`;
+  return `The filing window on the ${name} adapter opens ${label}.`;
 }
 
 function buildEmail({ kind, countyName, windowLabel, windowStart, windowEnd, confirmUrl, unsubscribeUrl, cancelUrl, postal, outcome, today }) {
@@ -85,26 +76,26 @@ function buildEmail({ kind, countyName, windowLabel, windowStart, windowEnd, con
     if (windowStart) lines.push(`The adapter opening date is ${windowStart}.`);
     else lines.push("This county adapter does not state an opening date.");
     if (confirmUrl) lines.push(`Confirm: ${confirmUrl}`);
-    const confirmDeadline = deadlineLine(windowEnd, today);
+    const confirmDeadline = deadlineLine(windowEnd);
     if (confirmDeadline) lines.push(confirmDeadline);
     lines.push("No window reminder is sent until you confirm.");
   } else if (kind === "heads_up_14") {
     heading = `Filing window reminder for ${name}`;
-    const opening = openingLine(name, windowStart, today);
+    const opening = openingLine(name, windowStart);
     if (opening) lines.push(opening);
-    const deadline = deadlineLine(windowEnd, today);
+    const deadline = deadlineLine(windowEnd);
     if (deadline) lines.push(deadline);
     if (windowLabel) lines.push(windowLabel);
   } else if (kind === "open_day") {
     heading = `The filing window is open for ${name}`;
     lines.push(`The filing window on the ${name} adapter is open.`);
     if (windowLabel) lines.push(windowLabel);
-    const deadline = deadlineLine(windowEnd, today);
+    const deadline = deadlineLine(windowEnd);
     if (deadline) lines.push(deadline);
     else if (windowEnd) lines.push(`The adapter deadline is ${windowEnd}.`);
   } else if (kind === "deadline_14") {
     heading = `Filing deadline reminder for ${name}`;
-    lines.push(deadlineLine(windowEnd, today) || `The filing deadline on the ${name} adapter is not set.`);
+    lines.push(deadlineLine(windowEnd) || `The filing deadline on the ${name} adapter is not set.`);
     if (windowLabel) lines.push(windowLabel);
   } else if (kind === "renewal") {
     heading = `Annual monitor renewal notice for ${name}`;
@@ -125,11 +116,13 @@ function buildEmail({ kind, countyName, windowLabel, windowStart, windowEnd, con
   } else {
     throw new Error("Unknown email kind");
   }
+  lines.push(ORDER_CLOSE_SENTENCE);
   const body = lines.join("\n");
   const text = [
     STATUTORY_DISCLOSURE, "", heading, "", body, "", String(postal).trim(), `Unsubscribe: ${unsubscribeUrl}`
   ].join("\n");
   const html = [
+    `<style>html,body{font-size:${BODY_PX}px}</style>`,
     `<div style="font-family:-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif;color:#111;font-size:${BODY_PX}px;line-height:1.5">`,
     statutoryDisclosureHtml(),
     logoHtml(),

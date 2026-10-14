@@ -4,7 +4,7 @@ import { getCounty } from "../counties.js";
 import { paymentsAdapter } from "../adapters/payments.js";
 import { nextWindowCopy } from "../engine.js";
 import { contactLine, esc, formatDay, money } from "../format.js";
-import { mountOrderCountdowns, offerMessage, orderBadgeHtml, purchaseOffer } from "../offer.js";
+import { offerMessage, orderBadgeHtml, purchaseOffer } from "../offer.js";
 import { slugForCountyId } from "../place.js";
 import { reminderMessage } from "../place-ui.js";
 import { confirmationBody, createMonitorRemote, enrollMonitor, monitorOfferHtml } from "../monitor.js";
@@ -15,7 +15,6 @@ import { currentMatter, saveMatter } from "../store.js";
 function priceLine(county, offer) {
   const lines = planPriceLines(county);
   const bits = [];
-  if (offer && offer.diy) bits.push(`DIY kit ${lines.diyLine}`);
   if (offer && offer.dfy) bits.push(`We file it ${lines.dfy.replace(/\.$/, "")}`);
   if (!bits.length) return "";
   return `<p>${esc(bits.join(". "))}</p>`;
@@ -193,7 +192,6 @@ function render(matter, county) {
       }
     });
   }
-  mountOrderCountdowns(root);
   bindMonitor(matter);
 }
 
