@@ -26,6 +26,10 @@
     "explanation_chars": null,
     "portal_notes": [],
     "filing_fee": 30,
+    "fee_confirmed": {
+      "amount": 30,
+      "source_url": "https://www.smcgov.org/ceo/assessment-appeals-board"
+    },
     "efile_fee": {
       "amount": 30,
       "currency": "USD",
@@ -167,5 +171,5 @@
       "text": "Template close date: November 30, 2026. Opening day is not set. Not a verified county."
     }
   ],
-  "notes": "Portal launched Sept 2026 (news source; confirm on smcgov.org)."
+  "notes": "Filing fee of $30 per application is confirmed at https://www.smcgov.org/ceo/assessment-appeals-board. Portal launched Sept 2026 (news source; confirm on smcgov.org)."
 }

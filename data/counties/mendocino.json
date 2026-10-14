@@ -1,5 +1,6 @@
 {
   "id": "mendocino",
+  "wefile_margin_block": true,
   "county": "Mendocino",
   "state": "CA",
   "status": "unconfirmed",

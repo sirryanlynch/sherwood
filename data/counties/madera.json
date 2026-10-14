@@ -1,5 +1,6 @@
 {
   "id": "madera",
+  "wefile_margin_block": true,
   "county": "Madera",
   "state": "CA",
   "status": "unconfirmed",

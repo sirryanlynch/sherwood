@@ -11,7 +11,8 @@ export const LAUNCH_COUNTIES = [
 /* Unlisted landings. Not a launch county, so the home screen does not sell We file it. */
 export const PREVIEW_COUNTIES = [
   { slug: "san-diego", id: "san_diego", label: "San Diego County", state: "CA", city: "San Diego" },
-  { slug: "san-mateo", id: "san_mateo", label: "San Mateo County", state: "CA", city: "San Mateo" }
+  { slug: "san-mateo", id: "san_mateo", label: "San Mateo County", state: "CA", city: "San Mateo" },
+  { slug: "santa-barbara", id: "santa_barbara", label: "Santa Barbara County", state: "CA", city: "Santa Barbara" }
 ];
 
 const LAUNCH_CITY_TOKENS = [

@@ -92,6 +92,11 @@ export function landingDfyEnabled(county) {
   return flags[county.id] === true;
 }
 
+/* County fee is too large for the current We file it price. Stays off after confirmation. */
+export function marginBlocksDfy(county) {
+  return !!(county && county.wefile_margin_block === true);
+}
+
 /* Last days of a regular window are too late to finish signing. */
 export function withinDfyLead(county, today) {
   const endIso = county && county.filing && county.filing.regular_window && county.filing.regular_window.end;
@@ -113,18 +118,19 @@ export function purchaseOffer(county, today, supplementalNoticeDate) {
   const lead = open && season.kind === "regular" && withinDfyLead(county, day);
   const cutoff = open && pastOrderCutoff(county, day);
   const landingOff = !landingDfyEnabled(county);
+  const margin = marginBlocksDfy(county);
   const losAngeles = !!(county && county.id === "los_angeles");
   let diy = open && verified;
-  let dfy = open && verified && !paper && !registration && !lead && !cutoff && !landingOff;
+  let dfy = open && verified && !paper && !registration && !lead && !cutoff && !landingOff && !margin;
   if (open && losAngeles) {
     diy = true;
-    dfy = !paper && !registration && !lead && !cutoff && !landingOff;
+    dfy = !paper && !registration && !lead && !cutoff && !landingOff && !margin;
   }
   if (!verified && !losAngeles) {
     diy = false;
     dfy = false;
   }
-  if (!open || paper || registration || lead || cutoff || landingOff) dfy = false;
+  if (!open || paper || registration || lead || cutoff || landingOff || margin) dfy = false;
   if (!open) diy = false;
   return {
     diy,
@@ -135,6 +141,7 @@ export function purchaseOffer(county, today, supplementalNoticeDate) {
     lead,
     cutoff,
     landingOff,
+    margin,
     closed: !open,
     informal: !open,
     verified,
@@ -164,6 +171,9 @@ export function offerMessage(county, offer) {
   }
   if (offer.landingOff && !offer.dfy) {
     return "We file it stays off for this county until that switch is turned on.";
+  }
+  if (offer.margin && !offer.dfy) {
+    return "We file it stays off in this county until the price changes.";
   }
   if (offer.lead && !offer.dfy) {
     return "We file it checkout is closed for the last days of this window so there is time to finish signing.";

@@ -5,7 +5,7 @@ import { authorizationReady } from "./authorization.js";
 import { CONFIG } from "./config.js";
 import { deadlineBadge } from "./engine.js";
 import {
-  orderBadgeHtml, orderCloseLine, orderCountdownText, orderCutoffIso, pastOrderCutoff, purchaseOffer
+  marginBlocksDfy, offerMessage, orderBadgeHtml, orderCloseLine, orderCountdownText, orderCutoffIso, pastOrderCutoff, purchaseOffer
 } from "./offer.js";
 import { landingHomeLine, planPriceLines } from "./pricing.js";
 import { countyBySlug, headlinePlace } from "./place.js";
@@ -94,19 +94,25 @@ test("Santa Cruz agent authorization offers both Local Rule 6 paths", () => {
   assert.equal(authorizationReady({ ...auth, rule6Option: "application_section" }, county), true);
 });
 
-test("San Diego and San Mateo landings stay unlisted, and San Diego has no fee line", () => {
+test("San Diego, San Mateo, and Santa Barbara landings stay unlisted", () => {
   assert.equal(CONFIG.LANDING_DFY.san_diego, false);
   assert.equal(CONFIG.LANDING_DFY.san_mateo, false);
+  assert.equal(CONFIG.LANDING_DFY.santa_barbara, false);
+  assert.equal(Object.keys(CONFIG.LANDING_DFY).length, 3);
   assert.equal(countyBySlug("san-diego").id, "san_diego");
   assert.equal(headlinePlace({ param: countyBySlug("san-diego") }), "San Diego");
   assert.equal(headlinePlace({ param: countyBySlug("san-mateo") }), "San Mateo");
+  assert.equal(headlinePlace({ param: countyBySlug("santa-barbara") }), "Santa Barbara");
   const diego = readCounty("san_diego");
   const mateo = readCounty("san_mateo");
+  const barbara = readCounty("santa_barbara");
   assert.equal(diego.status, "unconfirmed");
   assert.equal(mateo.status, "unconfirmed");
+  assert.equal(barbara.status, "unconfirmed");
   assert.equal(purchaseOffer(diego, oct13).dfy, false);
   assert.equal(purchaseOffer({ ...diego, status: "verified" }, oct13).dfy, false);
   assert.equal(purchaseOffer({ ...mateo, status: "verified" }, oct13).dfy, false);
+  assert.equal(purchaseOffer({ ...barbara, status: "verified" }, oct13).dfy, false);
   const diegoLine = landingHomeLine(diego);
   assert.equal(diegoLine, "Check for free. If there's a case, file it yourself for $79, or we'll file it for you for $249.");
   assert.equal(/county fee|included/i.test(diegoLine), false);
@@ -115,16 +121,43 @@ test("San Diego and San Mateo landings stay unlisted, and San Diego has no fee l
   const mateoLine = landingHomeLine(mateo);
   assert.match(mateoLine, /\$79 \+ \$30 county fee, paid when you file/);
   assert.match(mateoLine, /\$249, county fee included/);
-  for (const path of ["san-diego/index.html", "san-mateo/index.html"]) {
+  assert.equal(mateo.filing.fee_confirmed.amount, 30);
+  assert.equal(mateo.filing.fee_confirmed.source_url, "https://www.smcgov.org/ceo/assessment-appeals-board");
+  assert.equal(mateo.filing.efile_fee.source_url, "https://www.smcgov.org/ceo/assessment-appeals-board");
+  const barbaraLine = landingHomeLine(barbara);
+  assert.match(barbaraLine, /\$79 \+ \$65 county fee, paid when you file/);
+  assert.match(barbaraLine, /\$249, county fee included/);
+  assert.equal(planPriceLines(barbara).fee, 65);
+  for (const path of ["san-diego/index.html", "san-mateo/index.html", "santa-barbara/index.html"]) {
     const html = read(path);
     assert.match(html, /name="robots" content="noindex"/);
     assert.match(html, /data-statutory-disclosure/);
     assert.match(html, /has-disclosure/);
     assert.equal(/<details[\s\S]*data-statutory-disclosure/.test(html), false);
   }
+  assert.match(read("santa-barbara/index.html"), /\$249, county fee included/);
   const linked = readdirSync(new URL("../", import.meta.url))
     .filter(name => name.endsWith(".html"))
-    .filter(name => /san-diego\/|san-mateo\//.test(read(name)));
+    .filter(name => /san-diego\/|san-mateo\/|santa-barbara\//.test(read(name)));
   assert.deepEqual(linked, []);
-  assert.equal(/san-diego\/|san-mateo\//.test(read("santa-cruz/index.html")), false);
+  assert.equal(/san-diego\/|san-mateo\/|santa-barbara\//.test(read("santa-cruz/index.html")), false);
+});
+
+test("Mendocino, Madera, and Shasta keep We file it off after confirmation", () => {
+  for (const id of ["mendocino", "madera", "shasta"]) {
+    const county = readCounty(id);
+    assert.equal(county.wefile_margin_block, true, id);
+    assert.equal(county.status, "unconfirmed", id);
+    assert.equal(marginBlocksDfy(county), true, id);
+    const confirmed = { ...county, status: "verified" };
+    if (id === "shasta") {
+      confirmed.filing = { ...county.filing, efile: true, wet_signature_required: false, dfy_available: true };
+    }
+    const offer = purchaseOffer(confirmed, oct13);
+    assert.equal(offer.dfy, false, id);
+    assert.equal(offer.margin, true, id);
+    assert.equal(offerMessage(confirmed, offer), "We file it stays off in this county until the price changes.");
+  }
+  assert.equal(readCounty("santa_cruz").wefile_margin_block, undefined);
+  assert.equal(purchaseOffer(readCounty("santa_cruz"), oct13).dfy, true);
 });

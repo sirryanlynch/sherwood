@@ -122,7 +122,7 @@ test("agent authorization needs a title and a signature before the filing time",
 
 test("every page mounts the disclosure outside a collapsible, larger than the headline", () => {
   const pages = readdirSync(new URL("../", import.meta.url)).filter(name => name.endsWith(".html"));
-  pages.push("santa-cruz/index.html", "san-diego/index.html", "san-mateo/index.html");
+  pages.push("santa-cruz/index.html", "san-diego/index.html", "san-mateo/index.html", "santa-barbara/index.html");
   const css = readFileSync(new URL("../style.css", import.meta.url), "utf8");
   assert.match(css, /--type-disclosure:34px/);
   assert.match(css, /--type-max:20px/);

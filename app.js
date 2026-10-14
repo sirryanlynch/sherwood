@@ -63,7 +63,7 @@ document.querySelectorAll("form[data-kind]").forEach(form => {
       data.placeStatus = place.status;
       data.placeSource = place.source;
       sessionStorage.setItem("sherwood_check", JSON.stringify(data));
-      const nested = /\/(santa-cruz|san-diego|san-mateo)(\/|$)/.test(location.pathname);
+      const nested = /\/(santa-cruz|san-diego|san-mateo|santa-barbara)(\/|$)/.test(location.pathname);
       location.href = nested ? "../values.html" : "values.html";
       return;
     }

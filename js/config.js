@@ -16,10 +16,12 @@ export const CONFIG = {
   SHOW_199_PLUS_COUNTY_FEE: false,
   /* Last calendar day a Santa Cruz We file it order is accepted. Inclusive. */
   order_cutoff: "2026-11-25",
-  /* We file it on the unlisted landings. Off while those county files stay unconfirmed. */
+  /* One flag per unlisted test county. False keeps We file it orders off
+     on that landing even after the county file is verified. */
   LANDING_DFY: {
     san_diego: false,
-    san_mateo: false
+    san_mateo: false,
+    santa_barbara: false
   }
 };
 

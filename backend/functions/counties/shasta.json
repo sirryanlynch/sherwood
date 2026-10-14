@@ -1,5 +1,6 @@
 {
   "id": "shasta",
+  "wefile_margin_block": true,
   "county": "Shasta",
   "state": "CA",
   "status": "unconfirmed",
