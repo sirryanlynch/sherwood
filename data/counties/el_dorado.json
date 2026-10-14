@@ -19,23 +19,23 @@
     "value_url": null
   },
   "filing": {
-    "method": null,
-    "efile": null,
+    "method": "paper",
+    "efile": false,
     "paper_available": true,
     "portal_url": null,
     "explanation_chars": null,
-    "portal_notes": [
-      "E-file availability unconfirmed"
-    ],
-    "filing_fee": null,
-    "efile_fee": {
-      "amount": null,
+    "portal_notes": [],
+    "filing_fee": 40,
+    "efile_fee": null,
+    "paper_fee": {
+      "amount": 40,
       "currency": "USD",
-      "refundable": null,
+      "refundable": false,
       "unit": "per application",
-      "label": "unverified template — fee not set. Do not quote a number."
+      "as_of": "2026-10-13",
+      "source_url": "https://www.eldoradocounty.ca.gov/County-Government/Board-of-Supervisors/Assessment-Appeals-Resources-and-Application",
+      "label": "$40 per application, non-refundable — https://www.eldoradocounty.ca.gov/County-Government/Board-of-Supervisors/Assessment-Appeals-Resources-and-Application"
     },
-    "paper_fee": null,
     "fee_conflict": null,
     "current_year_deadline": "2026-11-30",
     "regular_window": {
@@ -57,7 +57,9 @@
       "email": null,
       "address": null
     },
-    "paper_steps": []
+    "paper_steps": [],
+    "wet_signature_required": true,
+    "dfy_available": false
   },
   "portal_sections": [],
   "signature_steps": [
@@ -105,7 +107,7 @@
     "agent_filing_allowed": true,
     "source": "Property Tax Rule 305 (statewide) https://www.boe.ca.gov/proptaxes/pdf/rules/Rule305.pdf",
     "perjury": "The homeowner signs. Sherwood does not sign as the homeowner.",
-    "roles_note": "County-specific agent rules unconfirmed.",
+    "roles_note": "Rule 305 authorization; no county agent registration stated on the official AAB page (absence, not a confirmation).",
     "registration_required": null,
     "registration_fee_annual": null,
     "registration_source": null
@@ -129,7 +131,7 @@
     "note": "unverified template"
   },
   "homeowner_exemption": null,
-  "informal_review": "Unconfirmed for this county. A Prop 8 informal review with the Assessor is free statewide. It does not extend the AAB deadline.",
+  "informal_review": "Online Informal Review Form (MPTS): https://appeals.mptsweb.com/IRF/Home?CN=eldorado . Deadline unconfirmed.",
   "stage_expectations": {
     "filed": [
       "unverified template — do not treat a simulated filing as a real county submission."
@@ -159,5 +161,5 @@
       "text": "Template close date: November 30, 2026. Opening day is not set. Not a verified county."
     }
   ],
-  "notes": "County page not yet reviewed."
+  "notes": "Wet signature; mail or in person; cash or check."
 }

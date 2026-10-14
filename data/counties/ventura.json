@@ -103,7 +103,7 @@
     "agent_filing_allowed": true,
     "source": "Property Tax Rule 305 (statewide) https://www.boe.ca.gov/proptaxes/pdf/rules/Rule305.pdf",
     "perjury": "The homeowner signs. Sherwood does not sign as the homeowner.",
-    "roles_note": "Rule 305 authorization. Registration: unconfirmed.",
+    "roles_note": "Rule 305 authorization; no county agent registration stated on the official AAB page (absence, not a confirmation).",
     "registration_required": null,
     "registration_fee_annual": null,
     "registration_source": null
@@ -157,5 +157,5 @@
       "text": "Template close date: November 30, 2026. Opening day is not set. Not a verified county."
     }
   ],
-  "notes": "No application fee listed (staging page only -> fee unconfirmed); findings of fact $100/$150. Closed Sept 15, 2026."
+  "notes": "The official page lists no application fee; only findings of fact cost $100/$150. Fee stays unconfirmed (an absence) until the clerk confirms. Online filing closed 11:59 pm Sept 15, 2026."
 }

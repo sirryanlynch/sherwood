@@ -30,7 +30,7 @@
       "residential": 290,
       "commercial": 675,
       "currency": "USD",
-      "note": "Residential, vacant, and agricultural is $290. Commercial, business, and 5 or more units is $675, effective June 1, 2026."
+      "note": "Residential, vacant, and agricultural is $290. Commercial, business, and 5 or more units is $675."
     },
     "efile_fee": {
       "amount": 290,

@@ -19,22 +19,14 @@
     "value_url": null
   },
   "filing": {
-    "method": null,
-    "efile": null,
+    "method": "paper",
+    "efile": false,
     "paper_available": true,
     "portal_url": null,
     "explanation_chars": null,
-    "portal_notes": [
-      "E-file availability unconfirmed"
-    ],
+    "portal_notes": [],
     "filing_fee": 75,
-    "efile_fee": {
-      "amount": null,
-      "currency": "USD",
-      "refundable": null,
-      "unit": "per application",
-      "label": "unverified template — fee not set. Do not quote a number."
-    },
+    "efile_fee": null,
     "paper_fee": {
       "amount": 75,
       "currency": "USD",
@@ -65,7 +57,9 @@
       "email": null,
       "address": null
     },
-    "paper_steps": []
+    "paper_steps": [],
+    "wet_signature_required": true,
+    "dfy_available": false
   },
   "portal_sections": [],
   "signature_steps": [
@@ -113,7 +107,7 @@
     "agent_filing_allowed": true,
     "source": "Property Tax Rule 305 (statewide) https://www.boe.ca.gov/proptaxes/pdf/rules/Rule305.pdf",
     "perjury": "The homeowner signs. Sherwood does not sign as the homeowner.",
-    "roles_note": "Rule 305 authorization. Registration: unconfirmed.",
+    "roles_note": "Rule 305 authorization; no county agent registration stated on the official AAB page (absence, not a confirmation). The county has its own Agent Authorization Form (PDF).",
     "registration_required": null,
     "registration_fee_annual": null,
     "registration_source": null
@@ -137,7 +131,7 @@
     "note": "unverified template"
   },
   "homeowner_exemption": null,
-  "informal_review": "Unconfirmed for this county. A Prop 8 informal review with the Assessor is free statewide. It does not extend the AAB deadline.",
+  "informal_review": "Assessor decline-in-value review (Prop 8); call 661-868-3485. Deadline unconfirmed. https://www.kerncounty.com/government/board-of-supervisors/clerk-of-the-board/assessment-appeals",
   "stage_expectations": {
     "filed": [
       "unverified template — do not treat a simulated filing as a real county submission."
@@ -167,9 +161,15 @@
       "text": "Template close date: November 30, 2026. Opening day is not set. Not a verified county."
     }
   ],
-  "notes": "Fee $75 effective Aug 29, 2025 per county code ch. 2.44 (mirror site) - confirm on county page. E-file: unconfirmed.",
+  "notes": "Fee $75 effective Sept 19, 2025 (not Aug 29). The official page gives a mailing address only and no online filing. Fee waiver form. Checks payable to County of Kern.",
   "county_form": {
-    "agent_authorization": { "exists": true, "url": null },
-    "revocation": { "exists": false, "url": null }
+    "agent_authorization": {
+      "exists": true,
+      "url": "https://www.kerncounty.com/government/board-of-supervisors/clerk-of-the-board/assessment-appeals"
+    },
+    "revocation": {
+      "exists": false,
+      "url": null
+    }
   }
 }

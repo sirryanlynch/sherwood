@@ -21,12 +21,17 @@ test("Kern, Stanislaus, Tulare, and Yolo record their own forms, and Stanislaus 
     const county = readCounty(id);
     assert.equal(county.status, "unconfirmed", id);
     assert.equal(county.county_form.agent_authorization.exists, true, id);
-    assert.equal(county.county_form.agent_authorization.url, null, id);
+    assert.match(county.county_form.agent_authorization.url, /^https:\/\//, id);
   }
   assert.equal(readCounty("kern").county_form.revocation.exists, false);
   assert.equal(readCounty("stanislaus").county_form.revocation.exists, false);
   assert.equal(readCounty("tulare").county_form.revocation.exists, true);
   assert.equal(readCounty("yolo").county_form.revocation.exists, true);
+  assert.equal(readCounty("kern").filing.efile, false);
+  assert.equal(readCounty("stanislaus").filing.filing_fee, 30);
+  assert.equal(readCounty("tulare").filing.efile, false);
+  assert.equal(readCounty("yolo").filing.efile, true);
+  assert.equal(readCounty("yolo").filing.filing_fee, 45);
   assert.equal(readCounty("stanislaus").filing.regular_window.end, "2026-11-30");
   const statuses = JSON.parse(read("data/counties/index.json")).map(name => readCounty(name.replace(/\.json$/, "")).status);
   assert.equal(statuses.filter(status => status === "verified").length, 1);

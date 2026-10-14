@@ -19,14 +19,12 @@
     "value_url": null
   },
   "filing": {
-    "method": null,
-    "efile": null,
+    "method": "efile",
+    "efile": true,
     "paper_available": true,
-    "portal_url": null,
+    "portal_url": "https://cobappeals.countyofsb.org/",
     "explanation_chars": null,
-    "portal_notes": [
-      "E-file availability unconfirmed"
-    ],
+    "portal_notes": [],
     "filing_fee": null,
     "efile_fee": {
       "amount": null,
@@ -105,7 +103,7 @@
     "agent_filing_allowed": true,
     "source": "Property Tax Rule 305 (statewide) https://www.boe.ca.gov/proptaxes/pdf/rules/Rule305.pdf",
     "perjury": "The homeowner signs. Sherwood does not sign as the homeowner.",
-    "roles_note": "County-specific agent rules unconfirmed.",
+    "roles_note": "Rule 305 authorization; no county agent registration stated on the official AAB page (absence, not a confirmation).",
     "registration_required": null,
     "registration_fee_annual": null,
     "registration_source": null
@@ -159,5 +157,5 @@
       "text": "Template close date: November 30, 2026. Opening day is not set. Not a verified county."
     }
   ],
-  "notes": "County page not yet reviewed."
+  "notes": "Fee reported as $65 per parcel under $30M, or $1,000 over $30M or complex. Only source is a county guide hosted on civicplus, so the fee is unconfirmed. Whether the portal uses an e-signature is unconfirmed."
 }

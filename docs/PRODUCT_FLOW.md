@@ -47,13 +47,13 @@ Hearing support is the published "quoted per case" add-on. The button records a 
 
 ## County adapters
 
-`js/counties.js` loads `data/counties/index.json` and then each file. Pages render portal URL, e-file versus paper, fees, deadline, form, signature steps, hearing format, timelines, clerk, assessor, agent rules, and stage copy from that object.
+`js/counties.js` loads `data/counties/index.json` and then each file. Pages render portal URL, e-file versus paper, fees, deadline, form, signature steps, hearing format, timelines, clerk, assessor, agent rules, and stage copy from that object. The files are the batch 2 `counties-corrected` set. Every county other than Santa Cruz is stored as `unconfirmed`.
 
 | File | Status | What it is |
 |---|---|---|
 | `santa_cruz.json` | Verified | Launch county. E-file portal, $50 non-refundable filing fee, fee waivers exist, window July 2 through November 30, 2026. The paper amount is not quoted. `regular_window.source_url` is the county Filing Deadlines and Appeal Information PDF. `agent_authorization.doc_title` names the Santa Cruz County Agent Authorization (SCC form). Local Rule 6 stores two choices: the application authorization section, or that county form. Informal review is the Assessor's Prop 8 request. We file it orders stop at the end of November 25, 2026 (`order_cutoff` in `js/config.js`). |
-| `kern.json`, `stanislaus.json`, `tulare.json`, `yolo.json` | `unconfirmed` | `county_form.agent_authorization.exists` is true. Tulare and Yolo also set `county_form.revocation.exists`. Form URLs are null. Stanislaus `regular_window.end` stays 2026-11-30. |
-| 53 other county files | `unconfirmed` | Real county files from the compliance review. Status is `unconfirmed`, so the engine will not return Go. Paper counties set `wet_signature_required` and `dfy_available: false`. Los Angeles sets `agent.registration_required`. Santa Clara's `filing_fee.amount` is the residential $290, with `commercial` 675. |
+| `kern.json`, `stanislaus.json`, `tulare.json`, `yolo.json` | `unconfirmed` | Batch 2. Each has its own agent-authorization form. Tulare and Yolo also have a revocation form. The `county_form` URL is the county page that publishes the form. Kern, Stanislaus, and Tulare are paper (`efile` false). Kern's fee is $75. Stanislaus and Tulare are $30. Yolo e-files at $45. Stanislaus `regular_window.end` stays 2026-11-30. The file notes an Assessor page that says December 1; the adapter keeps November 30. |
+| 53 other county files | `unconfirmed` | Batch 2 county files. Status is stored as `unconfirmed`, so the engine will not return Go. A county with `efile: false` sets `wet_signature_required` and `dfy_available: false`. That set is Sacramento, Contra Costa, Fresno, Placer, Sonoma, San Luis Obispo, Orange, Riverside, Kern, Stanislaus, Tulare, El Dorado, Monterey, San Joaquin, and Solano. Los Angeles sets `agent.registration_required`. Santa Clara's `filing_fee.amount` is the residential $290, with `commercial` 675. |
 
 The two template files are gone. A paper We-file-it path (print, wet signature, tracked mail, postmark) is not built. Those counties get a reminder signup.
 

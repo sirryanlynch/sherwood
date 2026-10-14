@@ -19,23 +19,31 @@
     "value_url": null
   },
   "filing": {
-    "method": null,
-    "efile": null,
+    "method": "efile",
+    "efile": true,
     "paper_available": true,
-    "portal_url": null,
+    "portal_url": "https://www.yolocounty.gov/government/board-of-supervisors/clerk-of-the-board/assessment-appeals",
     "explanation_chars": null,
-    "portal_notes": [
-      "E-file availability unconfirmed"
-    ],
-    "filing_fee": null,
+    "portal_notes": [],
+    "filing_fee": 45,
     "efile_fee": {
-      "amount": null,
+      "amount": 45,
       "currency": "USD",
-      "refundable": null,
+      "refundable": false,
       "unit": "per application",
-      "label": "unverified template — fee not set. Do not quote a number."
+      "as_of": "2026-10-13",
+      "source_url": "https://www.yolocounty.gov/government/board-of-supervisors/clerk-of-the-board/assessment-appeals",
+      "label": "$45 per application, non-refundable — https://www.yolocounty.gov/government/board-of-supervisors/clerk-of-the-board/assessment-appeals"
     },
-    "paper_fee": null,
+    "paper_fee": {
+      "amount": 45,
+      "currency": "USD",
+      "refundable": false,
+      "unit": "per application",
+      "as_of": "2026-10-13",
+      "source_url": "https://www.yolocounty.gov/government/board-of-supervisors/clerk-of-the-board/assessment-appeals",
+      "label": "$45 per application, non-refundable — https://www.yolocounty.gov/government/board-of-supervisors/clerk-of-the-board/assessment-appeals"
+    },
     "fee_conflict": null,
     "current_year_deadline": "2026-11-30",
     "regular_window": {
@@ -105,7 +113,7 @@
     "agent_filing_allowed": true,
     "source": "Property Tax Rule 305 (statewide) https://www.boe.ca.gov/proptaxes/pdf/rules/Rule305.pdf",
     "perjury": "The homeowner signs. Sherwood does not sign as the homeowner.",
-    "roles_note": "County-specific agent rules unconfirmed.",
+    "roles_note": "Rule 305 authorization; no county agent registration stated on the official AAB page (absence, not a confirmation). The county has its own Agent Authorization and Revocation/Substitution forms, which can be uploaded with the online application.",
     "registration_required": null,
     "registration_fee_annual": null,
     "registration_source": null
@@ -129,7 +137,7 @@
     "note": "unverified template"
   },
   "homeowner_exemption": null,
-  "informal_review": "Unconfirmed for this county. A Prop 8 informal review with the Assessor is free statewide. It does not extend the AAB deadline.",
+  "informal_review": "Prop 8 review with the Assessor: https://ace.yolocounty.gov/165/Proposition-8 (deadline unconfirmed).",
   "stage_expectations": {
     "filed": [
       "unverified template — do not treat a simulated filing as a real county submission."
@@ -159,9 +167,15 @@
       "text": "Template close date: November 30, 2026. Opening day is not set. Not a verified county."
     }
   ],
-  "notes": "County page not yet reviewed.",
+  "notes": "Online application with a $1.95 card or bank-draft service fee. Fee waiver form. E-signature method unconfirmed.",
   "county_form": {
-    "agent_authorization": { "exists": true, "url": null },
-    "revocation": { "exists": true, "url": null }
+    "agent_authorization": {
+      "exists": true,
+      "url": "https://www.yolocounty.gov/government/board-of-supervisors/clerk-of-the-board/assessment-appeals"
+    },
+    "revocation": {
+      "exists": true,
+      "url": "https://www.yolocounty.gov/government/board-of-supervisors/clerk-of-the-board/assessment-appeals"
+    }
   }
 }
