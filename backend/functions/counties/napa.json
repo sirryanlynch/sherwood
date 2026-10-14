@@ -19,22 +19,14 @@
     "value_url": null
   },
   "filing": {
-    "method": null,
-    "efile": null,
+    "method": "paper",
+    "efile": false,
     "paper_available": true,
     "portal_url": null,
     "explanation_chars": null,
-    "portal_notes": [
-      "E-file availability unconfirmed"
-    ],
+    "portal_notes": [],
     "filing_fee": 75,
-    "efile_fee": {
-      "amount": null,
-      "currency": "USD",
-      "refundable": null,
-      "unit": "per application",
-      "label": "unverified template — fee not set. Do not quote a number."
-    },
+    "efile_fee": null,
     "paper_fee": {
       "amount": 75,
       "currency": "USD",
@@ -65,7 +57,9 @@
       "email": null,
       "address": null
     },
-    "paper_steps": []
+    "paper_steps": [],
+    "wet_signature_required": true,
+    "dfy_available": false
   },
   "portal_sections": [],
   "signature_steps": [
@@ -167,5 +161,5 @@
       "text": "Template close date: November 30, 2026. Opening day is not set. Not a verified county."
     }
   ],
-  "notes": "$75 residential, $150 commercial/business, effective Jan 6, 2025. E-file unconfirmed. Local rules: https://www.napacounty.gov/DocumentCenter/View/2936/BOS-Resolution-Number-2018-48-Assessment-Appeals-Board-Local-Rules-PDF"
+  "notes": "$75 residential, $150 commercial/business, effective Jan 6, 2025. Paper: the county application PDF is fill-and-mail, and the official page shows no portal."
 }

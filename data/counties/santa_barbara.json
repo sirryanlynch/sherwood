@@ -25,15 +25,25 @@
     "portal_url": "https://cobappeals.countyofsb.org/",
     "explanation_chars": null,
     "portal_notes": [],
-    "filing_fee": null,
+    "filing_fee": 65,
     "efile_fee": {
-      "amount": null,
+      "amount": 65,
       "currency": "USD",
-      "refundable": null,
+      "refundable": false,
       "unit": "per application",
-      "label": "unverified template — fee not set. Do not quote a number."
+      "as_of": "2026-10-13",
+      "source_url": "https://content.civicplus.com/api/assets/ad7fa84b-751e-4c55-ab32-80a06df8a625",
+      "label": "$65 per application, non-refundable — https://content.civicplus.com/api/assets/ad7fa84b-751e-4c55-ab32-80a06df8a625"
     },
-    "paper_fee": null,
+    "paper_fee": {
+      "amount": 65,
+      "currency": "USD",
+      "refundable": false,
+      "unit": "per application",
+      "as_of": "2026-10-13",
+      "source_url": "https://content.civicplus.com/api/assets/ad7fa84b-751e-4c55-ab32-80a06df8a625",
+      "label": "$65 per application, non-refundable — https://content.civicplus.com/api/assets/ad7fa84b-751e-4c55-ab32-80a06df8a625"
+    },
     "fee_conflict": null,
     "current_year_deadline": "2026-11-30",
     "regular_window": {
@@ -157,5 +167,5 @@
       "text": "Template close date: November 30, 2026. Opening day is not set. Not a verified county."
     }
   ],
-  "notes": "Fee reported as $65 per parcel under $30M, or $1,000 over $30M or complex. Only source is a county guide hosted on civicplus, so the fee is unconfirmed. Whether the portal uses an e-signature is unconfirmed."
+  "notes": "Fee confirmed in the county AAB guide \"How to File an Application for Changed Assessment\": $65 per parcel or appraisal unit, or $1,000 if the assessed value is over $30M, non-refundable. Fee due within 20 days of the clerk's notice if omitted. Findings of fact $150. Whether the portal uses an e-signature is unconfirmed."
 }

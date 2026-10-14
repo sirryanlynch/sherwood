@@ -105,7 +105,7 @@
     "agent_filing_allowed": true,
     "source": "Property Tax Rule 305 (statewide) https://www.boe.ca.gov/proptaxes/pdf/rules/Rule305.pdf",
     "perjury": "The homeowner signs. Sherwood does not sign as the homeowner.",
-    "roles_note": "County-specific agent rules unconfirmed.",
+    "roles_note": "Rule 305 authorization; no county agent registration stated on the official AAB page (absence, not a confirmation).",
     "registration_required": null,
     "registration_fee_annual": null,
     "registration_source": null
@@ -159,5 +159,5 @@
       "text": "Template close date: November 30, 2026. Opening day is not set. Not a verified county."
     }
   ],
-  "notes": "County page not yet reviewed."
+  "notes": "Sources conflict (none vs $60, both third-party). Unconfirmed. https://www.tuolumnecounty.ca.gov/730/Property-Tax-Assessment-Appeals"
 }

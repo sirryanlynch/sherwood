@@ -19,23 +19,23 @@
     "value_url": null
   },
   "filing": {
-    "method": null,
-    "efile": null,
+    "method": "paper",
+    "efile": false,
     "paper_available": true,
     "portal_url": null,
     "explanation_chars": null,
-    "portal_notes": [
-      "E-file availability unconfirmed"
-    ],
-    "filing_fee": null,
-    "efile_fee": {
-      "amount": null,
+    "portal_notes": [],
+    "filing_fee": 30,
+    "efile_fee": null,
+    "paper_fee": {
+      "amount": 30,
       "currency": "USD",
       "refundable": null,
       "unit": "per application",
-      "label": "unverified template — fee not set. Do not quote a number."
+      "as_of": "2026-10-13",
+      "source_url": "https://nevadacountyca.gov/840/Assessment-Appeals-Board-AAB",
+      "label": "$30 per application, unconfirmed — https://nevadacountyca.gov/840/Assessment-Appeals-Board-AAB"
     },
-    "paper_fee": null,
     "fee_conflict": null,
     "current_year_deadline": "2026-11-30",
     "regular_window": {
@@ -57,7 +57,9 @@
       "email": null,
       "address": null
     },
-    "paper_steps": []
+    "paper_steps": [],
+    "wet_signature_required": true,
+    "dfy_available": false
   },
   "portal_sections": [],
   "signature_steps": [
@@ -105,7 +107,7 @@
     "agent_filing_allowed": true,
     "source": "Property Tax Rule 305 (statewide) https://www.boe.ca.gov/proptaxes/pdf/rules/Rule305.pdf",
     "perjury": "The homeowner signs. Sherwood does not sign as the homeowner.",
-    "roles_note": "County-specific agent rules unconfirmed.",
+    "roles_note": "Rule 305 authorization; no county agent registration stated on the official AAB page (absence, not a confirmation).",
     "registration_required": null,
     "registration_fee_annual": null,
     "registration_source": null
@@ -159,5 +161,5 @@
       "text": "Template close date: November 30, 2026. Opening day is not set. Not a verified county."
     }
   ],
-  "notes": "County page not yet reviewed."
+  "notes": "Original wet signature; mail or in person; scanned or emailed applications are rejected. Fee waiver: contact the clerk. Refundability unconfirmed."
 }

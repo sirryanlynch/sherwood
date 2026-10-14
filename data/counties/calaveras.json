@@ -105,7 +105,7 @@
     "agent_filing_allowed": true,
     "source": "Property Tax Rule 305 (statewide) https://www.boe.ca.gov/proptaxes/pdf/rules/Rule305.pdf",
     "perjury": "The homeowner signs. Sherwood does not sign as the homeowner.",
-    "roles_note": "County-specific agent rules unconfirmed.",
+    "roles_note": "Rule 305 authorization; no county agent registration stated on the official AAB page (absence, not a confirmation).",
     "registration_required": null,
     "registration_fee_annual": null,
     "registration_source": null
@@ -129,7 +129,7 @@
     "note": "unverified template"
   },
   "homeowner_exemption": null,
-  "informal_review": "Unconfirmed for this county. A Prop 8 informal review with the Assessor is free statewide. It does not extend the AAB deadline.",
+  "informal_review": "Assessor Property Review Request forms: https://assessor.calaverasgov.us/Property-Assessment . Deadline unconfirmed.",
   "stage_expectations": {
     "filed": [
       "unverified template — do not treat a simulated filing as a real county submission."
@@ -159,5 +159,5 @@
       "text": "Template close date: November 30, 2026. Opening day is not set. Not a verified county."
     }
   ],
-  "notes": "County page not yet reviewed."
+  "notes": "Fee conflict: third parties say $30 or none, and no official statement was found, so it is unconfirmed. The clerk hands out applications; 891 Mountain Ranch Rd, San Andreas; 209-754-6370. Hearing notice 45 days ahead. One postponement as of right."
 }
