@@ -21,7 +21,7 @@ const read = (path) => readFileSync(new URL(path, import.meta.url), "utf8");
 
 function pageNames() {
   const names = readdirSync(ROOT).filter(name => name.endsWith(".html"));
-  names.push("santa-cruz/index.html", "san-diego/index.html", "san-mateo/index.html", "santa-barbara/index.html", "scz/index.html");
+  names.push("santa-cruz/index.html", "san-diego/index.html", "san-mateo/index.html", "santa-barbara/index.html", "scz/index.html", "sc/index.html");
   return names;
 }
 
@@ -77,7 +77,7 @@ function startServer() {
       }
       try {
         let body = readFileSync(file);
-        if (pathname === "/scz/index.html" && url.searchParams.has("static")) {
+        if ((pathname === "/scz/index.html" || pathname === "/sc/index.html") && url.searchParams.has("static")) {
           body = Buffer.from(body.toString("utf8")
             .replace(/<meta http-equiv="refresh"[^>]*>/, "")
             .replace(/<script>location\.replace[\s\S]*?<\/script>/, ""));
@@ -249,8 +249,8 @@ test("disclosure computed font-size is larger than every other element", async (
     ];
     const targets = pageNames().map(name => ({
       name,
-      url: name === "scz/index.html"
-        ? `http://127.0.0.1:${port}/scz/index.html?static=1`
+      url: name === "scz/index.html" || name === "sc/index.html"
+        ? `http://127.0.0.1:${port}/${name}?static=1`
         : `http://127.0.0.1:${port}/${name}`
     }));
     targets.push({ name: "email", url: `http://127.0.0.1:${port}/email-preview.html`, email: true });
