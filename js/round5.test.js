@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { STATUTORY_DISCLOSURE, statutoryDisclosureHtml } from "./statutoryDisclosure.js";
+import { STATUTORY_DISCLOSURE, campaignTopDisclosure, statutoryDisclosureHtml } from "./statutoryDisclosure.js";
 import { AUTHORIZATION_RETENTION, retainUntil } from "./retention.js";
 import { MONITOR_TERMS, monitorOfferHtml } from "./monitor.js";
 import { CONFIG } from "./config.js";
@@ -19,15 +19,19 @@ test("the statutory disclosure is one sentence, shared with reminder email", () 
   assert.notEqual(STATUTORY_DISCLOSURE, STATUTORY_DISCLOSURE.toUpperCase());
 });
 
-test("home and the Santa Cruz landing put the disclosure above the header", () => {
+test("headed pages keep the verbatim disclosure in the Disclosures dialog", () => {
   for (const file of ["../index.html", "../santa-cruz/index.html", "../pricing.html", "../faq.html"]) {
     const html = read(file);
-    const match = html.match(/<div class="statutory-disclosure[^"]*"[^>]*>\s*<p><b>([\s\S]*?)<\/b><\/p>\s*<\/div>/);
+    const match = html.match(/role="dialog"[\s\S]*?<div class="statutory-disclosure[^"]*"[^>]*>\s*<p><b>([\s\S]*?)<\/b><\/p>\s*<\/div>/);
     assert.equal(match && match[1], STATUTORY_DISCLOSURE, file);
+    const headerAt = html.indexOf("<header");
+    const header = html.slice(headerAt, html.indexOf("</header>"));
+    assert.match(header, /<button type="button" class="disclosure-link" data-disclosure-open[^>]*>Disclosures<\/button>/, file);
+    assert.match(html, /aria-modal="true"/, file);
+    assert.match(html, /data-disclosure-close[^>]*>Close</, file);
     const box = html.indexOf('class="statutory-disclosure');
-    const header = html.indexOf("<header");
     const h1 = html.indexOf("<h1");
-    assert.ok(box > 0 && box < header && header < h1, file);
+    assert.ok(headerAt > 0 && box > headerAt && headerAt < h1, file);
     assert.equal(html.includes('class="has-disclosure"') || html.includes("has-disclosure "), true);
   }
   const css = read("../style.css");
@@ -39,6 +43,35 @@ test("home and the Santa Cruz landing put the disclosure above the header", () =
   assert.equal(/text-transform:\s*uppercase/.test(css), false);
   assert.match(css, /--fs-disclosure:16px/);
   assert.match(css, /@media \(max-width:480px\)\{:root\{--fs-disclosure:15px/);
+});
+
+test("campaign first-touch src keeps the top disclosure box", () => {
+  assert.equal(CONFIG.DISCLOSURE_TOP_FOR_CAMPAIGN, true);
+  for (const src of ["postcard-scz", "postcard-anything", "postcard-", "social", "search"]) {
+    assert.equal(campaignTopDisclosure(src), true, src);
+  }
+  for (const src of ["mail1", "", null, "Postcard-scz", "postcard", "search-ad", "social-ig"]) {
+    assert.equal(campaignTopDisclosure(src), false, String(src));
+  }
+  assert.equal(campaignTopDisclosure("social", { DISCLOSURE_TOP_FOR_CAMPAIGN: false }), false);
+  assert.equal(campaignTopDisclosure("postcard-scz", { DISCLOSURE_TOP_FOR_CAMPAIGN: false }), false);
+  assert.equal(campaignTopDisclosure("search", { DISCLOSURE_TOP_FOR_CAMPAIGN: false }), false);
+  const dialogJs = read("../js/statutoryDisclosure.js");
+  assert.match(dialogJs, /event\.key === "Escape"/);
+  assert.match(dialogJs, /event\.key !== "Tab"/);
+  assert.match(dialogJs, /data-disclosure-close/);
+  assert.match(dialogJs, /lastFocus\.focus\(\)/);
+  const app = read("../app.js");
+  assert.ok(app.indexOf("captureFirstTouch()") < app.indexOf("bindDisclosureDialog()"));
+  assert.match(read("../cancel.html"), /bindDisclosureDialog\(\)/);
+  for (const file of ["../sc/index.html", "../scz/index.html"]) {
+    const html = read(file);
+    assert.equal(html.includes('id="disclosure-dialog"'), false, file);
+    assert.equal(html.includes("data-disclosure-open"), false, file);
+    const match = html.match(/<div class="statutory-disclosure[^"]*"[^>]*>\s*<p><b>([\s\S]*?)<\/b><\/p>\s*<\/div>/);
+    assert.equal(match && match[1], STATUTORY_DISCLOSURE, file);
+    assert.ok(html.indexOf('class="statutory-disclosure') < html.indexOf("<p><a"), file);
+  }
 });
 
 test("consent and signed authorizations are kept 3 years", () => {

@@ -133,9 +133,10 @@ test("San Diego, San Mateo, and Santa Barbara landings stay unlisted", () => {
   for (const path of ["san-diego/index.html", "san-mateo/index.html", "santa-barbara/index.html"]) {
     const html = read(path);
     assert.match(html, /name="robots" content="noindex"/);
-    const match = html.match(/<div class="statutory-disclosure[^"]*"[^>]*>\s*<p><b>([\s\S]*?)<\/b><\/p>\s*<\/div>/);
+    const match = html.match(/role="dialog"[\s\S]*?<div class="statutory-disclosure[^"]*"[^>]*>\s*<p><b>([\s\S]*?)<\/b><\/p>\s*<\/div>/);
     assert.equal(match && match[1], STATUTORY_DISCLOSURE);
-    assert.ok(html.indexOf('class="statutory-disclosure') < html.indexOf("<header"));
+    assert.match(html, /data-disclosure-open[^>]*>Disclosures</);
+    assert.ok(html.indexOf('class="statutory-disclosure') > html.indexOf("<header"));
     assert.match(html, /has-disclosure/);
     assert.equal(/<details[\s\S]*statutory-disclosure/.test(html), false);
   }

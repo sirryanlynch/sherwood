@@ -1,7 +1,9 @@
 import { captureFirstTouch } from "./js/attribution.js";
 import { startPlace, rememberAddress } from "./js/place-ui.js";
+import { bindDisclosureDialog } from "./js/statutoryDisclosure.js";
 
 captureFirstTouch();
+bindDisclosureDialog();
 
 const FORM_ENDPOINT = "";
 

@@ -25,7 +25,10 @@ export const CONFIG = {
     san_diego: false,
     san_mateo: false,
     santa_barbara: false
-  }
+  },
+  /* True keeps the boxed disclosure above the header when the first-touch
+     src is postcard-*, social, or search. Other visits get the dialog only. */
+  DISCLOSURE_TOP_FOR_CAMPAIGN: true
 };
 
 export function backendEnabled() {

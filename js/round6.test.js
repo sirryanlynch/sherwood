@@ -124,7 +124,7 @@ test("agent authorization needs a title and a signature before the filing time",
   assert.equal(signedBeforeFiling({ ...auth, agentName: "[pending]" }, "2026-10-13T13:00:00.000Z"), false);
 });
 
-test("every page mounts the disclosure outside a collapsible, larger than the headline", () => {
+test("every page keeps the verbatim disclosure outside a collapsible", () => {
   const pages = readdirSync(new URL("../", import.meta.url)).filter(name => name.endsWith(".html"));
   pages.push("santa-cruz/index.html", "san-diego/index.html", "san-mateo/index.html", "santa-barbara/index.html", "scz/index.html", "sc/index.html");
   const css = readFileSync(new URL("../style.css", import.meta.url), "utf8");
@@ -138,7 +138,14 @@ test("every page mounts the disclosure outside a collapsible, larger than the he
     const boxAt = html.indexOf('class="statutory-disclosure');
     const headerAt = html.indexOf("<header");
     assert.ok(boxAt >= 0, name);
-    if (headerAt !== -1) assert.ok(headerAt > boxAt, name);
+    if (headerAt !== -1) {
+      const header = html.slice(headerAt, html.indexOf("</header>"));
+      assert.match(header, /data-disclosure-open[^>]*>Disclosures<\/button>/, name);
+      const dialogAt = html.indexOf('role="dialog"');
+      assert.ok(dialogAt > headerAt && boxAt > dialogAt, name);
+      assert.match(html, /aria-modal="true"/, name);
+      assert.match(html, /data-disclosure-close[^>]*>Close</, name);
+    }
     assert.ok(html.includes("has-disclosure"), name);
     assert.equal(html.includes("data-statutory-disclosure"), false, name);
     assert.equal(/<details[\s\S]*statutory-disclosure/.test(html), false, name);

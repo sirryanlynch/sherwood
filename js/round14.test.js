@@ -49,7 +49,9 @@ test("DIY is disabled, including the Los Angeles override, and is not offered", 
     assert.equal(html.includes("we'll file it for you for $249"), false);
     assert.equal(html.includes("Check my property"), false);
     assert.equal(html.includes("Check a property anyway"), false);
-    assert.equal((html.match(/<button/g) || []).length, 1, path);
+    assert.equal((html.match(/<button/g) || []).length, 3, path);
+    assert.equal((html.match(/data-disclosure-open/g) || []).length, 1, path);
+    assert.equal((html.match(/data-disclosure-close/g) || []).length, 1, path);
   }
   const results = read("js/pages/results.js");
   assert.match(results, /reminderOnly\(offer\)/);
