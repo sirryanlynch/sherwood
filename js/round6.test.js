@@ -126,7 +126,7 @@ test("agent authorization needs a title and a signature before the filing time",
 
 test("every page keeps the verbatim disclosure outside a collapsible", () => {
   const pages = readdirSync(new URL("../", import.meta.url)).filter(name => name.endsWith(".html"));
-  pages.push("santa-cruz/index.html", "san-diego/index.html", "san-mateo/index.html", "santa-barbara/index.html", "scz/index.html", "sc/index.html");
+  pages.push("santa-cruz/index.html", "san-diego/index.html", "san-mateo/index.html", "santa-barbara/index.html", "scz/index.html", "sc/index.html", "disclosures/index.html");
   const css = readFileSync(new URL("../style.css", import.meta.url), "utf8");
   assert.match(css, /--fs-disclosure:16px/);
   assert.match(css, /--fs-h1:15px/);

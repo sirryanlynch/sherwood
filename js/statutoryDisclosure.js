@@ -6,6 +6,8 @@ import { readAttribution } from "./attribution.js";
 
 export const STATUTORY_DISCLOSURE = "This assessment reduction filing service is not associated with any government agency. If you disagree with the assessed value of your property, you have the right to an informal assessment review, at no cost, by contacting the assessor's office directly. If you and the assessor cannot agree to the value of the property or if you do not wish to contact the assessor you can obtain and file an application for changed assessment with the county board of equalization or assessment appeals board on your own behalf. An appeals board has the authority to raise property values (but in no case higher than the Proposition 13 protected value) as well as to lower property values.";
 
+export const DISCLOSURES_URL = "https://sirryanlynch.github.io/sherwood/disclosures/";
+
 export function statutoryDisclosureHtml() {
   return `<div class="statutory-disclosure disclosure" role="note"><p><b>${STATUTORY_DISCLOSURE}</b></p></div>`;
 }

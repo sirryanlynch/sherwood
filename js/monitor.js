@@ -2,7 +2,7 @@ import { backendEnabled, functionsUrl } from "./config.js";
 import { uid } from "./format.js";
 import { CARD_SAVE_NOTE } from "./pricing.js";
 import { retainUntil, shiftYears } from "./retention.js";
-import { STATUTORY_DISCLOSURE } from "./statutoryDisclosure.js";
+import { DISCLOSURES_URL } from "./statutoryDisclosure.js";
 import { updateDb, loadDb } from "./store.js";
 
 export const MONITOR_TERMS = "The annual monitor costs $49 and renews automatically each year until you cancel. You can cancel online in one click before the renewal date. Sherwood emails a renewal notice 15 to 45 days before the renewal.";
@@ -10,14 +10,13 @@ export const MONITOR_TERMS = "The annual monitor costs $49 and renews automatica
 export function confirmationBody(record) {
   const link = `cancel.html?token=${encodeURIComponent(record.cancelToken)}`;
   return [
-    STATUTORY_DISCLOSURE,
-    "",
     "Annual monitor confirmation",
     "",
     "You agreed to the annual monitor at $49 a year.",
     MONITOR_TERMS,
     "This confirmation is yours to keep.",
-    `Cancel online: ${link}`
+    `Cancel online: ${link}`,
+    `Disclosures: ${DISCLOSURES_URL}`
   ].join("\n");
 }
 

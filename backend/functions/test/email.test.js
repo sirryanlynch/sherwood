@@ -1,9 +1,9 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const { buildEmail, sendingConfig } = require("../email");
-const { STATUTORY_DISCLOSURE } = require("../disclosure");
+const { STATUTORY_DISCLOSURE, DISCLOSURES_URL } = require("../disclosure");
 
-test("every email includes unsubscribe, postal address, and the statutory disclosure", () => {
+test("every email includes unsubscribe, postal address, and a Disclosures link", () => {
   const mail = buildEmail({
     kind: "confirm",
     countyName: "Santa Cruz",
@@ -16,23 +16,37 @@ test("every email includes unsubscribe, postal address, and the statutory disclo
   assert.match(mail.text, /1 Market St, San Francisco, CA 94105/);
   assert.equal(mail.text.includes("Sherwood is not a law firm"), false);
   assert.match(mail.text, /2026-07-02/);
-  assert.equal(mail.text.startsWith(STATUTORY_DISCLOSURE), true);
-  assert.ok(mail.html.indexOf("border:1px solid #c9d3de") < mail.html.indexOf("<h1"));
-  assert.ok(mail.html.indexOf("padding:8px 16px") < mail.html.indexOf("<h1"));
-  assert.ok(mail.html.indexOf("background:#f3f5f8") < mail.html.indexOf("<h1"));
-  assert.ok(mail.html.indexOf("color:#3e556e") < mail.html.indexOf("<h1"));
-  assert.ok(mail.html.indexOf("text-transform:none") < mail.html.indexOf("<h1"));
-  assert.ok(mail.html.indexOf("font-weight:700") < mail.html.indexOf("<h1"));
-  assert.ok(mail.html.indexOf('alt="Sherwood"') > mail.html.indexOf("border:1px solid #c9d3de"));
+  assert.equal(mail.text.startsWith(STATUTORY_DISCLOSURE), false);
+  assert.equal(mail.text.includes(STATUTORY_DISCLOSURE), false);
+  assert.equal(mail.html.includes(STATUTORY_DISCLOSURE), false);
+  assert.equal(mail.html.includes("statutory-disclosure"), false);
+  assert.equal(mail.text.startsWith("Confirm your Santa Cruz filing reminder"), true);
+  assert.match(mail.text, new RegExp(`Disclosures: ${DISCLOSURES_URL.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`));
+  assert.ok(mail.text.indexOf("Unsubscribe:") > mail.text.indexOf("Disclosures:"));
+  assert.match(mail.html, new RegExp(`<a href="${DISCLOSURES_URL}">Disclosures</a>`));
+  assert.ok(mail.html.indexOf("<h1") < mail.html.indexOf(">Disclosures</a>"));
   assert.ok(mail.html.indexOf('alt="Sherwood"') < mail.html.indexOf("<h1"));
   assert.match(mail.html, /<img [^>]*src="https:\/\/sirryanlynch\.github\.io\/sherwood\/logo\.png"/);
   assert.match(mail.text, /Orders for us to file close Nov 25, 2026\./);
-  assert.equal(mail.disclosurePx, 16);
+  assert.equal(mail.html.includes("font-size:16px"), false);
   assert.equal(mail.headingPx, 15);
-  assert.ok(mail.disclosurePx > mail.headingPx);
+  for (const kind of ["confirm", "heads_up_14", "open_day", "deadline_14", "renewal", "monitor_confirm", "result"]) {
+    const each = buildEmail({
+      kind,
+      countyName: "Santa Cruz",
+      windowStart: "2026-07-02",
+      windowEnd: "2026-11-30",
+      unsubscribeUrl: "https://example.com/unsubscribe?token=def",
+      postal: "1 Market St, San Francisco, CA 94105"
+    });
+    assert.equal(each.text.includes(STATUTORY_DISCLOSURE), false, kind);
+    assert.equal(each.html.includes(STATUTORY_DISCLOSURE), false, kind);
+    assert.match(each.text, /Disclosures: https:\/\/sirryanlynch\.github\.io\/sherwood\/disclosures\//, kind);
+    assert.match(each.html, /<a href="https:\/\/sirryanlynch\.github\.io\/sherwood\/disclosures\/">Disclosures<\/a>/, kind);
+  }
 });
 
-test("renewal email leads with the disclosure and a smaller heading", () => {
+test("renewal email links to Disclosures and keeps a smaller heading", () => {
   const mail = buildEmail({
     kind: "renewal",
     countyName: "Santa Cruz",
@@ -40,14 +54,14 @@ test("renewal email leads with the disclosure and a smaller heading", () => {
     cancelUrl: "https://example.com/cancel?token=def",
     postal: "1 Market St, San Francisco, CA 94105"
   });
-  assert.equal(mail.text.startsWith(STATUTORY_DISCLOSURE), true);
+  assert.equal(mail.text.includes(STATUTORY_DISCLOSURE), false);
   assert.equal(mail.text.includes("Sherwood is not a law firm"), false);
   assert.match(mail.text, /Annual monitor renewal/);
   assert.match(mail.text, /15 to 45 days before the renewal date/);
   assert.match(mail.text, /Cancel online: https:\/\/example.com\/cancel/);
-  assert.match(mail.html, /font-size:16px/);
+  assert.match(mail.text, /Disclosures: https:\/\/sirryanlynch\.github\.io\/sherwood\/disclosures\//);
   assert.match(mail.html, /font-size:15px/);
-  assert.ok(mail.html.indexOf("font-size:16px") < mail.html.indexOf("font-size:15px"));
+  assert.equal(mail.html.includes("font-size:16px"), false);
   assert.equal(mail.html.includes("font-size:20px"), false);
   assert.equal(mail.html.includes("font-size:18px"), false);
   assert.equal(mail.html.includes("font-size:34px"), false);

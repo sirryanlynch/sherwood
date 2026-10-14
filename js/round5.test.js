@@ -1,17 +1,31 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { STATUTORY_DISCLOSURE, campaignTopDisclosure, statutoryDisclosureHtml } from "./statutoryDisclosure.js";
+import { DISCLOSURES_URL, STATUTORY_DISCLOSURE, campaignTopDisclosure, statutoryDisclosureHtml } from "./statutoryDisclosure.js";
 import { AUTHORIZATION_RETENTION, retainUntil } from "./retention.js";
-import { MONITOR_TERMS, monitorOfferHtml } from "./monitor.js";
+import { MONITOR_TERMS, confirmationBody, monitorOfferHtml } from "./monitor.js";
 import { CONFIG } from "./config.js";
 import { CHECKOUT_PLANS, DIY_HOLD_NOTE } from "./pricing.js";
 
 const read = (path) => readFileSync(new URL(path, import.meta.url), "utf8");
 
-test("the statutory disclosure is one sentence, shared with reminder email", () => {
+test("the statutory disclosure is one sentence, and emails link to the disclosures page", () => {
   const backend = read("../backend/functions/disclosure.js");
   assert.ok(backend.includes(STATUTORY_DISCLOSURE));
+  assert.ok(backend.includes(DISCLOSURES_URL));
+  const email = read("../backend/functions/email.js");
+  assert.equal(email.includes("statutoryDisclosureHtml()"), false);
+  assert.ok(email.includes("Disclosures: ${DISCLOSURES_URL}"));
+  const page = read("../disclosures/index.html");
+  const boxes = [...page.matchAll(/<div class="statutory-disclosure[^"]*"[^>]*>\s*<p><b>([\s\S]*?)<\/b><\/p>\s*<\/div>/g)];
+  assert.equal(boxes.length, 2);
+  assert.ok(boxes.every(match => match[1] === STATUTORY_DISCLOSURE));
+  const main = page.slice(page.indexOf("<main"), page.indexOf("</main>"));
+  assert.ok(main.includes(`<b>${STATUTORY_DISCLOSURE}</b>`));
+  assert.equal(page.slice(0, page.indexOf("<header")).includes("statutory-disclosure"), false);
+  const note = confirmationBody({ cancelToken: "abc" });
+  assert.equal(note.includes(STATUTORY_DISCLOSURE), false);
+  assert.match(note, new RegExp(`Disclosures: ${DISCLOSURES_URL.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`));
   const html = statutoryDisclosureHtml();
   assert.ok(html.includes(`<b>${STATUTORY_DISCLOSURE}</b>`));
   assert.ok(html.includes("statutory-disclosure"));

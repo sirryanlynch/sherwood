@@ -21,7 +21,7 @@ const read = (path) => readFileSync(new URL(path, import.meta.url), "utf8");
 
 function pageNames() {
   const names = readdirSync(ROOT).filter(name => name.endsWith(".html"));
-  names.push("santa-cruz/index.html", "san-diego/index.html", "san-mateo/index.html", "santa-barbara/index.html", "scz/index.html", "sc/index.html");
+  names.push("santa-cruz/index.html", "san-diego/index.html", "san-mateo/index.html", "santa-barbara/index.html", "scz/index.html", "sc/index.html", "disclosures/index.html");
   return names;
 }
 
@@ -201,15 +201,17 @@ const MEASURE = `(() => {
     const lo = Math.min(L1, L2);
     return (hi + 0.05) / (lo + 0.05);
   };
-  const box = document.querySelector(".statutory-disclosure");
+  const boxes = [...document.querySelectorAll(".statutory-disclosure")];
+  const box = boxes[0];
   if (!box) return { error: "missing disclosure" };
   const px = el => parseFloat(getComputedStyle(el).fontSize);
   const boxSize = px(box);
   const textEl = box.querySelector("b, p");
+  const inDisclosure = el => boxes.some(item => el === item || item.contains(el));
   const offenders = [];
   for (const el of document.querySelectorAll("*")) {
     const size = px(el);
-    if (el === box || box.contains(el)) {
+    if (inDisclosure(el)) {
       if (size > boxSize + 0.1) offenders.push({ where: "inside", tag: el.tagName, className: String(el.className).slice(0, 80), size });
       continue;
     }
@@ -241,6 +243,20 @@ const MEASURE = `(() => {
     logoImg: !logo || !!logo.querySelector("img"),
     logoText: logo ? logo.textContent.trim() : "",
     offenders: offenders.slice(0, 8)
+  };
+})()`;
+
+const EMAIL_MEASURE = `(() => {
+  const px = el => parseFloat(getComputedStyle(el).fontSize);
+  const link = document.querySelector("a[href='https://sirryanlynch.github.io/sherwood/disclosures/']");
+  const sizes = [...document.querySelectorAll("*")].map(px);
+  return {
+    disclosure: !!document.querySelector(".statutory-disclosure"),
+    sentence: document.body.textContent.includes(${JSON.stringify(STATUTORY_DISCLOSURE)}),
+    link: link ? link.textContent.trim() : "",
+    h1: document.querySelector("h1") ? px(document.querySelector("h1")) : null,
+    body: px(document.body),
+    max: Math.max(...sizes)
   };
 })()`;
 
@@ -292,9 +308,20 @@ test("disclosure computed font-size is larger than every other element", async (
           if (Date.now() - started > 10000) throw new Error(`load timeout ${target.name}`);
           await new Promise(r => setTimeout(r, 40));
         }
+        const label = `${target.name} ${viewport.name}`;
+        if (target.email) {
+          const emailEval = await client.send("Runtime.evaluate", { expression: EMAIL_MEASURE, returnByValue: true });
+          const email = emailEval.result.value;
+          assert.equal(email.disclosure, false, label);
+          assert.equal(email.sentence, false, label);
+          assert.equal(email.link, "Disclosures", label);
+          assert.equal(email.h1, 15, `${label} h1`);
+          assert.equal(email.body, 14, label);
+          assert.ok(email.max <= 15, `${label} max ${email.max}`);
+          continue;
+        }
         const evaluated = await client.send("Runtime.evaluate", { expression: MEASURE, returnByValue: true });
         const measured = evaluated.result.value;
-        const label = `${target.name} ${viewport.name}`;
         assert.equal(measured.error, undefined, label);
         assert.equal(measured.wording, true, label);
         assert.equal(measured.collapsed, false, label);

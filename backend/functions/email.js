@@ -1,4 +1,4 @@
-const { STATUTORY_DISCLOSURE, statutoryDisclosureHtml, logoHtml, DISCLOSURE_PX, H1_PX, BODY_PX, ORDER_CLOSE_SENTENCE } = require("./disclosure");
+const { logoHtml, DISCLOSURES_URL, H1_PX, BODY_PX, ORDER_CLOSE_SENTENCE } = require("./disclosure");
 
 const REMINDER_KINDS = new Set(["confirm", "heads_up_14", "open_day", "deadline_14"]);
 
@@ -119,21 +119,21 @@ function buildEmail({ kind, countyName, windowLabel, windowStart, windowEnd, con
   lines.push(ORDER_CLOSE_SENTENCE);
   const body = lines.join("\n");
   const text = [
-    STATUTORY_DISCLOSURE, "", heading, "", body, "", String(postal).trim(), `Unsubscribe: ${unsubscribeUrl}`
+    heading, "", body, "", String(postal).trim(), `Disclosures: ${DISCLOSURES_URL}`, `Unsubscribe: ${unsubscribeUrl}`
   ].join("\n");
   const html = [
     `<style>html,body{font-size:${BODY_PX}px}</style>`,
     `<div style="font-family:-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif;color:#111;font-size:${BODY_PX}px;line-height:1.5">`,
-    statutoryDisclosureHtml(),
     logoHtml(),
     `<h1 style="font-size:${H1_PX}px;line-height:1.3;font-weight:700;margin:0 0 32px">${escapeHtml(heading)}</h1>`,
     ...lines.map(line => `<p style="font-size:${BODY_PX}px;line-height:1.5;margin:0 0 12px">${escapeHtml(line)}</p>`),
     `<p style="font-size:${BODY_PX}px;line-height:1.5;margin:24px 0 0">${escapeHtml(String(postal).trim())}</p>`,
+    `<p style="font-size:${BODY_PX}px;line-height:1.5;margin:12px 0 0"><a href="${DISCLOSURES_URL}">Disclosures</a></p>`,
     `<p style="font-size:${BODY_PX}px;line-height:1.5;margin:12px 0 0">Unsubscribe: ${escapeHtml(unsubscribeUrl)}</p>`,
     `</div>`
   ].join("");
   const subject = heading;
-  return { subject, text, html, disclosurePx: DISCLOSURE_PX, headingPx: H1_PX };
+  return { subject, text, html, headingPx: H1_PX };
 }
 
 async function deliver({ to, subject, text, html }, env = process.env, fetchImpl = fetch) {
