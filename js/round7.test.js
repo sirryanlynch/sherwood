@@ -108,10 +108,13 @@ test("San Diego and San Mateo landings stay unlisted, and San Diego has no fee l
   assert.equal(purchaseOffer({ ...diego, status: "verified" }, oct13).dfy, false);
   assert.equal(purchaseOffer({ ...mateo, status: "verified" }, oct13).dfy, false);
   const diegoLine = landingHomeLine(diego);
-  assert.equal(diegoLine, "Check for free. If there's a case, file it yourself for $79.");
+  assert.equal(diegoLine, "Check for free. If there's a case, file it yourself for $79, or we'll file it for you for $249.");
   assert.equal(/county fee|included/i.test(diegoLine), false);
   assert.equal(planPriceLines(diego).fee, null);
-  assert.match(landingHomeLine(mateo), /\$79 \+ \$30 county fee, paid when you file/);
+  assert.equal(planPriceLines(diego).dfy, "$249");
+  const mateoLine = landingHomeLine(mateo);
+  assert.match(mateoLine, /\$79 \+ \$30 county fee, paid when you file/);
+  assert.match(mateoLine, /\$249, county fee included/);
   for (const path of ["san-diego/index.html", "san-mateo/index.html"]) {
     const html = read(path);
     assert.match(html, /name="robots" content="noindex"/);
