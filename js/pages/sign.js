@@ -5,7 +5,7 @@ import {
 } from "../authorization.js";
 import { getCounty } from "../counties.js";
 import { esc, formatShortDay } from "../format.js";
-import { HEARING_STATEMENT, planById } from "../pricing.js";
+import { HEARING_PACKET_LINE, planById } from "../pricing.js";
 import { AUTHORIZATION_RETENTION, retainUntil } from "../retention.js";
 import { requireMatter, saveMatter } from "../store.js";
 
@@ -49,7 +49,7 @@ function paintExplainer(root, matter, county, onContinue) {
     <p class="lead">${esc(doc.doc_title || "Agent authorization")} for ${esc(county.county)}.</p>
     <div class="card">
       <p><b>What you're signing.</b> You authorize the named agent to sign filings only, for this parcel and the tax years you select, up to 4. You still sign the perjury certification yourself. The agent does not attend a hearing for you.</p>
-      <p>${esc(HEARING_STATEMENT)}</p>
+      <p>${esc(HEARING_PACKET_LINE)}</p>
       <p><b>Why the county needs it.</b> ${why}</p>
       ${rule6Explainer(doc)}
       <p>How to revoke: ${esc(doc.revocation || "[pending verification]")}</p>

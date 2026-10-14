@@ -54,6 +54,9 @@ export const CONTINGENCY = {
 
 export const HEARING_STATEMENT = "We prepare your evidence, file your appeal, and work toward an informal reduction or settlement with the Assessor. If your case goes to a hearing, you attend (in person or by video where the county allows) using a hearing packet we prepare. If no one attends, the board will deny the appeal.";
 
+/* Pricing, trust, the signing explainer, and the hearing stage. Not the checkout checkbox. */
+export const HEARING_PACKET_LINE = "We prepare a hearing packet for you. You attend, or the appeal is denied.";
+
 /* Shown for We file it. Unchecked until the customer checks it. */
 export function hearingAckState(planId) {
   const dfy = planId === "dfy";

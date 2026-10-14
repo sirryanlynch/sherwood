@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { AGENT_CONTACT } from "./authorization.js";
-import { HEARING_STATEMENT, hearingAckHtml, hearingAckState } from "./pricing.js";
+import { HEARING_PACKET_LINE, HEARING_STATEMENT, hearingAckHtml, hearingAckState } from "./pricing.js";
 
 const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
 const STATEMENT = "We prepare your evidence, file your appeal, and work toward an informal reduction or settlement with the Assessor. If your case goes to a hearing, you attend (in person or by video where the county allows) using a hearing packet we prepare. If no one attends, the board will deny the appeal.";
@@ -31,8 +31,14 @@ test("the hearing statement replaces the hearing-support add-on", () => {
   assert.match(hidden, /\shidden(?:\s|>)/);
   assert.equal(/\srequired(?:\s|>)/.test(hidden), false);
 
-  for (const path of ["pricing.html", "trust.html", "js/pricing.js"]) {
-    assert.ok(read(path).includes(STATEMENT), path);
+  assert.equal(HEARING_PACKET_LINE, "We prepare a hearing packet for you. You attend, or the appeal is denied.");
+  assert.ok(read("js/pricing.js").includes(STATEMENT));
+  for (const path of ["pricing.html", "trust.html"]) {
+    assert.ok(read(path).includes(HEARING_PACKET_LINE), path);
+    assert.equal(read(path).includes(STATEMENT), false, path);
+  }
+  for (const path of ["js/pages/dashboard.js", "js/pages/sign.js"]) {
+    assert.equal(read(path).includes(STATEMENT), false, path);
   }
   for (const path of ["pricing.html", "trust.html", "js/pages/checkout.js", "js/pages/dashboard.js", "js/pages/sign.js", "js/pricing.js"]) {
     const source = read(path);
@@ -43,8 +49,9 @@ test("the hearing statement replaces the hearing-support add-on", () => {
     assert.equal(source.includes("hearing-support"), false, path);
   }
   assert.match(read("js/pages/checkout.js"), /HEARING_STATEMENT/);
-  assert.match(read("js/pages/dashboard.js"), /HEARING_STATEMENT/);
-  assert.match(read("js/pages/sign.js"), /HEARING_STATEMENT/);
+  assert.match(read("js/pages/dashboard.js"), /HEARING_PACKET_LINE/);
+  assert.match(read("js/pages/sign.js"), /HEARING_PACKET_LINE/);
+  assert.equal(read("js/pages/checkout.js").includes(HEARING_PACKET_LINE), false);
 
   const sign = read("js/pages/sign.js");
   assert.match(sign, /named agent to sign filings only/);
