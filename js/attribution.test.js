@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { countyBySlug } from "./place.js";
+import { STATUTORY_DISCLOSURE } from "./statutoryDisclosure.js";
 import { ATTR_KEY, attributionPayload, captureFirstTouch, touchFromSearch } from "./attribution.js";
 
 function memory() {
@@ -46,7 +47,9 @@ test("src=postcard-scz is stored from the Santa Cruz forward", () => {
   assert.match(html, /location\.replace\("\.\.\/santa-cruz\/\?county=santa-cruz&src=postcard-scz"\)/);
   const linkAt = html.indexOf(`<a href="${dest}">`);
   const boxAt = html.indexOf('class="statutory-disclosure');
-  assert.ok(boxAt >= 0 && linkAt > boxAt);
+  assert.ok(linkAt >= 0 && boxAt > linkAt);
+  assert.match(html, /<footer[\s\S]*data-disclosure-open[^>]*>Disclosures<\/button>/);
+  assert.equal(html.match(/role="dialog"[\s\S]*?<b>([\s\S]*?)<\/b>/)[1], STATUTORY_DISCLOSURE);
   const store = memory();
   const touch = captureFirstTouch("?county=santa-cruz&src=postcard-scz", store);
   assert.equal(touch.src, "postcard-scz");
@@ -62,7 +65,9 @@ test("src=social is stored from the /sc/ forward", () => {
   assert.match(html, /location\.replace\("\.\.\/santa-cruz\/\?county=santa-cruz&src=social"\)/);
   const linkAt = html.indexOf(`<a href="${dest}">`);
   const boxAt = html.indexOf('class="statutory-disclosure');
-  assert.ok(boxAt >= 0 && linkAt > boxAt);
+  assert.ok(linkAt >= 0 && boxAt > linkAt);
+  assert.match(html, /<footer[\s\S]*data-disclosure-open[^>]*>Disclosures<\/button>/);
+  assert.equal(html.match(/role="dialog"[\s\S]*?<b>([\s\S]*?)<\/b>/)[1], STATUTORY_DISCLOSURE);
   const store = memory();
   const touch = captureFirstTouch("?county=santa-cruz&src=social", store);
   assert.equal(touch.src, "social");

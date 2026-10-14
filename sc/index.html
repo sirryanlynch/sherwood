@@ -4,6 +4,11 @@
 <title>Sherwood</title><link rel="stylesheet" href="../style.css">
 <script>location.replace("../santa-cruz/?county=santa-cruz&src=social");</script>
 </head><body class="has-disclosure">
-<div class="wrap"><div class="statutory-disclosure disclosure" role="note"><p><b>This assessment reduction filing service is not associated with any government agency. If you disagree with the assessed value of your property, you have the right to an informal assessment review, at no cost, by contacting the assessor's office directly. If you and the assessor cannot agree to the value of the property or if you do not wish to contact the assessor you can obtain and file an application for changed assessment with the county board of equalization or assessment appeals board on your own behalf. An appeals board has the authority to raise property values (but in no case higher than the Proposition 13 protected value) as well as to lower property values.</b></p></div></div>
 <p><a href="../santa-cruz/?county=santa-cruz&src=social">Santa Cruz County property tax check</a></p>
+<footer><div class="wrap"><p><button type="button" class="disclosure-link" data-disclosure-open aria-haspopup="dialog" aria-controls="disclosure-dialog">Disclosures</button></p></div></footer>
+<div id="disclosure-dialog" class="disclosure-dialog" role="dialog" aria-modal="true" aria-labelledby="disclosure-dialog-title" hidden><div class="disclosure-dialog-panel"><p id="disclosure-dialog-title" class="disclosure-dialog-title">Disclosures</p><div class="statutory-disclosure disclosure" role="note"><p><b>This assessment reduction filing service is not associated with any government agency. If you disagree with the assessed value of your property, you have the right to an informal assessment review, at no cost, by contacting the assessor's office directly. If you and the assessor cannot agree to the value of the property or if you do not wish to contact the assessor you can obtain and file an application for changed assessment with the county board of equalization or assessment appeals board on your own behalf. An appeals board has the authority to raise property values (but in no case higher than the Proposition 13 protected value) as well as to lower property values.</b></p></div><button type="button" class="btn ghost disclosure-close" data-disclosure-close>Close</button></div></div>
+<script type="module">
+import { bindDisclosureDialog } from "../js/statutoryDisclosure.js";
+bindDisclosureDialog();
+</script>
 </body></html>

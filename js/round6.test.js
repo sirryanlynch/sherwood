@@ -137,14 +137,19 @@ test("every page keeps the verbatim disclosure outside a collapsible", () => {
     assert.equal(match && match[1], STATUTORY_DISCLOSURE, name);
     const boxAt = html.indexOf('class="statutory-disclosure');
     const headerAt = html.indexOf("<header");
-    assert.ok(boxAt >= 0, name);
+    const footerAt = html.indexOf("<footer");
+    const dialogAt = html.indexOf('role="dialog"');
+    assert.ok(boxAt >= 0 && footerAt >= 0 && dialogAt >= 0 && boxAt > dialogAt, name);
+    const footer = html.slice(footerAt, html.indexOf("</footer>"));
+    assert.match(footer, /data-disclosure-open[^>]*>Disclosures<\/button>/, name);
+    assert.match(html, /aria-modal="true"/, name);
+    assert.match(html, /data-disclosure-close[^>]*>Close</, name);
     if (headerAt !== -1) {
-      const header = html.slice(headerAt, html.indexOf("</header>"));
-      assert.match(header, /data-disclosure-open[^>]*>Disclosures<\/button>/, name);
-      const dialogAt = html.indexOf('role="dialog"');
-      assert.ok(dialogAt > headerAt && boxAt > dialogAt, name);
-      assert.match(html, /aria-modal="true"/, name);
-      assert.match(html, /data-disclosure-close[^>]*>Close</, name);
+      assert.equal(html.slice(headerAt, html.indexOf("</header>")).includes("data-disclosure-open"), false, name);
+      assert.equal(html.slice(0, headerAt).includes("statutory-disclosure"), false, name);
+      assert.ok(dialogAt > headerAt, name);
+    } else {
+      assert.equal(html.slice(0, html.indexOf("<p><a")).includes("statutory-disclosure"), false, name);
     }
     assert.ok(html.includes("has-disclosure"), name);
     assert.equal(html.includes("data-statutory-disclosure"), false, name);

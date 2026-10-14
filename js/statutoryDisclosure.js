@@ -1,7 +1,6 @@
 /* B&P 17537.9 disclosure. Draft pending an attorney. The sentence is fixed.
-   Pages with a header keep this sentence inside the Disclosures dialog.
-   /sc/ and /scz/ keep the boxed sentence as static HTML.
-   A campaign first-touch also renders the boxed sentence above the header. */
+   Every page keeps this sentence inside the footer Disclosures dialog.
+   DISCLOSURE_TOP_FOR_CAMPAIGN is false, so no page renders a box at the top. */
 import { CONFIG } from "./config.js";
 import { readAttribution } from "./attribution.js";
 

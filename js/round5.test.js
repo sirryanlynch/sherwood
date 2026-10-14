@@ -26,7 +26,10 @@ test("headed pages keep the verbatim disclosure in the Disclosures dialog", () =
     assert.equal(match && match[1], STATUTORY_DISCLOSURE, file);
     const headerAt = html.indexOf("<header");
     const header = html.slice(headerAt, html.indexOf("</header>"));
-    assert.match(header, /<button type="button" class="disclosure-link" data-disclosure-open[^>]*>Disclosures<\/button>/, file);
+    assert.equal(header.includes("data-disclosure-open"), false, file);
+    assert.equal(html.slice(0, headerAt).includes("statutory-disclosure"), false, file);
+    const footer = html.slice(html.indexOf("<footer"), html.indexOf("</footer>"));
+    assert.match(footer, /<button type="button" class="disclosure-link" data-disclosure-open[^>]*>Disclosures<\/button>/, file);
     assert.match(html, /aria-modal="true"/, file);
     assert.match(html, /data-disclosure-close[^>]*>Close</, file);
     const box = html.indexOf('class="statutory-disclosure');
@@ -45,17 +48,17 @@ test("headed pages keep the verbatim disclosure in the Disclosures dialog", () =
   assert.match(css, /@media \(max-width:480px\)\{:root\{--fs-disclosure:15px/);
 });
 
-test("campaign first-touch src keeps the top disclosure box", () => {
-  assert.equal(CONFIG.DISCLOSURE_TOP_FOR_CAMPAIGN, true);
+test("the top disclosure box stays off, and the flag still recognizes campaign sources", () => {
+  assert.equal(CONFIG.DISCLOSURE_TOP_FOR_CAMPAIGN, false);
+  const on = { DISCLOSURE_TOP_FOR_CAMPAIGN: true };
   for (const src of ["postcard-scz", "postcard-anything", "postcard-", "social", "search"]) {
-    assert.equal(campaignTopDisclosure(src), true, src);
+    assert.equal(campaignTopDisclosure(src), false, src);
+    assert.equal(campaignTopDisclosure(src, on), true, src);
   }
   for (const src of ["mail1", "", null, "Postcard-scz", "postcard", "search-ad", "social-ig"]) {
     assert.equal(campaignTopDisclosure(src), false, String(src));
+    assert.equal(campaignTopDisclosure(src, on), false, String(src));
   }
-  assert.equal(campaignTopDisclosure("social", { DISCLOSURE_TOP_FOR_CAMPAIGN: false }), false);
-  assert.equal(campaignTopDisclosure("postcard-scz", { DISCLOSURE_TOP_FOR_CAMPAIGN: false }), false);
-  assert.equal(campaignTopDisclosure("search", { DISCLOSURE_TOP_FOR_CAMPAIGN: false }), false);
   const dialogJs = read("../js/statutoryDisclosure.js");
   assert.match(dialogJs, /event\.key === "Escape"/);
   assert.match(dialogJs, /event\.key !== "Tab"/);
@@ -66,11 +69,12 @@ test("campaign first-touch src keeps the top disclosure box", () => {
   assert.match(read("../cancel.html"), /bindDisclosureDialog\(\)/);
   for (const file of ["../sc/index.html", "../scz/index.html"]) {
     const html = read(file);
-    assert.equal(html.includes('id="disclosure-dialog"'), false, file);
-    assert.equal(html.includes("data-disclosure-open"), false, file);
-    const match = html.match(/<div class="statutory-disclosure[^"]*"[^>]*>\s*<p><b>([\s\S]*?)<\/b><\/p>\s*<\/div>/);
+    const footer = html.slice(html.indexOf("<footer"), html.indexOf("</footer>"));
+    assert.match(footer, /data-disclosure-open[^>]*>Disclosures<\/button>/, file);
+    const match = html.match(/role="dialog"[\s\S]*?<div class="statutory-disclosure[^"]*"[^>]*>\s*<p><b>([\s\S]*?)<\/b><\/p>\s*<\/div>/);
     assert.equal(match && match[1], STATUTORY_DISCLOSURE, file);
-    assert.ok(html.indexOf('class="statutory-disclosure') < html.indexOf("<p><a"), file);
+    assert.ok(html.indexOf("<p><a") < html.indexOf('class="statutory-disclosure'), file);
+    assert.equal(html.slice(0, html.indexOf("<p><a")).includes("statutory-disclosure"), false, file);
   }
 });
 

@@ -26,9 +26,9 @@ export const CONFIG = {
     san_mateo: false,
     santa_barbara: false
   },
-  /* True keeps the boxed disclosure above the header when the first-touch
-     src is postcard-*, social, or search. Other visits get the dialog only. */
-  DISCLOSURE_TOP_FOR_CAMPAIGN: true
+  /* False shows no boxed disclosure above the page for any visitor.
+     True would show that box when the first-touch src is postcard-*, social, or search. */
+  DISCLOSURE_TOP_FOR_CAMPAIGN: false
 };
 
 export function backendEnabled() {
