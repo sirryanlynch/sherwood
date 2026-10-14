@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { countyBySlug } from "./place.js";
 import { ATTR_KEY, attributionPayload, captureFirstTouch, touchFromSearch } from "./attribution.js";
 
@@ -35,6 +36,22 @@ test("src=search is kept beside a county landing", () => {
   assert.equal(touch.src, "search");
   assert.equal(touchFromSearch("?src=search").src, "search");
   assert.equal(captureFirstTouch("?county=santa-cruz", store).src, "search");
+});
+
+test("src=postcard-scz is stored from the Santa Cruz forward", () => {
+  const html = readFileSync(new URL("../scz/index.html", import.meta.url), "utf8");
+  const dest = "../santa-cruz/?county=santa-cruz&src=postcard-scz";
+  assert.match(html, /name="robots" content="noindex"/);
+  assert.match(html, new RegExp(`http-equiv="refresh" content="0; url=${dest.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"`));
+  assert.match(html, /location\.replace\("\.\.\/santa-cruz\/\?county=santa-cruz&src=postcard-scz"\)/);
+  const linkAt = html.indexOf(`<a href="${dest}">`);
+  const boxAt = html.indexOf('class="statutory-disclosure"');
+  assert.ok(boxAt >= 0 && linkAt > boxAt);
+  const store = memory();
+  const touch = captureFirstTouch("?county=santa-cruz&src=postcard-scz", store);
+  assert.equal(touch.src, "postcard-scz");
+  assert.equal(captureFirstTouch("?src=other", store).src, "postcard-scz");
+  assert.equal(JSON.parse(store.getItem(ATTR_KEY)).src, "postcard-scz");
 });
 
 test("a county param alone is not stored", () => {
