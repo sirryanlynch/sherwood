@@ -5,7 +5,7 @@ import {
 } from "../authorization.js";
 import { getCounty } from "../counties.js";
 import { esc, formatShortDay } from "../format.js";
-import { planById } from "../pricing.js";
+import { HEARING_STATEMENT, planById } from "../pricing.js";
 import { AUTHORIZATION_RETENTION, retainUntil } from "../retention.js";
 import { requireMatter, saveMatter } from "../store.js";
 
@@ -48,7 +48,8 @@ function paintExplainer(root, matter, county, onContinue) {
     <h1>Before you sign</h1>
     <p class="lead">${esc(doc.doc_title || "Agent authorization")} for ${esc(county.county)}.</p>
     <div class="card">
-      <p><b>What you're signing.</b> You authorize Sherwood to file this appeal as your agent for this parcel and the tax years you select, up to 4. You still sign the perjury certification yourself.</p>
+      <p><b>What you're signing.</b> You authorize the named agent to sign filings only, for this parcel and the tax years you select, up to 4. You still sign the perjury certification yourself. The agent does not attend a hearing for you.</p>
+      <p>${esc(HEARING_STATEMENT)}</p>
       <p><b>Why the county needs it.</b> ${why}</p>
       ${rule6Explainer(doc)}
       <p>How to revoke: ${esc(doc.revocation || "[pending verification]")}</p>
@@ -87,6 +88,7 @@ function summaryHtml(matter, years, signedAt) {
       <p data-tax-years>Tax years covered: ${esc(list.filter(Boolean).join(", "))}. Up to 4.</p>
       <p>${esc(OWNER_COPY_LINE)}</p>
       <p>${esc(dateLine)}</p>
+      <p>The named agent signs filings only.</p>
       <p>Agent name: ${esc(AGENT_CONTACT.name)}</p>
       <p>Agent address: ${esc(AGENT_CONTACT.address)}</p>
       <p>Agent phone: ${esc(AGENT_CONTACT.phone)}</p>

@@ -6,7 +6,7 @@ import { authAdapter } from "../adapters/auth.js";
 import { getCounty } from "../counties.js";
 import { contactLine, esc, formatDay, isoDay, money } from "../format.js";
 import { parseNotice } from "../notices.js";
-import { HEARING_ADDON, MONITOR } from "../pricing.js";
+import { HEARING_STATEMENT, MONITOR } from "../pricing.js";
 import { currentMatter, requireMatter, saveMatter, loadDb } from "../store.js";
 
 const STAGES = [
@@ -48,12 +48,11 @@ function paint(matter, user, county) {
     <p class="small muted">${matter.signatures && matter.signatures.stipulation ? "A simulated signature is on file." : ""} ${matter.stipulationDecision ? esc(matter.stipulationDecision) : ""}</p>` : "";
   const hearing = stage === "hearing_scheduled" ? `
     <h2>Hearing</h2>
+    <p>${esc(HEARING_STATEMENT)}</p>
     <p>Format, from the adapter: ${esc(county.hearing.format)}</p>
     <p>${esc(county.hearing.notice)}</p>
     <p>Preview date: ${esc(matter.hearing && matter.hearing.date ? formatDay(matter.hearing.date) : "none")} ${matter.hearing && matter.hearing.simulated ? "(simulated preview, not a county notice)" : ""}</p>
-    <ul>${(county.hearing.prep || []).map(item => `<li>${esc(item)}</li>`).join("")}</ul>
-    <p>${esc(HEARING_ADDON.summary)}</p>
-    <button class="btn ghost" id="addon" type="button">${matter.hearingAddon ? "Quote requested" : "Request a hearing-support quote"}</button>` : "";
+    <ul>${(county.hearing.prep || []).map(item => `<li>${esc(item)}</li>`).join("")}</ul>` : "";
   const decision = stage === "decision" ? `
     <h2>Decision preview</h2>
     <p>No county decision is loaded. These buttons only restate your own numbers.</p>
@@ -141,12 +140,6 @@ function paint(matter, user, county) {
   const decline = document.querySelector("#decline");
   if (decline) decline.addEventListener("click", () => {
     matter.stipulationDecision = "Declined in the demo. No document was signed.";
-    saveMatter(matter);
-    paint(matter, user, county);
-  });
-  const addon = document.querySelector("#addon");
-  if (addon) addon.addEventListener("click", () => {
-    matter.hearingAddon = { requestedAt: new Date().toISOString(), price: null, note: HEARING_ADDON.summary };
     saveMatter(matter);
     paint(matter, user, county);
   });

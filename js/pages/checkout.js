@@ -2,7 +2,7 @@ import "../boot.js";
 import { paymentsAdapter } from "../adapters/payments.js";
 import { readAttribution } from "../attribution.js";
 import { money, esc, formatDay } from "../format.js";
-import { CHECKOUT_PLANS, adapterFeeNotes, planPriceLines } from "../pricing.js";
+import { CHECKOUT_PLANS, HEARING_STATEMENT, adapterFeeNotes, hearingAckHtml, hearingAckState, planPriceLines } from "../pricing.js";
 import { getCounty } from "../counties.js";
 import { filingWindow, nextWindowCopy } from "../engine.js";
 import { mountOrderCountdowns, offerMessage, orderBadgeHtml, purchaseOffer } from "../offer.js";
@@ -33,6 +33,7 @@ if (gate) {
     const lines = planPriceLines(county);
     const notes = adapterFeeNotes(county).map(line => `<p class="small muted">${esc(line)}</p>`).join("");
     const limit = offerMessage(county, offer);
+    const onlyDfy = plans.length === 1 && plans[0].id === "dfy";
     root.innerHTML = `
       <h1>Choose a plan</h1>
       ${orderBadgeHtml(county)}
@@ -42,15 +43,21 @@ if (gate) {
         <div class="plans">
           ${plans.map(plan => cardHtml(plan, lines, savings)).join("")}
         </div>
+        ${plans.some(plan => plan.id === "dfy") ? hearingAckHtml(onlyDfy ? "dfy" : "") : ""}
         ${notes}
         <p class="small muted">Simulated Stripe. The card is saved and not charged. There is no card field.</p>
         <button class="btn" type="submit">Continue</button>
       </form>`;
+    const payForm = document.querySelector("#pay");
+    payForm.addEventListener("change", () => syncHearingAck(payForm));
     document.querySelector("#pay").addEventListener("submit", async e => {
       e.preventDefault();
+      syncHearingAck(e.target);
       if (!e.target.reportValidity()) return;
-      const plan = plans.find(p => p.id === new FormData(e.target).get("plan"));
+      const formData = new FormData(e.target);
+      const plan = plans.find(p => p.id === formData.get("plan"));
       if (!plan) return;
+      if (plan.id === "dfy" && formData.get("hearingAck") !== "on") return;
       const liveOffer = purchaseOffer(county, new Date(), matter.supplementalNoticeDate);
       const stillOpen = plan.id === "dfy" ? liveOffer.dfy : liveOffer.diy;
       if (!stillOpen) {
@@ -72,6 +79,11 @@ if (gate) {
       matter.cardSavedAt = setup.createdAt;
       matter.chargeStatus = "card_saved";
       matter.paymentTimingNote = plan.timingFlag || "";
+      if (plan.id === "dfy") {
+        matter.hearingAcknowledgment = { statement: HEARING_STATEMENT, acceptedAt: new Date().toISOString() };
+      } else {
+        delete matter.hearingAcknowledgment;
+      }
       matter.paymentId = null;
       matter.paidAt = null;
       matter.src = setup.src;
@@ -145,6 +157,16 @@ function bindReminder(root, matter, county) {
     }
     form.querySelector("button").disabled = true;
   });
+}
+
+function syncHearingAck(form) {
+  const state = hearingAckState(new FormData(form).get("plan"));
+  const wrap = form.querySelector("#hearing-ack");
+  const box = form.querySelector("[name=hearingAck]");
+  if (!wrap || !box) return;
+  wrap.hidden = !state.visible;
+  box.required = state.required;
+  if (!state.visible) box.checked = false;
 }
 
 function cardHtml(plan, lines, savings) {

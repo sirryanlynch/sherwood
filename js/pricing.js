@@ -32,7 +32,7 @@ export const CHECKOUT_PLANS = [
     dueToday: 0,
     filesAsAgent: true,
     chargeNote: CARD_SAVE_NOTE,
-    summary: "Everything in the kit. Sherwood files as your authorized agent after you sign this county's agent authorization. You sign the perjury certification yourself."
+    summary: "Everything in the kit. The named agent signs filings only, after you sign this county's agent authorization. You sign the perjury certification yourself."
   }
 ];
 
@@ -50,12 +50,20 @@ export const CONTINGENCY = {
   summary: "Coming soon, pending review. Not offered at checkout."
 };
 
-export const HEARING_ADDON = {
-  id: "hearing",
-  name: "Hearing support",
-  price: null,
-  summary: "Flat fee, quoted per case. Evidence packet and hearing preparation. Not a checkout price."
-};
+export const HEARING_STATEMENT = "We prepare your evidence, file your appeal, and work toward an informal reduction or settlement with the Assessor. If your case goes to a hearing, you attend (in person or by video where the county allows) using a hearing packet we prepare. If no one attends, the board will deny the appeal.";
+
+/* Shown for We file it. Unchecked until the customer checks it. */
+export function hearingAckState(planId) {
+  const dfy = planId === "dfy";
+  return { visible: dfy, required: dfy, checked: false };
+}
+
+export function hearingAckHtml(planId) {
+  const state = hearingAckState(planId);
+  const hidden = state.visible ? "" : " hidden";
+  const required = state.required ? " required" : "";
+  return `<label class="check" id="hearing-ack"${hidden}><input type="checkbox" name="hearingAck" data-hearing-ack${required}> ${HEARING_STATEMENT}</label>`;
+}
 
 export const MONITOR = {
   id: "monitor",
