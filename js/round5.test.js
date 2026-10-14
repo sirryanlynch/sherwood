@@ -14,7 +14,8 @@ test("the statutory disclosure is one sentence, shared with reminder email", () 
   const html = statutoryDisclosureHtml();
   assert.ok(html.includes(`<b>${STATUTORY_DISCLOSURE}</b>`));
   assert.ok(html.includes("statutory-disclosure"));
-  assert.equal(STATUTORY_DISCLOSURE.startsWith("THIS ASSESSMENT REDUCTION FILING SERVICE"), true);
+  assert.equal(STATUTORY_DISCLOSURE.startsWith("This assessment reduction filing service"), true);
+  assert.notEqual(STATUTORY_DISCLOSURE, STATUTORY_DISCLOSURE.toUpperCase());
 });
 
 test("home and the Santa Cruz landing put the disclosure above the header", () => {
@@ -32,6 +33,7 @@ test("home and the Santa Cruz landing put the disclosure above the header", () =
   assert.match(css, /\.disclosure\{[^}]*border:1px solid currentColor/);
   assert.match(css, /\.disclosure\{[^}]*padding:11px 16px/);
   assert.match(css, /\.disclosure\{[^}]*text-transform:none/);
+  assert.equal(/text-transform:\s*uppercase/.test(css), false);
   assert.match(css, /--fs-disclosure:20px/);
   assert.match(css, /@media \(max-width:480px\)\{:root\{--fs-disclosure:18px/);
 });
