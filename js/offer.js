@@ -129,9 +129,6 @@ export function purchaseOffer(county, today, supplementalNoticeDate) {
 export function offerMessage(county, offer) {
   if (!offer) return "";
   if (offer.closed) return "";
-  if (offer.losAngeles && offer.registration && offer.diy) {
-    return "We file it stays off until Los Angeles tax-agent registration is active. The DIY kit is available. A reminder is available too.";
-  }
   if (offer.paper) {
     return "We file it is not available in this county yet. A typed signature is not valid on a paper filing. Leave your email for a reminder.";
   }

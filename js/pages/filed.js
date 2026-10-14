@@ -20,7 +20,6 @@ if (gate) {
   } else if (!plan.filesAsAgent) {
     root.innerHTML = `
       <h1>Your kit is ready for you to file</h1>
-      <p class="lead">The DIY kit does not send anything to the county. Use the steps on this adapter.</p>
       ${stepsHtml(county)}
       <div class="cta"><a class="btn" href="dashboard.html">Go to your appeal</a></div>`;
     if (!matter.stage) {

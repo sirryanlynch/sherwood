@@ -40,18 +40,6 @@ export const CHECKOUT_PLANS = CONFIG.DIY_ENABLED === true ? [DIY_PLAN, DFY_PLAN]
 
 export const PLANS = CHECKOUT_PLANS;
 
-/* Not sold at checkout. Kept so an older matter id still resolves. */
-export const CONTINGENCY = {
-  id: "contingency",
-  name: "Contingency",
-  price: null,
-  rate: 0.35,
-  dueToday: 0,
-  filesAsAgent: true,
-  checkout: false,
-  summary: "Coming soon, pending review. Not offered at checkout."
-};
-
 export const HEARING_STATEMENT = "We prepare your evidence, file your appeal, and work toward an informal reduction or settlement with the Assessor. If your case goes to a hearing, you attend (in person or by video where the county allows) using a hearing packet we prepare. If no one attends, the board will deny the appeal.";
 
 /* Pricing, trust, the signing explainer, and the hearing stage. Not the checkout checkbox. */
@@ -80,7 +68,6 @@ export const MONITOR = {
 };
 
 export function planById(id) {
-  if (id === CONTINGENCY.id) return CONTINGENCY;
   if (id === DIY_PLAN.id) return CONFIG.DIY_ENABLED === true ? DIY_PLAN : null;
   return CHECKOUT_PLANS.find(p => p.id === id) || null;
 }
