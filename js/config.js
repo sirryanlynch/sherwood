@@ -14,6 +14,8 @@ export const CONFIG = {
      On switches We file it to $199 plus the county fee. Do not turn this on
      until the attorney clears that price. */
   SHOW_199_PLUS_COUNTY_FEE: false,
+  /* False removes the DIY kit from checkout, pricing, and every county offer, including Los Angeles. */
+  DIY_ENABLED: false,
   /* Last calendar day a Santa Cruz We file it order is accepted. Inclusive.
      Other counties close orders 5 days before regular_window.end. */
   order_cutoff: "2026-11-25",

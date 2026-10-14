@@ -1,7 +1,7 @@
 import { getCounty, loadCounties } from "./counties.js";
 import { contactLine, esc, formatDay, money } from "./format.js";
 import { landingDfyEnabled, orderBadgeHtml } from "./offer.js";
-import { DIY_HOLD_NOTE, filingFeeNote, landingHomeLine, planPriceLines } from "./pricing.js";
+import { filingFeeNote, landingHomeLine, planPriceLines } from "./pricing.js";
 
 const SIM = "Simulated on this device. Payment, signatures, county filing, and email or SMS do not leave this browser.";
 
@@ -25,7 +25,7 @@ async function fillLaunchFacts() {
     return;
   }
   const slots = document.querySelectorAll("[data-fact]");
-  const needsPlans = document.getElementById("home-price") || document.getElementById("plan-diy-price") || document.getElementById("faq-prices") || document.getElementById("how-plans");
+  const needsPlans = document.getElementById("home-price") || document.getElementById("faq-prices") || document.getElementById("how-plans");
   if (!slots.length && !document.getElementById("launch-facts") && !document.getElementById("launch-filing") && !document.getElementById("launch-fee") && !needsPlans && !document.querySelector("[data-order-badge]")) return;
   const county = await getCounty("santa_cruz");
   if (!county) return;
@@ -102,8 +102,6 @@ function paintPlanPrices(county) {
   const lines = planPriceLines(county);
   const home = document.getElementById("home-price");
   if (home) home.textContent = lines.home;
-  const diy = document.getElementById("plan-diy-price");
-  if (diy) diy.textContent = DIY_HOLD_NOTE;
   const feeNote = document.getElementById("filing-fee-note");
   if (feeNote) feeNote.textContent = filingFeeNote(county);
   const dfy = document.getElementById("plan-dfy-price");

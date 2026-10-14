@@ -1,6 +1,7 @@
 import { CONFIG } from "./config.js";
 
-/* Checkout offers these two only. Contingency is not a checkout plan.
+/* Checkout offers We file it. The DIY kit is included only when DIY_ENABLED is true.
+   Contingency is not a checkout plan.
    County filing fees come from filing.filing_fee on the county adapter.
    SHOW_199_PLUS_COUNTY_FEE stays off until counsel clears that display.
    Neither plan charges at checkout. */
@@ -14,27 +15,28 @@ export function dfyServiceAmount() {
   return CONFIG.SHOW_199_PLUS_COUNTY_FEE === true ? DFY_PLUS_FEE_AMOUNT : DFY_INCLUDED_AMOUNT;
 }
 
-export const CHECKOUT_PLANS = [
-  {
-    id: "diy",
-    name: "DIY kit",
-    price: 79,
-    dueToday: 0,
-    filesAsAgent: false,
-    timingFlag: "[DRAFT – payment timing pending attorney review]",
-    chargeNote: DIY_HOLD_NOTE,
-    summary: "Comparable-sales method, value opinion from your numbers, Statement of Facts preview, and the filing checklist from your county adapter. You file."
-  },
-  {
-    id: "dfy",
-    name: "We file it",
-    price: dfyServiceAmount(),
-    dueToday: 0,
-    filesAsAgent: true,
-    chargeNote: CARD_SAVE_NOTE,
-    summary: "Everything in the kit. The named agent signs filings only, after you sign this county's agent authorization. You sign the perjury certification yourself."
-  }
-];
+const DIY_PLAN = {
+  id: "diy",
+  name: "DIY kit",
+  price: 79,
+  dueToday: 0,
+  filesAsAgent: false,
+  timingFlag: "[DRAFT – payment timing pending attorney review]",
+  chargeNote: DIY_HOLD_NOTE,
+  summary: "Comparable-sales method, value opinion from your numbers, Statement of Facts preview, and the filing checklist from your county adapter. You file."
+};
+
+const DFY_PLAN = {
+  id: "dfy",
+  name: "We file it",
+  price: dfyServiceAmount(),
+  dueToday: 0,
+  filesAsAgent: true,
+  chargeNote: CARD_SAVE_NOTE,
+  summary: "Everything in the kit. The named agent signs filings only, after you sign this county's agent authorization. You sign the perjury certification yourself."
+};
+
+export const CHECKOUT_PLANS = CONFIG.DIY_ENABLED === true ? [DIY_PLAN, DFY_PLAN] : [DFY_PLAN];
 
 export const PLANS = CHECKOUT_PLANS;
 
@@ -76,6 +78,7 @@ export const MONITOR = {
 
 export function planById(id) {
   if (id === CONTINGENCY.id) return CONTINGENCY;
+  if (id === DIY_PLAN.id) return CONFIG.DIY_ENABLED === true ? DIY_PLAN : null;
   return CHECKOUT_PLANS.find(p => p.id === id) || null;
 }
 

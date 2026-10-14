@@ -54,7 +54,7 @@ test("closed, paper, Los Angeles, and fee-waiver gates come from the county file
   assert.equal(la.filing.efile_fee.surcharge, 1.49);
   assert.equal(la.filing.cutoff_time, "midnight PST");
   const laOffer = purchaseOffer(la, oct13);
-  assert.equal(laOffer.diy, true);
+  assert.equal(laOffer.diy, false);
   assert.equal(laOffer.dfy, false);
   const sf = readCounty("san_francisco");
   assert.equal(sf.filing.efile_fee.surcharge, 3);
@@ -66,11 +66,11 @@ test("closed, paper, Los Angeles, and fee-waiver gates come from the county file
   assert.equal(clara.filing.postmark_ok, true);
   for (const id of WAIVER) assert.equal(readCounty(id).fee_waiver.available, true, id);
   const cruz = purchaseOffer(readCounty("santa_cruz"), oct13);
-  assert.equal(cruz.diy, true);
+  assert.equal(cruz.diy, false);
   assert.equal(cruz.dfy, true);
   const late = purchaseOffer(readCounty("santa_cruz"), new Date(2026, 10, 28));
   assert.equal(late.dfy, false);
-  assert.equal(late.diy, true);
+  assert.equal(late.diy, false);
 });
 
 test("a zero county fee is not described as included, and the $199 display stays off", () => {

@@ -13,6 +13,8 @@ if (gate) {
     const county = await getCounty(matter.countyId);
     const plan = planById(matter.planId);
     const root = document.querySelector("#intake");
+    if (!plan) location.href = "checkout.html";
+    else {
     const exemption = county.homeowner_exemption;
     root.innerHTML = `
       <h1>Intake</h1>
@@ -104,6 +106,7 @@ if (gate) {
       saveMatter(matter);
       location.href = "kit.html";
     });
+    }
   }
 }
 

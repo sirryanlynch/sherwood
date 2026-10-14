@@ -96,10 +96,10 @@ export function purchaseOffer(county, today, supplementalNoticeDate) {
   const landingOff = !landingDfyEnabled(county);
   const margin = marginBlocksDfy(county);
   const losAngeles = !!(county && county.id === "los_angeles");
-  let diy = open && verified;
+  let diy = CONFIG.DIY_ENABLED === true && open && verified;
   let dfy = open && verified && !paper && !registration && !lead && !cutoff && !landingOff && !margin;
   if (open && losAngeles) {
-    diy = true;
+    diy = CONFIG.DIY_ENABLED === true;
     dfy = !paper && !registration && !lead && !cutoff && !landingOff && !margin;
   }
   if (!verified && !losAngeles) {
@@ -107,7 +107,7 @@ export function purchaseOffer(county, today, supplementalNoticeDate) {
     dfy = false;
   }
   if (!open || paper || registration || lead || cutoff || landingOff || margin) dfy = false;
-  if (!open) diy = false;
+  if (!open || CONFIG.DIY_ENABLED !== true) diy = false;
   return {
     diy,
     dfy,

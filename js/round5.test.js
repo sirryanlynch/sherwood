@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import { STATUTORY_DISCLOSURE, statutoryDisclosureHtml } from "./statutoryDisclosure.js";
 import { AUTHORIZATION_RETENTION, retainUntil } from "./retention.js";
 import { MONITOR_TERMS, monitorOfferHtml } from "./monitor.js";
+import { CONFIG } from "./config.js";
 import { CHECKOUT_PLANS, DIY_HOLD_NOTE } from "./pricing.js";
 
 const read = (path) => readFileSync(new URL(path, import.meta.url), "utf8");
@@ -52,11 +53,9 @@ test("the monitor offer is unchecked and the $249 card waits for county confirma
   assert.ok(offer.includes(MONITOR_TERMS));
   assert.ok(offer.includes("15 to 45 days"));
   const dfy = CHECKOUT_PLANS.find(plan => plan.id === "dfy");
-  const diy = CHECKOUT_PLANS.find(plan => plan.id === "diy");
+  assert.equal(CONFIG.DIY_ENABLED, false);
+  assert.equal(CHECKOUT_PLANS.some(plan => plan.id === "diy"), false);
   assert.equal(dfy.chargeNote, "We'll save your card today. You won't be charged until the county confirms your appeal is filed.");
   assert.equal(dfy.dueToday, 0);
-  assert.equal(diy.dueToday, 0);
-  assert.equal(diy.chargeNote, DIY_HOLD_NOTE);
-  assert.equal(diy.chargeNote, "Card saved. Not charged while payment timing is under attorney review.");
-  assert.equal(diy.timingFlag, "[DRAFT – payment timing pending attorney review]");
+  assert.equal(DIY_HOLD_NOTE, "Card saved. Not charged while payment timing is under attorney review.");
 });

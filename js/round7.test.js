@@ -46,7 +46,7 @@ test("Santa Cruz We file it stops at the end of Nov 25 and the close line is a f
   assert.equal(pastOrderCutoff(county, nov26), true);
   assert.equal(purchaseOffer(county, nov25).dfy, true);
   assert.equal(purchaseOffer(county, nov26).dfy, false);
-  assert.equal(purchaseOffer(county, nov26).diy, true);
+  assert.equal(purchaseOffer(county, nov26).diy, false);
   assert.equal(deadlineBadge(county), "County filing deadline: Nov 30, 2026");
   assert.equal(orderCloseLine(county), "Orders for us to file close Nov 25, 2026.");
   const badge = orderBadgeHtml(county);
