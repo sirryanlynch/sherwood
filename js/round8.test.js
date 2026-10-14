@@ -52,11 +52,12 @@ test("the charge button waits for a filing and a county confirmation it does not
   assert.match(admin, /recordCountyConfirmation/);
   const recorded = recordCountyConfirmation(
     { filing: { id: "file_2", filedAt: "2026-10-13T18:00:00.000Z", simulated: true } },
-    { confirmedOn: "2026-10-14", countyReference: "SCC-42" }
+    { confirmedOn: "2026-10-14", countyReference: "SCC-42", countyFeePaid: "0", countyFeePaidOn: "2026-10-14", countyFeeReceipt: "NONE" }
   );
   assert.equal(recorded.ok, true);
   assert.equal(recorded.matter.filing.countyConfirmedAt, "2026-10-14T00:00:00.000Z");
   assert.equal(recorded.matter.filing.countyReference, "SCC-42");
+  assert.equal(recorded.matter.filing.countyFeePaidCents, 0);
   assert.equal(chargeReady(recorded.matter), false);
   assert.match(admin, /chargeSavedCardIfReady/);
   assert.equal(read("js/adapters/payments.js").includes("async charge("), false);

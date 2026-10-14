@@ -1,6 +1,6 @@
 import "../boot.js";
 import { paymentsAdapter } from "../adapters/payments.js";
-import { chargeReady, chargeSavedCardIfReady, recordCountyConfirmation } from "../chargeGate.js";
+import { chargeReady, chargeSavedCardIfReady, countyFeeUncaptured, recordCountyConfirmation } from "../chargeGate.js";
 import { planById } from "../pricing.js";
 import { loadCounties } from "../counties.js";
 import { formatDay, esc, parseISODate } from "../format.js";
@@ -40,6 +40,7 @@ function paint() {
     <h2>Mark filed, then charge</h2>
     <p class="small muted">We file it saves a card. The charge runs only when this appeal already has a filing time, a filing ID, and a county confirmation, and the filing is not simulated. Recording the confirmation is a separate step and does not charge the card.</p>
     ${chargeQueue(db.matters)}
+    ${uncapturedFeeFlags(db.matters)}
     <h2>Signed agent authorizations</h2>
     <p>${esc(AUTHORIZATION_RETENTION)}</p>
     ${authorizationRows(db.matters)}
@@ -96,7 +97,10 @@ function paint() {
       const data = new FormData(form);
       const result = recordCountyConfirmation(matter, {
         confirmedOn: data.get("confirmedOn"),
-        countyReference: data.get("countyReference")
+        countyReference: data.get("countyReference"),
+        countyFeePaid: data.get("countyFeePaid"),
+        countyFeePaidOn: data.get("countyFeePaidOn"),
+        countyFeeReceipt: data.get("countyFeeReceipt")
       });
       if (!result.ok) return;
       saveDb(next);
@@ -138,23 +142,59 @@ function chargeQueue(matters) {
       ? `<button class="btn" type="button" data-charge="${esc(matter.id)}" ${done ? "disabled" : ""}>Mark filed, then charge</button>
       <button class="btn ghost" type="button" data-charge="${esc(matter.id)}" data-fail="1" ${done ? "disabled" : ""}>Record a failed charge</button>`
       : `<p class="small muted">The charge stays off until this appeal has a filing time, a filing ID, and a county confirmation, and the filing is not simulated.</p>`;
+    const flag = countyFeeUncaptured(matter) ? `<p class="badge">${esc(feeFlagText(matter))}</p>` : "";
     return `<div class="card"><p><b>${esc(matter.address)}</b></p><p>Charge: ${esc(status)}.${esc(detail)}</p>
+      ${flag}
       ${confirmationForm(matter)}
       ${buttons}</div>`;
   }).join("");
+}
+
+function feeFlagText(matter) {
+  return matter.chargeStatus === "failed"
+    ? "County fee paid. The card charge failed."
+    : "County fee paid. The card charge is not yet captured.";
+}
+
+function uncapturedFeeFlags(matters) {
+  const rows = matters.filter(countyFeeUncaptured);
+  if (!rows.length) return "";
+  return `<h3>County fee paid, card not captured</h3>` + rows.map(matter =>
+    `<p class="badge">${esc(matter.address || matter.id)} — ${esc(feeFlagText(matter))}</p>`
+  ).join("");
+}
+
+function dollarsFromCents(cents) {
+  const whole = Math.floor(cents / 100);
+  const frac = String(cents % 100).padStart(2, "0");
+  return `$${whole.toLocaleString("en-US")}.${frac}`;
+}
+
+function dollarsInput(cents) {
+  const whole = Math.floor(cents / 100);
+  const frac = String(cents % 100).padStart(2, "0");
+  return `${whole}.${frac}`;
 }
 
 function confirmationForm(matter) {
   const filing = matter.filing;
   if (!filing) return `<p class="small muted">Record a filing before a county confirmation.</p>`;
   const when = /^\d{4}-\d{2}-\d{2}/.test(String(filing.countyConfirmedAt || "")) ? String(filing.countyConfirmedAt).slice(0, 10) : "";
+  const paidOn = /^\d{4}-\d{2}-\d{2}/.test(String(filing.countyFeePaidAt || "")) ? String(filing.countyFeePaidAt).slice(0, 10) : "";
+  const paidAmount = Number.isInteger(filing.countyFeePaidCents) ? dollarsInput(filing.countyFeePaidCents) : "";
   const recorded = filing.countyConfirmedAt
     ? `<p>Recorded county confirmation: ${esc(filing.countyConfirmedAt)}. Reference: ${esc(filing.countyReference || "")}.</p>`
     : "";
-  return `${recorded}
+  const recordedFee = Number.isInteger(filing.countyFeePaidCents)
+    ? `<p>County fee paid: ${esc(dollarsFromCents(filing.countyFeePaidCents))} on ${esc(filing.countyFeePaidAt || "")}. Receipt: ${esc(filing.countyFeeReceipt || "")}.</p>`
+    : "";
+  return `${recorded}${recordedFee}
     <form data-confirm="${esc(matter.id)}">
       <label>Confirmation date<input name="confirmedOn" type="date" required value="${esc(when)}"></label>
       <label>County reference<input name="countyReference" required value="${esc(filing.countyReference || "")}"></label>
+      <label>County fee paid<input name="countyFeePaid" inputmode="decimal" required value="${esc(paidAmount)}"></label>
+      <label>Fee paid date<input name="countyFeePaidOn" type="date" required value="${esc(paidOn)}"></label>
+      <label>County receipt<input name="countyFeeReceipt" required value="${esc(filing.countyFeeReceipt || "")}"></label>
       <button class="btn" type="submit">Record county confirmation</button>
     </form>`;
 }
