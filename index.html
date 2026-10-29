@@ -54,41 +54,51 @@
 </div>
 </section>
 
-<section class="band" id="check">
-<div class="wrap">
-<p class="eyebrow">Free check · <span data-headline-city>your</span> county</p>
-<h2>Lower <span class="pill teal">your property tax</span> bill</h2>
-<p class="subhead">Free check in under a minute. The figures above are a sample home, not yours.</p>
+<section class="band check-hero" id="check">
+<div class="wrap check-hero-grid">
+<div class="check-hero-copy">
+<p class="eyebrow">Free check</p>
+<span data-headline-city hidden>your</span>
+<h2>Lower your property tax bill</h2>
+<p class="subhead">Free check in under a minute. The figures above are a sample home, not yours. Results are estimates.</p>
+</div>
+<div class="check-hero-panel">
 <div id="home-launch" hidden>
 <p class="lead" id="home-price">Check for free. If there's a case, we'll file it for you for $249.</p>
 <div data-order-badge></div>
 </div>
-<div id="home-other" hidden>
-<p class="lead">We're launching county by county. Get a reminder when we're in your county.</p>
-<form id="county-reminder">
-<label>Email<input name="email" type="email" required autocomplete="email" placeholder="you@example.com" data-msg="Enter a valid email."></label>
-<p class="privacy-note">We use your email and approximate location only to run your check and send what you ask for. <a href="privacy.html">Privacy policy</a>.</p>
-<div><button class="btn" type="submit">Email me a reminder</button></div>
-<p id="county-reminder-ok" class="small muted" hidden></p>
-</form>
-<p><button class="btn ghost" id="show-check" type="button">Check a property anyway</button></p>
-</div>
 <div id="home-ambiguous">
-<p class="small muted">Choose your county, then check your property.</p>
+<p class="check-hint">Choose your county, then enter the address.</p>
 </div>
 <div data-place-bar></div>
 <form id="check-form" class="check-capture" data-kind="check" aria-label="Free over-assessment check">
 <label class="addr"><span class="sr-only">Property address</span><input name="address" required autocomplete="street-address" placeholder="Enter your home address" data-msg="Enter your property address."></label>
-<div><button class="btn teal" type="submit">Check my property</button></div>
+<div class="check-submit"><button class="btn" type="submit">Check my property</button></div>
 </form>
-<p class="small muted" id="home-under">Free check. No account needed to see your result. Results are estimates.</p>
-<ul class="chips">
+<p class="small muted" id="home-under">Results are estimates. No account needed to see them.</p>
+<div id="home-other" hidden>
+<div data-waitlist>
+<p class="lead">We're not filing in your county yet. Leave your email and we'll write when we are.</p>
+<form id="county-reminder">
+<label>Email<input name="email" type="email" required autocomplete="email" placeholder="you@example.com" data-msg="Enter a valid email."></label>
+<p class="privacy-note">We use your email and approximate location only to run your check and send what you ask for. <a href="privacy.html">Privacy policy</a>.</p>
+<div class="check-submit"><button class="btn" type="submit">Email me a reminder</button></div>
+<p id="county-reminder-ok" class="small muted" hidden></p>
+</form>
+</div>
+<p class="check-escape"><button type="button" id="show-check">Check a property anyway</button></p>
+</div>
+<ul class="trust-strip">
 <li>Flat $249 when we file</li>
 <li>You keep 100% of savings</li>
-<li>Free check · no account for the result</li>
+<li>Free check · no account</li>
 </ul>
 </div>
+</div>
 </section>
+<div class="check-dock" data-check-dock hidden>
+<button type="button" class="btn" data-dock-go>Check my property</button>
+</div>
 
 <section class="band band-mint" id="fee">
 <div class="wrap">
@@ -214,7 +224,7 @@
 <section class="band band-ink" id="check-again">
 <div class="wrap">
 <p class="eyebrow on-dark">Free check</p>
-<h2>See the estimate <span class="pill teal">before</span> an account.</h2>
+<h2>See the estimate before an account.</h2>
 <p class="lede">Same free check. Under a minute. Results are estimates.</p>
 <form id="check-form-end" class="check-capture" data-kind="check" aria-label="Free over-assessment check">
 <label class="addr"><span class="sr-only">Property address</span><input name="address" required autocomplete="street-address" placeholder="Enter your home address" data-msg="Enter your property address."></label>

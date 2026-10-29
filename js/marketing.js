@@ -125,9 +125,57 @@ function bindEndCheck() {
   }
 }
 
+function bindCheckDock() {
+  const dock = document.querySelector("[data-check-dock]");
+  const section = document.querySelector("#check");
+  const go = dock && dock.querySelector("[data-dock-go]");
+  if (!dock || !section || !go) return;
+  const panel = section.querySelector(".check-hero-panel") || section;
+  const runway = document.querySelector(".house-runway");
+  const narrow = window.matchMedia("(max-width: 800px)");
+  let sectionVisible = false;
+  let pastStory = !runway;
+  const sync = () => {
+    const check = document.querySelector("#check-form");
+    const waiting = !!(check && check.hidden);
+    go.textContent = waiting ? "Email me a reminder" : "Check my property";
+    dock.hidden = !narrow.matches || sectionVisible || !pastStory;
+  };
+  const watch = entries => {
+    for (const entry of entries) {
+      if (entry.target === panel) {
+        const box = entry.boundingClientRect;
+        const view = window.innerHeight || 0;
+        sectionVisible = box.top < view - 64 && box.bottom > 88;
+      }
+      if (entry.target === runway) pastStory = entry.boundingClientRect.bottom <= 8;
+    }
+    sync();
+  };
+  if ("IntersectionObserver" in window) {
+    const io = new IntersectionObserver(watch, { threshold: [0, 0.2] });
+    io.observe(panel);
+    if (runway) io.observe(runway);
+  }
+  const check = document.querySelector("#check-form");
+  if (check) new MutationObserver(sync).observe(check, { attributes: true, attributeFilter: ["hidden"] });
+  narrow.addEventListener("change", sync);
+  go.addEventListener("click", () => {
+    const checkForm = document.querySelector("#check-form");
+    const waiting = checkForm && checkForm.hidden;
+    const target = waiting
+      ? document.querySelector("#county-reminder input[name=email]")
+      : checkForm && checkForm.querySelector("input[name=address]");
+    section.scrollIntoView({ behavior: REDUCE.matches ? "auto" : "smooth", block: "start" });
+    if (target) target.focus({ preventScroll: true });
+  });
+  sync();
+}
+
 const stories = document.querySelectorAll("[data-story]");
 stories.forEach(bindRunway);
 bindEndCheck();
+bindCheckDock();
 if (stories.length) requestAnimationFrame(loop);
 REDUCE.addEventListener("change", () => {
   document.querySelectorAll("[data-story]").forEach(runway => {

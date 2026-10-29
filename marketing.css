@@ -145,6 +145,107 @@ body.mkt .badge{
 body.mkt #county-reminder{margin-top:16px}
 body.mkt #home-other .lead,body.mkt #home-ambiguous .lead,body.mkt #home-launch .lead{margin-top:8px}
 
+body.mkt .check-hero.band{
+  background:#fff;
+  padding:96px 0 88px;
+  border-top:1px solid #e7e1d6;
+}
+.check-hero-grid{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(300px,420px);
+  gap:36px 56px;
+  align-items:center;
+}
+.check-hero-copy{min-width:0}
+body.mkt .check-hero h2{
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:clamp(46px,5.4vw,72px);
+  font-weight:600;
+  line-height:.98;
+  letter-spacing:-.045em;
+  max-width:10em;
+  margin:12px 0 18px;
+  color:#17191c;
+  text-wrap:balance;
+}
+.check-hero .subhead{
+  max-width:34rem;
+  margin:0;
+  font-size:18px;
+  line-height:1.45;
+  color:#5c635e;
+}
+.check-hero-panel{
+  background:#fff;
+  border:1px solid #e6e1d8;
+  border-radius:20px;
+  padding:22px 22px 18px;
+}
+.check-hero .lead{font-size:16px;line-height:1.45;margin:0 0 12px;color:#3c4440}
+.check-hero .check-hint{margin:0 0 8px;font-size:14px;color:#5c635e}
+body.mkt .check-hero .place-bar{margin:0 0 12px;font-size:13px;color:#5c635e}
+body.mkt .check-hero [data-order-badge]{margin:0 0 10px}
+body.mkt .check-hero .badge{
+  display:block;border:0;background:none;border-radius:0;
+  padding:0;margin:0 0 4px;font-size:13px;font-weight:500;color:#5c635e;
+}
+body.mkt .check-hero form.check-capture:not([hidden]),
+body.mkt .check-hero #county-reminder{
+  display:flex;flex-direction:column;align-items:stretch;gap:10px;
+  max-width:none;width:100%;margin-top:0;
+}
+body.mkt .check-hero form.check-capture label,
+body.mkt .check-hero #county-reminder label{flex:none;width:100%;gap:6px}
+.check-hero form.check-capture input[name=address],
+.check-hero #county-reminder input{
+  min-height:56px;border-radius:14px;font-size:16px;
+}
+.check-hero .check-submit{display:block}
+.check-hero .check-submit .btn{
+  width:100%;min-height:52px;background:#17191c;color:#fff;
+  font-family:Inter,ui-sans-serif,system-ui,sans-serif;
+}
+.check-hero .check-submit .btn:hover{background:#000}
+.check-hero #home-under{margin:10px 0 0;font-size:13px}
+.check-hero .privacy-note{font-size:13px}
+#show-check{
+  background:none;border:0;padding:0;margin:0;
+  font:inherit;font-size:14px;font-weight:500;color:#5c635e;
+  text-decoration:underline;text-underline-offset:3px;cursor:pointer;
+}
+.check-escape{margin:12px 0 0}
+.trust-strip{
+  display:flex;flex-direction:column;gap:8px;
+  list-style:none;margin:18px 0 0;padding:16px 0 0;
+  border-top:1px solid #e6e1d8;
+}
+.trust-strip li{font-size:14px;font-weight:600;color:#2c3330;letter-spacing:-.01em}
+.trust-strip li::before{
+  content:"";display:inline-block;width:6px;height:6px;margin-right:8px;
+  border-radius:50%;background:#128f88;transform:translateY(-1px);
+}
+.check-dock{display:none}
+@media (min-width:720px){
+  .trust-strip{flex-direction:row;flex-wrap:wrap;gap:8px 18px}
+}
+@media (max-width:800px){
+  body.mkt .check-hero.band{padding:64px 0 56px}
+  .check-hero-grid{grid-template-columns:1fr;gap:28px;align-items:start}
+  body.mkt .check-hero h2{font-size:clamp(40px,11vw,52px);max-width:100%}
+  .check-dock:not([hidden]){
+    display:block;position:fixed;left:0;right:0;bottom:0;z-index:30;
+    padding:12px 16px calc(12px + env(safe-area-inset-bottom));
+    background:rgba(255,252,248,.96);
+    border-top:1px solid #e6e1d8;
+    backdrop-filter:blur(12px);
+  }
+  .check-dock .btn{width:100%;min-height:52px;text-align:center;background:#17191c}
+  body.mkt:has(.check-dock:not([hidden])){padding-bottom:84px}
+}
+@media (prefers-reduced-motion:reduce){
+  .check-dock{backdrop-filter:none}
+}
+
 .band{padding:72px 0}
 .band-mint{background:var(--teal-soft)}
 .band-deep{background:var(--paper-deep)}
