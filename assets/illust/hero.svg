@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 520" fill="none">
+  <g stroke-linecap="round" stroke-linejoin="round">
+    <ellipse cx="300" cy="438" rx="190" ry="22" fill="#e6e0d4"/>
+    <g stroke="#ddd6cb" stroke-width="1.25">
+      <path d="M70 250 L210 170 L350 250 L210 330 Z"/>
+      <path d="M210 170 L350 90 L490 170 L350 250 Z"/>
+      <path d="M210 330 L350 250 L490 330 L350 410 Z"/>
+      <path d="M210 170 L350 250 M350 90 L350 250 L350 410 M210 330 L350 250 L490 170"/>
+    </g>
+    <path d="M120 300 L250 230 L380 300 L250 370 Z" fill="#fffcf8" stroke="#1c2421" stroke-width="1.6"/>
+    <!-- walls -->
+    <path d="M98.8 355 L236.8 430 L236.8 360 L98.8 285 Z" fill="#fffcf8" stroke="#1c2421" stroke-width="1.7"/>
+    <path d="M338 375 L236.8 430 L236.8 360 L338 305 Z" fill="#f6f2ea" stroke="#1c2421" stroke-width="1.7"/>
+    <!-- roof, teal on the faces turned toward us -->
+    <path d="M200 230 L98.8 285 L218.4 155 Z" fill="#b7ddd8" stroke="#0e6e68" stroke-width="1.5"/>
+    <path d="M338 305 L200 230 L218.4 155 Z" fill="#9fd4ce" stroke="#0e6e68" stroke-width="1.5"/>
+    <path d="M98.8 285 L236.8 360 L218.4 155 Z" fill="#128f88" stroke="#0e6e68" stroke-width="1.6"/>
+    <path d="M236.8 360 L338 305 L218.4 155 Z" fill="#0f7f78" stroke="#0e6e68" stroke-width="1.6"/>
+    <!-- door and window on the near walls -->
+    <path d="M150 392 L186 412 L186 368 L150 348 Z" fill="#128f88"/>
+    <path d="M286 348 L314 362 L314 334 L286 320 Z" fill="#d7efec" stroke="#128f88" stroke-width="1.4"/>
+    <g transform="translate(418 118) rotate(7)">
+      <rect width="158" height="198" rx="10" fill="#fffcf8" stroke="#1c2421" stroke-width="1.7"/>
+      <path d="M0 34 H158" stroke="#128f88" stroke-width="7"/>
+      <path d="M18 58 H112 M18 76 H132 M18 94 H96 M18 120 H124 M18 138 H80" stroke="#d5cfc3" stroke-width="2.4"/>
+      <rect x="18" y="158" width="48" height="20" rx="4" fill="#128f88"/>
+    </g>
+    <g fill="#128f88">
+      <circle cx="430" cy="108" r="2.2"/>
+      <circle cx="446" cy="98" r="1.5"/>
+      <circle cx="418" cy="96" r="1.3"/>
+    </g>
+  </g>
+</svg>

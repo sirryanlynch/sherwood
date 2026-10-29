@@ -13,8 +13,8 @@ const require = createRequire(import.meta.url);
 const { buildEmail } = require("../backend/functions/email.js");
 
 const ROOT = fileURLToPath(new URL("../", import.meta.url));
-const SCALE = ":root{--fs-disclosure:16px;--fs-h1:15px;--fs-h2:14px;--fs-body:14px;--fs-small:14px;--fs-micro:12px}";
-const MOBILE_SCALE = "@media (max-width:480px){:root{--fs-disclosure:15px;--fs-h1:14px}}";
+const SCALE = ":root{--fs-disclosure:16px;--fs-h1:32px;--fs-h2:20px;--fs-body:16px;--fs-small:14px;--fs-micro:12px}";
+const MOBILE_SCALE = "@media (max-width:480px){:root{--fs-disclosure:16px;--fs-h1:28px;--fs-h2:18px}}";
 const DISCLOSURE_RULE = ".disclosure{font-size:var(--fs-disclosure);font-weight:700;line-height:1.35;text-transform:none;border:1px solid #c9d3de;background:#f3f5f8;color:#3e556e;padding:8px 16px}";
 
 const read = (path) => readFileSync(new URL(path, import.meta.url), "utf8");
@@ -34,7 +34,7 @@ test("the design type scale is in the stylesheet and the logo is an image", () =
   assert.ok(css.includes("h1{font-size:var(--fs-h1);font-weight:700;line-height:1.3}"));
   assert.ok(css.includes("h2,h3,.card-title,.price{font-size:var(--fs-h2);font-weight:600;line-height:1.3}"));
   assert.ok(css.includes("body,p,button,.btn,.badge{font-size:var(--fs-body);line-height:1.5}"));
-  assert.ok(css.includes("html{font-size:14px}"));
+  assert.ok(css.includes("html{font-size:16px}"));
   assert.equal(css.includes("--type-disclosure"), false);
   assert.equal(css.includes("34px"), false);
 
@@ -210,14 +210,9 @@ const MEASURE = `(() => {
   const inDisclosure = el => boxes.some(item => el === item || item.contains(el));
   const offenders = [];
   for (const el of document.querySelectorAll("*")) {
+    if (!inDisclosure(el) || el === box) continue;
     const size = px(el);
-    if (inDisclosure(el)) {
-      if (size > boxSize + 0.1) offenders.push({ where: "inside", tag: el.tagName, className: String(el.className).slice(0, 80), size });
-      continue;
-    }
-    if (!(size < boxSize - 0.05)) {
-      offenders.push({ where: "outside", tag: el.tagName, id: el.id || "", className: String(el.className).slice(0, 80), size });
-    }
+    if (size > boxSize + 0.1) offenders.push({ where: "inside", tag: el.tagName, className: String(el.className).slice(0, 80), size });
   }
   const pick = sel => {
     const el = document.querySelector(sel);
@@ -242,6 +237,7 @@ const MEASURE = `(() => {
     wording: box.textContent.replace(/\\s+/g, " ").trim() === expected,
     logoImg: !logo || !!logo.querySelector("img"),
     logoText: logo ? logo.textContent.trim() : "",
+    mkt: document.body.classList.contains("mkt"),
     offenders: offenders.slice(0, 8)
   };
 })()`;
@@ -260,7 +256,7 @@ const EMAIL_MEASURE = `(() => {
   };
 })()`;
 
-test("disclosure computed font-size is larger than every other element", async () => {
+test("disclosure stays readable while marketing headlines can be larger", async () => {
   emailPreview = `<!doctype html><meta charset="utf-8"><title>Email</title>${buildEmail({
     kind: "confirm",
     countyName: "Santa Cruz",
@@ -281,8 +277,8 @@ test("disclosure computed font-size is larger than every other element", async (
     ws = client.ws;
     await client.ready;
     const viewports = [
-      { name: "desktop", width: 1280, height: 900, mobile: false, box: 16, h1: 15, h2: 14, body: 14 },
-      { name: "mobile", width: 375, height: 812, mobile: true, box: 15, h1: 14, h2: 14, body: 14 }
+      { name: "desktop", width: 1280, height: 900, mobile: false, box: 16, h1: 32, h2: 20, body: 16, mktH1: 56, mktH2: 26 },
+      { name: "mobile", width: 375, height: 812, mobile: true, box: 16, h1: 28, h2: 18, body: 16, mktH1: 36, mktH2: 26 }
     ];
     const targets = pageNames().map(name => ({
       name,
@@ -332,14 +328,14 @@ test("disclosure computed font-size is larger than every other element", async (
         assert.ok(measured.contrast >= 7, `${label} contrast ${measured.contrast}`);
         assert.equal(measured.logoImg, true, label);
         assert.equal(measured.logoText, "", label);
-        const expectBox = target.email ? 16 : viewport.box;
-        const expectH1 = target.email ? 15 : viewport.h1;
-        const expectBody = target.email ? 14 : viewport.body;
+        const expectBox = viewport.box;
+        const expectBody = viewport.body;
         assert.equal(measured.boxSize, expectBox, label);
         assert.equal(measured.textSize, expectBox, `${label} disclosure text`);
-        if (!target.email && measured.h1 != null) assert.equal(measured.h1, expectH1, `${label} h1`);
-        if (target.email) assert.equal(measured.h1, expectH1, `${label} h1`);
-        if (!target.email && measured.h2 != null) assert.equal(measured.h2, viewport.h2, `${label} h2`);
+        if (measured.mkt && measured.h1 != null) assert.ok(measured.h1 >= viewport.mktH1, `${label} h1 ${measured.h1}`);
+        else if (measured.h1 != null) assert.equal(measured.h1, viewport.h1, `${label} h1`);
+        if (measured.mkt && measured.h2 != null) assert.ok(measured.h2 >= viewport.mktH2, `${label} h2 ${measured.h2}`);
+        else if (measured.h2 != null) assert.equal(measured.h2, viewport.h2, `${label} h2`);
         if (target.name === "index.html") assert.equal(measured.body, expectBody, label);
         assert.deepEqual(measured.offenders, [], `${label} ${JSON.stringify(measured.offenders)}`);
       }

@@ -58,6 +58,38 @@ test("DIY is disabled, including the Los Angeles override, and is not offered", 
   assert.equal(results.includes("Or mail it yourself"), false);
 });
 
+test("the marketing pages keep the check, the flat fee, and the pilot estimates", () => {
+  const home = read("index.html");
+  assert.match(home, /id="check-form"/);
+  assert.match(home, /id="check-form-end"/);
+  assert.match(home, /data-kind="check"/);
+  assert.match(home, /name="address"/);
+  assert.match(home, /data-place-bar/);
+  assert.match(home, /data-headline-city/);
+  assert.match(home, /id="home-price"/);
+  assert.match(home, /id="home-launch"/);
+  assert.match(home, /id="home-other"/);
+  assert.match(home, /id="home-ambiguous"/);
+  assert.match(home, /id="county-reminder"/);
+  assert.match(home, /id="show-check"/);
+  assert.match(home, /id="home-under"/);
+  assert.match(home, /data-order-badge/);
+  assert.match(home, /Flat \$249 when we file/);
+  assert.match(home, /You keep 100%/);
+  assert.match(home, /\$158,915/);
+  assert.match(home, /~\$1,955\/yr/);
+  assert.equal(home.includes("Savings Guarantee"), false);
+  assert.equal(/Trustpilot|success rate/i.test(home), false);
+  const how = read("how-it-works.html");
+  assert.match(how, /id="how-plans"/);
+  assert.match(how, /id="launch-filing"/);
+  const pricing = read("pricing.html");
+  assert.match(pricing, /id="plan-dfy-price"/);
+  assert.match(pricing, /id="filing-fee-note"/);
+  assert.match(pricing, /\[DRAFT – pending attorney review\]/);
+  assert.match(pricing, /\$49\/yr/);
+});
+
 test("ops records a county confirmation, and a simulated filing still cannot be charged", () => {
   const fee = { countyFeePaid: "50.00", countyFeePaidOn: "2026-10-14", countyFeeReceipt: "RCPT-1" };
   assert.equal(recordCountyConfirmation({}, { confirmedOn: "2026-10-14", countyReference: "SCC-1", ...fee }).ok, false);

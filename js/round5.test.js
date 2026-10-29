@@ -59,7 +59,7 @@ test("headed pages keep the verbatim disclosure in the Disclosures dialog", () =
   assert.match(css, /\.disclosure\{[^}]*text-transform:none/);
   assert.equal(/text-transform:\s*uppercase/.test(css), false);
   assert.match(css, /--fs-disclosure:16px/);
-  assert.match(css, /@media \(max-width:480px\)\{:root\{--fs-disclosure:15px/);
+  assert.match(css, /@media \(max-width:480px\)\{:root\{--fs-disclosure:16px/);
 });
 
 test("the top disclosure box stays off, and the flag still recognizes campaign sources", () => {
