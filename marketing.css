@@ -34,6 +34,7 @@ body.mkt header{
   border-bottom:1px solid transparent;
 }
 body.mkt header .wrap{height:auto;min-height:72px;padding-top:14px;padding-bottom:14px}
+#check,#fee,#pricing,#pilot,#faq,#terms,#check-again{scroll-margin-top:96px}
 body.mkt nav a{font-size:14px;font-weight:500;color:#3c4440;letter-spacing:-.01em}
 body.mkt nav a:hover,body.mkt nav a[aria-current]{color:var(--ink)}
 body.mkt nav a.nav-cta{
