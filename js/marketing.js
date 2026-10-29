@@ -125,9 +125,10 @@ function bindEndCheck() {
   }
 }
 
-document.querySelectorAll("[data-story]").forEach(bindRunway);
+const stories = document.querySelectorAll("[data-story]");
+stories.forEach(bindRunway);
 bindEndCheck();
-requestAnimationFrame(loop);
+if (stories.length) requestAnimationFrame(loop);
 REDUCE.addEventListener("change", () => {
   document.querySelectorAll("[data-story]").forEach(runway => {
     if (REDUCE.matches) {

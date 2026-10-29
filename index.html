@@ -1,20 +1,72 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Lower your property tax bill — Sherwood</title>
-<meta name="description" content="Free property tax check in under a minute. Flat $249 when we file in Santa Cruz, county fee included. You keep 100% of the savings.">
+<title>Is your home over-assessed? — Sherwood</title>
+<meta name="description" content="See a sample home the way the county sees it: assessed value, parcel, remodel, and comps. Then run a free check. Flat $249 when we file in Santa Cruz.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="marketing.css">
+<link rel="stylesheet" href="house.css">
 </head><body class="has-disclosure mkt">
 <header><div class="wrap"><a class="logo" href="index.html"><img src="logo.png" alt="Sherwood" width="209" height="33"></a><nav><a href="index.html#check" aria-current="page">Check</a><a href="how-it-works.html">How it works</a><a href="pricing.html">Pricing</a><a href="case-study.html">Pilot case</a><a href="faq.html">FAQ</a><a href="contact.html">Contact</a><a class="nav-cta" href="#check">Check my property</a></nav></div></header>
 <div id="disclosure-dialog" class="disclosure-dialog" role="dialog" aria-modal="true" aria-labelledby="disclosure-dialog-title" hidden><div class="disclosure-dialog-panel"><p id="disclosure-dialog-title" class="disclosure-dialog-title">Disclosures</p><div class="statutory-disclosure disclosure" role="note"><p><b>This assessment reduction filing service is not associated with any government agency. If you disagree with the assessed value of your property, you have the right to an informal assessment review, at no cost, by contacting the assessor's office directly. If you and the assessor cannot agree to the value of the property or if you do not wish to contact the assessor you can obtain and file an application for changed assessment with the county board of equalization or assessment appeals board on your own behalf. An appeals board has the authority to raise property values (but in no case higher than the Proposition 13 protected value) as well as to lower property values.</b></p></div><button type="button" class="btn ghost disclosure-close" data-disclosure-close>Close</button></div></div>
 <main>
-<section class="hero"><div class="wrap hero-grid">
-<div class="hero-copy">
-<p class="eyebrow">Launching in Santa Cruz County</p>
-<h1>Lower <span class="pill teal"><span data-headline-city>your</span> property tax</span> bill</h1>
-<p class="subhead">Free check in under a minute.</p>
+<section class="house-runway" id="story" data-house>
+<div class="stage">
+<div class="viewport"><div class="scene"></div></div>
+<aside class="cards hero" id="cards">
+<article class="card" data-k="establish">
+<p class="lbl">Sherwood · Property intelligence</p>
+<h1>Is your home<br>over-assessed?</h1>
+<p class="sub">Scroll to see what the county records, what the market supports, and where the gap is.</p>
+</article>
+<article class="card" data-k="valuation">
+<p class="lbl">01 · Assessed vs market</p>
+<div class="big"><div><span>Assessed</span><b>$1.12M</b></div><div class="t"><span>Market</span><b>$905–960k</b></div></div>
+<div class="bars">
+<div class="row"><div class="track"><i class="b-ink" style="width:calc(100% * var(--v, 1))"></i></div></div>
+<div class="row"><div class="track"><i class="b-teal" style="width:calc(83% * var(--v, 1))"></i></div></div>
+</div>
+<p class="kick">Assessed ~17% above market.</p>
+<p class="sub">That gap is the appeal opportunity: the case for bringing the assessment down to what the market supports.</p>
+<p class="sample-tag">Sample figures</p>
+</article>
+<article class="card" data-k="lot">
+<p class="lbl">02 · The parcel</p>
+<div class="big one"><b>6,250</b><span>sq ft · R-1 single-family</span></div>
+<p class="sub">50 ft frontage, 125 ft deep. Setbacks 20 front, 5 side, 15 rear. APN 000-111-22.</p>
+<p class="sample-tag">Sample parcel</p>
+</article>
+<article class="card" data-k="after">
+<p class="lbl">03 · Before → after</p>
+<h2>What changed,<br>line by line.</h2>
+<p class="sub">Porch 6 → 9 ft. Pitch 5:12 → 7:12. One gable dormer. Width 30 → 33 ft. Typically only the added value is reassessed.</p>
+<p class="sample-tag">Illustrative</p>
+</article>
+<article class="card" data-k="comps">
+<p class="lbl">04 · Neighborhood comps</p>
+<h2>The sales that<br>set the range.</h2>
+<p class="sub">Comp A · 0.1 mi · sold 2025. Comp B · 0.2 mi · sold 2024.</p>
+<p class="sample-tag">Sample comps</p>
+</article>
+<article class="card" data-k="settle">
+<p class="lbl">Sherwood</p>
+<h2>See your home the way the county sees it.</h2>
+<p class="sub">Then run the free check and decide whether to appeal.</p>
+</article>
+</aside>
+<nav class="rail" aria-label="Story">
+<span data-k="establish">Home</span><span data-k="valuation">Value</span><span data-k="lot">Parcel</span><span data-k="after">Remodel</span><span data-k="comps">Comps</span>
+<div class="prog"><i data-prog></i></div><span class="beat" data-beat-readout></span>
+</nav>
+</div>
+</section>
+
+<section class="band" id="check">
+<div class="wrap">
+<p class="eyebrow">Free check · <span data-headline-city>your</span> county</p>
+<h2>Lower <span class="pill teal">your property tax</span> bill</h2>
+<p class="subhead">Free check in under a minute. The figures above are a sample home, not yours.</p>
 <div id="home-launch" hidden>
 <p class="lead" id="home-price">Check for free. If there's a case, we'll file it for you for $249.</p>
 <div data-order-badge></div>
@@ -32,25 +84,19 @@
 <div id="home-ambiguous">
 <p class="small muted">Choose your county, then check your property.</p>
 </div>
-<div id="check">
 <div data-place-bar></div>
 <form id="check-form" class="check-capture" data-kind="check" aria-label="Free over-assessment check">
 <label class="addr"><span class="sr-only">Property address</span><input name="address" required autocomplete="street-address" placeholder="Enter your home address" data-msg="Enter your property address."></label>
 <div><button class="btn teal" type="submit">Check my property</button></div>
 </form>
 <p class="small muted" id="home-under">Free check. No account needed to see your result. Results are estimates.</p>
-</div>
 <ul class="chips">
 <li>Flat $249 when we file</li>
 <li>You keep 100% of savings</li>
 <li>Free check · no account for the result</li>
 </ul>
 </div>
-<figure class="hero-art"><div class="hero-frame">
-<svg class="hero-far" viewBox="0 0 640 420" fill="none" aria-hidden="true"><g stroke="#ddd6cb" stroke-width="1.5"><path d="M40 80 L220 170 L400 80 L220 -10 Z"/><path d="M80 200 L260 290 L440 200 L260 110 Z"/><path d="M140 300 L320 390 L500 300 L320 210 Z"/><path d="M40 80 L80 200 L140 300 M220 170 L260 290 L320 390 M400 80 L440 200 L500 300"/></g></svg>
-<img class="hero-near" src="assets/illust/hero.svg" alt="Line drawing of a house on a parcel map beside an assessment notice.">
-</div></figure>
-</div></section>
+</section>
 
 <section class="band band-mint" id="fee">
 <div class="wrap">
@@ -85,45 +131,6 @@
 <p class="charge">We'll save your card today. You won't be charged until the county confirms your appeal is filed.</p>
 </div>
 <p class="cta"><a class="btn" href="#check">Check my property</a> <a class="btn ghost" href="pricing.html">See pricing</a></p>
-</div>
-</section>
-
-<section class="runway" id="story" data-story data-station="check">
-<div class="runway-stage">
-<div class="world-viewport" data-world></div>
-<div class="runway-ui">
-<div class="runway-top">
-<p class="eyebrow">How it works</p>
-<h2>From the check to <span class="pill white">the filing</span></h2>
-</div>
-<div class="station-stack">
-<article class="station" data-beat="check">
-<p class="beat-kicker"><span class="pill teal">01</span></p>
-<h3>Free check</h3>
-<p>Address in. Then the assessed value and your market-value estimate. No account to see the result. Email comes after.</p>
-<div class="scrub" aria-hidden="true"><span></span></div>
-</article>
-<article class="station" data-beat="estimate">
-<p class="beat-kicker"><span class="pill teal">02</span></p>
-<h3>Estimate</h3>
-<p>Go, borderline, no-go, or off-season, from your numbers and that county's rules. A person reviews borderline checks. Results are estimates.</p>
-<div class="scrub" aria-hidden="true"><span></span></div>
-</article>
-<article class="station" data-beat="file">
-<p class="beat-kicker"><span class="pill teal">03</span></p>
-<h3>We file</h3>
-<p>Flat $249 in Santa Cruz, county fee included. You sign. We do not take a percentage. You are charged only after the county confirms the filing.</p>
-<div class="scrub" aria-hidden="true"><span></span></div>
-</article>
-<article class="station" data-beat="confirm">
-<p class="beat-kicker"><span class="pill teal">04</span></p>
-<h3>Confirmation</h3>
-<p>You track the case. The board can raise, lower, or leave the assessment. The mark on the porch is what the filing asks for, not a decision.</p>
-<div class="scrub" aria-hidden="true"><span></span></div>
-</article>
-</div>
-<p class="more-link"><a href="how-it-works.html">See the full process →</a></p>
-</div>
 </div>
 </section>
 
@@ -233,6 +240,7 @@
 <p>Launch-county clerk, from the adapter: <span data-fact="santa_cruz.clerk">loading…</span></p>
 <p><a href="trust.html">Trust and data</a> · <a href="privacy.html">Privacy policy</a> · <a href="contact.html">Contact</a> · <a href="dashboard.html">Your appeal</a> · <a href="admin.html">Ops</a> · <a href="docs/PRODUCT_FLOW.md">Product notes</a></p>
 <p>© 2026 Sherwood</p><p><button type="button" class="disclosure-link" data-disclosure-open aria-haspopup="dialog" aria-controls="disclosure-dialog">Disclosures</button></p></div></footer>
+<script type="module" src="js/house.js"></script>
 <script type="module" src="js/marketing.js"></script>
 <script type="module" src="app.js"></script>
 <script type="module" src="js/boot.js"></script>
