@@ -132,31 +132,24 @@ function bindCheckDock() {
   if (!dock || !section || !go) return;
   const panel = section.querySelector(".check-hero-panel") || section;
   const runway = document.querySelector(".house-runway");
-  const narrow = window.matchMedia("(max-width: 800px)");
-  let sectionVisible = false;
-  let pastStory = !runway;
+  const stage = runway && runway.querySelector(".stage");
+  const narrow = window.matchMedia("(max-width: 900px)");
   const sync = () => {
     const check = document.querySelector("#check-form");
     const waiting = !!(check && check.hidden);
     go.textContent = waiting ? "Email me a reminder" : "Check my property";
-    dock.hidden = !narrow.matches || sectionVisible || !pastStory;
-  };
-  const watch = entries => {
-    for (const entry of entries) {
-      if (entry.target === panel) {
-        const box = entry.boundingClientRect;
-        const view = window.innerHeight || 0;
-        sectionVisible = box.top < view - 64 && box.bottom > 88;
-      }
-      if (entry.target === runway) pastStory = entry.boundingClientRect.bottom <= 8;
+    const view = window.innerHeight || 0;
+    let onStory = false;
+    if (stage) {
+      const box = stage.getBoundingClientRect();
+      onStory = box.top < 160 && box.bottom > view * 0.5;
     }
-    sync();
+    const panelBox = panel.getBoundingClientRect();
+    const sectionVisible = panelBox.top < view - 64 && panelBox.bottom > 88;
+    dock.hidden = !narrow.matches || sectionVisible || onStory;
   };
-  if ("IntersectionObserver" in window) {
-    const io = new IntersectionObserver(watch, { threshold: [0, 0.2] });
-    io.observe(panel);
-    if (runway) io.observe(runway);
-  }
+  const tick = () => { sync(); requestAnimationFrame(tick); };
+  requestAnimationFrame(tick);
   const check = document.querySelector("#check-form");
   if (check) new MutationObserver(sync).observe(check, { attributes: true, attributeFilter: ["hidden"] });
   narrow.addEventListener("change", sync);

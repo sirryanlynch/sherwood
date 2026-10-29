@@ -173,7 +173,7 @@ let P_ = 0;
 const bb = s => `rotateY(${-s.yaw}deg) rotateX(${-s.pitch}deg)`; // billboard
 const cl = v => Math.max(0, Math.min(1, v));
 function render(s) {
-  const m = innerWidth < 900, X = m ? 0 : innerWidth * .2, Y = s.y - (m ? innerHeight * .02 : 0), Z = s.zoom * (m ? Math.min(.5, innerWidth / 800) : .8);
+  const m = innerWidth < 900, X = m ? 0 : innerWidth * .2, Y = s.y, Z = s.zoom * (m ? Math.min(.5, innerWidth / 800) : .8);
   draws(P_, s);
   scene.style.transform = `translate3d(${X}px,${Y}px,0) scale(${Z}) rotateX(${s.pitch}deg) rotateY(${s.yaw}deg)`;
   placeHouse(hero, s);
