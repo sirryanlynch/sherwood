@@ -19,14 +19,16 @@
 <div data-order-badge></div>
 </div>
 <div id="home-other" hidden>
-<p class="lead">We're launching county by county. Get a reminder when we're in your county.</p>
+<div data-waitlist>
+<p class="lead">We're not filing in your county yet. Leave your email and we'll write when we are.</p>
 <form id="county-reminder">
 <label>Email<input name="email" type="email" required autocomplete="email" placeholder="you@example.com" data-msg="Enter a valid email."></label>
 <p class="privacy-note">We use your email and approximate location only to run your check and send what you ask for. <a href="../privacy.html">Privacy policy</a>.</p>
 <div><button class="btn" type="submit">Email me a reminder</button></div>
 <p id="county-reminder-ok" class="small muted" hidden></p>
 </form>
-<p><button class="btn ghost" id="show-check" type="button">Check a property anyway</button></p>
+</div>
+<p class="check-escape"><button type="button" id="show-check">Check a property anyway</button></p>
 </div>
 <div id="home-ambiguous" hidden>
 <p class="lead">Choose your county, then check your property.</p>

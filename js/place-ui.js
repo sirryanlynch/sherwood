@@ -66,8 +66,9 @@ function applyRegion(geo) {
 function renderBar(place) {
   document.querySelectorAll("[data-place-bar]").forEach(host => {
     const openPicker = place.status === "ambiguous";
+    const lead = host.closest(".check-hero") ? "County" : "Showing results for";
     host.innerHTML = `
-      <p class="place-bar">Showing results for ${escapeHtml(displayLabel(place))} · <button type="button" data-place-change>change</button></p>
+      <p class="place-bar"${openPicker ? " hidden" : ""}>${lead}: ${escapeHtml(displayLabel(place))} · <button type="button" data-place-change>change</button></p>
       <div class="place-picker" data-place-picker ${openPicker ? "" : "hidden"}>
         <label>County
           <select data-place-select>
@@ -147,18 +148,35 @@ function paint(place) {
   if (under && check) under.hidden = check.hidden;
   const showCheck = document.querySelector("#show-check");
   if (showCheck) showCheck.hidden = remindOnlyLanding;
+  syncEscape(check);
+}
+
+function syncEscape(check) {
+  const wait = document.querySelector("[data-waitlist]");
+  const show = document.querySelector("#show-check");
+  const forced = !!(check && check.dataset.forced === "1" && !check.hidden);
+  if (wait) wait.hidden = forced;
+  if (show) show.textContent = forced ? "Get a reminder instead" : "Check a property anyway";
 }
 
 function showCheckAnyway() {
   if (document.body && document.body.getAttribute("data-landing")) return;
   const check = document.querySelector("#check-form");
-  const other = document.querySelector("#home-other");
   if (!check) return;
+  const under = document.querySelector("#home-under");
+  if (check.dataset.forced === "1") {
+    delete check.dataset.forced;
+    check.hidden = true;
+    if (under) under.hidden = true;
+    syncEscape(check);
+    return;
+  }
   check.dataset.forced = "1";
   check.hidden = false;
-  const under = document.querySelector("#home-under");
   if (under) under.hidden = false;
-  if (other) other.hidden = false;
+  syncEscape(check);
+  const input = check.querySelector("input[name=address]");
+  if (input) input.focus();
 }
 
 async function lookupGeo() {
