@@ -46,13 +46,17 @@
 <li>Free check · no account for the result</li>
 </ul>
 </div>
-<figure class="hero-art"><div class="hero-frame"><img src="assets/illust/hero.svg" alt="Line drawing of a house on a parcel map beside an assessment notice."></div></figure>
+<figure class="hero-art"><div class="hero-frame">
+<svg class="hero-far" viewBox="0 0 640 420" fill="none" aria-hidden="true"><g stroke="#ddd6cb" stroke-width="1.5"><path d="M40 80 L220 170 L400 80 L220 -10 Z"/><path d="M80 200 L260 290 L440 200 L260 110 Z"/><path d="M140 300 L320 390 L500 300 L320 210 Z"/><path d="M40 80 L80 200 L140 300 M220 170 L260 290 L320 390 M400 80 L440 200 L500 300"/></g></svg>
+<img class="hero-near" src="assets/illust/hero.svg" alt="Line drawing of a house on a parcel map beside an assessment notice.">
+</div></figure>
 </div></section>
 
 <section class="band band-mint" id="fee">
 <div class="wrap">
 <p class="eyebrow">Flat fee</p>
 <h2>You keep <span class="pill yellow">100%</span> of the savings.</h2>
+<svg class="fee-route" viewBox="0 0 560 64" aria-hidden="true"><path class="fee-line" pathLength="1" d="M8 46 L90 28 L180 44 L270 22 L370 40 L470 18 L548 32"/><circle cx="180" cy="44" r="5" fill="#128f88"/><circle cx="370" cy="40" r="5" fill="#f3d36b"/><circle cx="548" cy="32" r="5" fill="#17191c"/></svg>
 <p class="lede">A percentage firm takes a cut of the tax savings. Sherwood charges a flat $249 when we file in Santa Cruz, and the county fee is included. The savings are not shared.</p>
 <div class="math">
 <p class="math-kicker">Example math</p>
@@ -84,55 +88,53 @@
 </div>
 </section>
 
-<section class="story" id="story" data-story data-active="check">
-<div class="wrap">
+<section class="runway" id="story" data-story data-station="check">
+<div class="runway-stage">
+<div class="world-viewport" data-world></div>
+<div class="runway-ui">
+<div class="runway-top">
 <p class="eyebrow">How it works</p>
 <h2>From the check to <span class="pill white">the filing</span></h2>
-<div class="story-layout">
-<div class="story-copy">
-<article class="beat" data-beat="check">
-<p class="beat-kicker">01</p>
+</div>
+<div class="station-stack">
+<article class="station" data-beat="check">
+<p class="beat-kicker"><span class="pill teal">01</span></p>
 <h3>Free check</h3>
 <p>Address in. Then the assessed value and your market-value estimate. No account to see the result. Email comes after.</p>
+<div class="scrub" aria-hidden="true"><span></span></div>
 </article>
-<article class="beat" data-beat="result">
-<p class="beat-kicker">02</p>
+<article class="station" data-beat="result">
+<p class="beat-kicker"><span class="pill teal">02</span></p>
 <h3>A clear result</h3>
 <p>Go, borderline, no-go, or off-season, from your numbers and that county's rules. A person reviews borderline checks. Results are estimates.</p>
+<div class="scrub" aria-hidden="true"><span></span></div>
 </article>
-<article class="beat" data-beat="plan">
-<p class="beat-kicker">03</p>
+<article class="station" data-beat="plan">
+<p class="beat-kicker"><span class="pill teal">03</span></p>
 <h3>Pick a plan</h3>
 <p>Looking is free. We file it is $249 in Santa Cruz, county fee included. The annual monitor is $49/yr. We do not take a percentage.</p>
+<div class="scrub" aria-hidden="true"><span></span></div>
 </article>
-<article class="beat" data-beat="intake">
-<p class="beat-kicker">04</p>
+<article class="station" data-beat="intake">
+<p class="beat-kicker"><span class="pill teal">04</span></p>
 <h3>Intake and photos</h3>
 <p>You confirm the property, add condition notes, and can upload photos in this browser. Photos stay on this device.</p>
+<div class="scrub" aria-hidden="true"><span></span></div>
 </article>
-<article class="beat" data-beat="sign">
-<p class="beat-kicker">05</p>
+<article class="station" data-beat="sign">
+<p class="beat-kicker"><span class="pill teal">05</span></p>
 <h3>You sign</h3>
 <p>You sign the certification. If Sherwood is filing, you also sign an agent authorization. Sherwood does not sign that certification as you.</p>
+<div class="scrub" aria-hidden="true"><span></span></div>
 </article>
-<article class="beat" data-beat="file">
-<p class="beat-kicker">06</p>
+<article class="station" data-beat="file">
+<p class="beat-kicker"><span class="pill teal">06</span></p>
 <h3>We file. You track.</h3>
 <p>Filing stays off until your authorization is stored. The stamp on the drawing is the lower value the filing asks for. The board can raise, lower, or leave the assessment. You are charged only after the county confirms the filing.</p>
+<div class="scrub" aria-hidden="true"><span></span></div>
 </article>
-<p><a href="how-it-works.html">See the full process →</a></p>
 </div>
-<div class="story-visual" aria-hidden="true">
-<div class="stage">
-<p class="stage-label"><span class="pill teal" data-for="check">Free check</span><span class="pill teal" data-for="result">The result</span><span class="pill teal" data-for="plan">The plan</span><span class="pill teal" data-for="intake">Intake</span><span class="pill teal" data-for="sign">You sign</span><span class="pill teal" data-for="file">Value lowered</span></p>
-<img src="assets/illust/parcel.svg" alt="" data-station="check">
-<img src="assets/illust/notice.svg" alt="" data-station="result">
-<img src="assets/illust/packet.svg" alt="" data-station="plan">
-<img src="assets/illust/photos.svg" alt="" data-station="intake">
-<img src="assets/illust/sign.svg" alt="" data-station="sign">
-<img src="assets/illust/filed.svg" alt="" data-station="file">
-</div>
-</div>
+<p class="more-link"><a href="how-it-works.html">See the full process →</a></p>
 </div>
 </div>
 </section>
