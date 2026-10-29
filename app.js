@@ -4,6 +4,34 @@ import { bindDisclosureDialog } from "./js/statutoryDisclosure.js";
 
 captureFirstTouch();
 bindDisclosureDialog();
+mountCompactNav();
+
+function mountCompactNav() {
+  if (!document.body.classList.contains("mkt")) return;
+  const header = document.querySelector("header");
+  const nav = header && header.querySelector("nav");
+  const wrap = header && header.querySelector(".wrap");
+  if (!header || !nav || !wrap || header.querySelector(".nav-menu")) return;
+  nav.id = nav.id || "site-nav";
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "nav-menu";
+  btn.setAttribute("aria-expanded", "false");
+  btn.setAttribute("aria-controls", nav.id);
+  btn.innerHTML = '<span class="sr-only">Menu</span>';
+  wrap.appendChild(btn);
+  const setOpen = open => {
+    header.classList.toggle("nav-open", open);
+    btn.setAttribute("aria-expanded", open ? "true" : "false");
+  };
+  btn.addEventListener("click", () => setOpen(!header.classList.contains("nav-open")));
+  nav.addEventListener("click", event => {
+    if (event.target.closest("a")) setOpen(false);
+  });
+  document.addEventListener("keydown", event => {
+    if (event.key === "Escape") setOpen(false);
+  });
+}
 
 const FORM_ENDPOINT = "";
 
