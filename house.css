@@ -1,0 +1,131 @@
+/* House study v7, scoped so it does not restyle the rest of Sherwood.
+   Type leads. The bungalow is ambient on the right. Figures are samples. */
+
+.house-runway{
+  --paper:#f4efe6;
+  --ink:#2b2824;
+  --greige:#cfc6b8;
+  --teal:#2f7f7a;
+  height:560vh;
+  position:relative;
+  background:var(--paper);
+  color:var(--ink);
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+.house-runway .stage{
+  position:sticky;
+  top:0;
+  height:100svh;
+  overflow:hidden;
+  background:radial-gradient(ellipse at 62% 58%, #faf7f1 0, var(--paper) 68%);
+}
+.house-runway .viewport{position:absolute;inset:0;perspective:1600px;perspective-origin:62% 48%}
+.house-runway .scene{position:absolute;left:50%;top:58%;width:0;height:0;transform-style:preserve-3d}
+.house-runway .face{position:absolute;transform-style:preserve-3d;backface-visibility:visible}
+.house-runway .face .fill{position:absolute;inset:0;opacity:1}
+.house-runway .face svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.house-runway .face svg *{fill:none;stroke:var(--ink);stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.house-runway .face svg .thin{stroke-width:1;opacity:.28}
+.house-runway .face svg .acc{stroke:var(--teal)}
+.house-runway .face svg .glow{fill:#f6d58e;stroke:none}
+.house-runway .face svg .frame{fill:none;stroke:var(--ink);stroke-width:2}
+.house-runway .face svg .door{fill:#c86b4a;stroke:var(--ink)}
+.house-runway .face svg .knob{fill:var(--ink);stroke:none}
+.house-runway .face svg .draw{stroke:var(--teal);stroke-width:4;stroke-linecap:round;fill:none}
+.house-runway .face svg .ghost{stroke:var(--ink);stroke-width:2.5;stroke-dasharray:5 5;opacity:.55}
+.house-runway .face svg .pd0{stroke:var(--ink);opacity:.8}
+.house-runway .face svg .pd1,
+.house-runway .face svg .pp{stroke-width:5}
+.house-runway .face svg .dd{stroke-width:3}
+.house-runway .face svg .cA,
+.house-runway .face svg .cB{stroke-width:7}
+.house-runway .grp{position:absolute;left:0;top:0;width:0;height:0;transform-style:preserve-3d}
+.house-runway .tree{position:absolute;width:80px;height:110px;transform-origin:50% 100%}
+.house-runway .tree svg{width:100%;height:100%;overflow:visible}
+.house-runway .tree .canopy{fill:#9db08f;stroke:var(--ink);stroke-width:1.5}
+.house-runway .tree .trunk{stroke:var(--ink);stroke-width:2.5;stroke-linecap:round}
+.house-runway .chip{
+  position:absolute;white-space:nowrap;
+  font:500 13px/1 Inter,ui-sans-serif,system-ui,sans-serif;
+  padding:8px 13px;border-radius:999px;background:#fff;border:0;
+  box-shadow:0 2px 10px rgba(43,40,36,.12);color:var(--ink);opacity:0;
+  display:flex;gap:6px;align-items:center;
+}
+.house-runway .chip.dark{background:var(--ink);color:#fbf9f5}
+.house-runway .chip.teal{background:#fff;color:var(--teal);box-shadow:0 0 0 1.5px var(--teal),0 2px 10px rgba(47,127,122,.15)}
+.house-runway .chip b{font-weight:650}
+.house-runway .chip small{font-size:10.5px;opacity:.7;font-weight:400}
+.house-runway .flag{position:absolute;width:2px;height:70px;background:var(--ink);opacity:0}
+.house-runway .flag:after{content:"";position:absolute;left:2px;top:0;width:26px;height:16px;background:var(--teal);clip-path:polygon(0 0,100% 50%,0 100%)}
+.house-runway .flag span{position:absolute;left:0;top:-16px;font:9px ui-monospace,Menlo,monospace;color:var(--teal);letter-spacing:.08em}
+.house-runway .cards.hero{
+  position:absolute;left:6vw;top:0;bottom:0;width:min(560px,44vw);
+  height:100svh;z-index:6;pointer-events:none;margin:0;transform:none;
+}
+.house-runway .hero .card{
+  position:absolute;left:0;right:0;top:50%;width:auto;max-height:none;
+  background:none;border:0;box-shadow:none;padding:0;margin:0;opacity:0;
+}
+.house-runway .hero .lbl{
+  font:600 12px/1 Inter,system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--teal);margin:0 0 22px;
+}
+.house-runway .hero h1,
+.house-runway .hero h2{
+  font:600 clamp(36px,4.6vw,64px)/1.02 Inter,system-ui,sans-serif;
+  letter-spacing:-.03em;color:var(--ink);margin:0 0 20px;max-width:none;
+}
+.house-runway .hero .sub{font:400 18px/1.5 Inter,system-ui,sans-serif;color:#5c5650;max-width:440px;margin:0 0 16px}
+.house-runway .hero .big{display:flex;gap:40px;margin:0 0 18px}
+.house-runway .hero .big div{display:flex;flex-direction:column;gap:6px}
+.house-runway .hero .big span{font:500 13px/1 Inter,system-ui,sans-serif;color:#8a8279;letter-spacing:.04em;text-transform:uppercase}
+.house-runway .hero .big b{font:650 clamp(34px,3.8vw,56px)/1 Inter,system-ui,sans-serif;letter-spacing:-.035em;color:var(--ink);white-space:nowrap}
+.house-runway .hero .big .t b{color:var(--teal)}
+.house-runway .hero .big.one{flex-direction:column;gap:8px}
+.house-runway .hero .big.one span{text-transform:none;font-size:18px;letter-spacing:0;color:#5c5650}
+.house-runway .hero .big.one b{font-size:clamp(64px,8vw,112px)}
+.house-runway .hero .bars{max-width:420px;margin:0 0 22px}
+.house-runway .hero .bars .row{display:block;margin:0 0 8px}
+.house-runway .hero .track{position:relative;height:8px;width:100%;border-radius:4px;background:#ece6db}
+.house-runway .hero .track i{position:absolute;left:0;top:0;bottom:0;border-radius:4px;display:block}
+.house-runway .hero .b-ink{background:var(--ink)}
+.house-runway .hero .b-teal{background:var(--teal)}
+.house-runway .hero .kick{font:600 24px/1.25 Inter,system-ui,sans-serif;color:var(--ink);margin:0 0 10px;letter-spacing:-.01em}
+.house-runway .sample-tag{
+  display:inline-block;font:500 11px/1 Inter,system-ui,sans-serif;color:#8a8279;
+  border:1px solid #d6cdbf;border-radius:99px;padding:6px 10px;margin:4px 0 0;
+}
+.house-runway .rail{
+  position:absolute;left:28px;right:28px;bottom:22px;display:flex;gap:6px;align-items:center;z-index:6;flex-wrap:wrap;
+}
+.house-runway .rail span[data-k]{font-size:11.5px;padding:5px 11px;border-radius:20px;color:#7b7368;border:1px solid transparent}
+.house-runway .rail span.on{background:var(--ink);color:#fbf9f5}
+.house-runway .prog{flex:1;min-width:80px;height:2px;background:#e2dbcf;margin:0 14px;position:relative}
+.house-runway .prog i{position:absolute;left:0;top:0;bottom:0;background:var(--ink);width:0}
+.house-runway .beat{font:10.5px ui-monospace,Menlo,monospace;color:#a19a8f;min-height:0;padding:0;display:block}
+@media (min-width:901px){
+  .house-runway .stage::before{
+    content:"";position:absolute;inset:0;z-index:5;pointer-events:none;
+    background:linear-gradient(90deg,#f4efe6 0,rgba(244,239,230,.88) 32%,rgba(244,239,230,0) 54%);
+  }
+}
+@media (max-width:900px){
+  .house-runway .cards.hero{left:20px;right:20px;width:auto;top:auto;bottom:64px;height:46svh}
+  .house-runway .hero .card{top:auto;bottom:0}
+  .house-runway .hero h1,
+  .house-runway .hero h2{font-size:36px}
+  .house-runway .hero .big b{font-size:34px}
+  .house-runway .hero .big.one b{font-size:56px}
+  .house-runway .hero .sub{font-size:15px}
+  .house-runway .hero .kick{font-size:18px}
+  .house-runway .viewport{bottom:46svh}
+  .house-runway .beat{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+  .house-runway{height:auto}
+  .house-runway .stage{position:relative;height:auto;overflow:visible}
+  .house-runway .viewport{position:relative;height:52svh}
+  .house-runway .cards.hero{position:relative;left:auto;right:auto;top:auto;bottom:auto;width:min(720px,100%);height:auto;padding:8px 24px 28px}
+  .house-runway .hero .card{position:relative;top:auto;opacity:1 !important;transform:none !important;margin:0 0 28px}
+  .house-runway .rail{position:relative;left:auto;right:auto;bottom:auto;padding:0 24px 24px}
+}

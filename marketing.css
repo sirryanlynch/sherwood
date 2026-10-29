@@ -1,0 +1,352 @@
+/* Marketing surface. Warm paper, one teal, highlighter pills, illustrated appeal path.
+   The statutory disclosure box in style.css is unchanged and stays in the dialog. */
+
+body.mkt{
+  --paper:#f4f1eb;
+  --paper-deep:#ebe6dc;
+  --ink:#17191c;
+  --muted:#5c635e;
+  --line:#e3ddd2;
+  --teal:#128f88;
+  --teal-deep:#0c6c66;
+  --teal-soft:#e5f3f1;
+  --yellow:#f3d36b;
+  --white:#fffcf8;
+  background:var(--paper);
+  color:var(--ink);
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+body.mkt [hidden]{display:none !important}
+body.mkt h1,body.mkt h2,body.mkt h3,.mkt .amount{font-family:Outfit,Inter,ui-sans-serif,system-ui,sans-serif}
+body.mkt ::selection{background:var(--yellow);color:var(--ink)}
+html:has(body.mkt){scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){
+  html:has(body.mkt){scroll-behavior:auto}
+}
+
+body.mkt main{padding:0 0 24px}
+body.mkt main > .wrap{padding-top:48px;padding-bottom:56px}
+body.mkt .wrap{max-width:1120px}
+body.mkt header{
+  position:sticky;top:0;z-index:20;
+  background:rgba(244,241,235,.88);
+  backdrop-filter:saturate(1.2) blur(12px);
+  border-bottom:1px solid transparent;
+}
+body.mkt header .wrap{height:auto;min-height:72px;padding-top:14px;padding-bottom:14px}
+#check,#fee,#pricing,#pilot,#faq,#terms,#check-again{scroll-margin-top:96px}
+body.mkt nav a{font-size:14px;font-weight:500;color:#3c4440;letter-spacing:-.01em}
+body.mkt nav a:hover,body.mkt nav a[aria-current]{color:var(--ink)}
+body.mkt nav a.nav-cta{
+  background:var(--ink);color:#fff;border-radius:999px;padding:8px 14px;text-decoration:none;
+}
+body.mkt nav a.nav-cta:hover{background:var(--teal-deep);color:#fff}
+
+body.mkt h1{
+  font-size:clamp(40px,6.2vw,72px);
+  font-weight:600;
+  line-height:1.02;
+  letter-spacing:-.045em;
+  margin:12px 0 16px;
+}
+body.mkt h2{
+  font-size:clamp(28px,3.2vw,42px);
+  font-weight:600;
+  line-height:1.08;
+  letter-spacing:-.035em;
+  margin:0 0 14px;
+}
+body.mkt h3{font-size:18px;font-weight:600;letter-spacing:-.02em;line-height:1.25;margin:0 0 6px}
+body.mkt p.lead,body.mkt .lede{font-size:18px;line-height:1.5;color:#3d4541;max-width:38rem}
+body.mkt .narrow{max-width:36rem}
+body.mkt a{text-underline-offset:3px}
+body.mkt .btn{
+  font-size:16px;font-weight:600;letter-spacing:-.01em;
+  background:var(--ink);padding:14px 22px;border-radius:999px;
+}
+body.mkt .btn:hover{background:var(--teal-deep)}
+body.mkt .btn.teal{background:var(--teal);color:#fff}
+body.mkt .btn.teal:hover{background:var(--teal-deep)}
+body.mkt .btn.ghost{background:transparent;color:var(--ink);border:1px solid #c9c3b8}
+body.mkt .btn.ghost:hover{border-color:var(--ink);background:transparent;color:var(--ink)}
+body.mkt .btn.on-dark{background:#fff;color:var(--ink)}
+body.mkt .btn.on-dark:hover{background:var(--yellow);color:var(--ink)}
+body.mkt input,body.mkt select,body.mkt textarea{
+  border:1px solid #ddd6cb;border-radius:14px;background:#fff;padding:14px 16px;font-size:16px;
+}
+body.mkt input:focus,body.mkt select:focus,body.mkt textarea:focus{outline:2px solid var(--teal);outline-offset:1px}
+body.mkt :focus-visible{outline:2px solid var(--teal);outline-offset:3px}
+
+.pill{
+  display:inline;padding:.02em .32em .06em;border-radius:999px;
+  box-decoration-break:clone;-webkit-box-decoration-break:clone;
+  letter-spacing:-.04em;
+}
+.pill.teal{background:var(--teal);color:#fff}
+.pill.ink{background:var(--ink);color:#fff}
+.pill.white{background:#fff;color:var(--ink);box-shadow:inset 0 0 0 1px rgba(23,25,28,.06)}
+.pill.yellow{background:var(--yellow);color:var(--ink)}
+.eyebrow{margin:0;font-size:14px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--teal-deep)}
+.eyebrow.on-dark{color:#8fd9d2}
+.per{font-size:.45em;letter-spacing:0}
+
+.hero{padding:18px 0 28px}
+.hero-grid{display:grid;grid-template-columns:minmax(0,1.12fr) minmax(280px,.88fr);gap:28px 40px;align-items:center}
+.hero-art{margin:0}
+.hero{view-timeline-name:--hero;view-timeline-axis:block}
+.hero-frame{
+  position:relative;
+  border-radius:28px;
+  background:#f7f4ee;
+  min-height:420px;
+  display:grid;place-items:center;
+  overflow:clip;
+}
+.hero-far,.hero-near{grid-area:1 / 1;width:100%}
+.hero-far{z-index:0}
+.hero-near{z-index:1;position:relative}
+.hero-frame img{width:100%;height:auto;display:block}
+.hero-far{animation:hero-far linear both;animation-timeline:--hero;animation-range:cover 0% cover 100%}
+.hero-near{animation:hero-near linear both;animation-timeline:--hero;animation-range:cover 0% cover 100%}
+@keyframes hero-far{from{transform:translate3d(0,10px,0)}to{transform:translate3d(0,-16px,0)}}
+@keyframes hero-near{from{transform:translate3d(0,22px,0)}to{transform:translate3d(0,-28px,0)}}
+.subhead{margin:0 0 8px;font-size:20px;color:#2c3330}
+
+.addr{position:relative}
+.sr-only{
+  position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+  clip:rect(0,0,0,0);white-space:nowrap;border:0;
+}
+body.mkt form.check-capture:not([hidden]){
+  display:flex;flex-wrap:wrap;gap:10px;align-items:center;
+  max-width:640px;margin-top:18px;
+}
+body.mkt form.check-capture label{flex:1 1 260px;gap:0}
+body.mkt form.check-capture input[name=address]{
+  border-radius:999px;padding:16px 18px 16px 46px;border:1px solid #e4ddd2;
+  background:#fff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' fill='none' stroke='%23171c1a' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'><path d='M10 18s6-5.2 6-10a6 6 0 1 0-12 0c0 4.8 6 10 6 10z'/><circle cx='10' cy='8' r='2.1'/></svg>") 16px 50% no-repeat;
+  box-shadow:0 8px 24px rgba(40,36,28,.05);
+}
+body.mkt form.check-capture .btn{padding:16px 22px}
+body.mkt #home-under{margin:10px 0 0}
+.chips{display:flex;flex-wrap:wrap;gap:8px;list-style:none;padding:14px 0 0;margin:0;max-width:640px}
+.chips li{
+  background:#fff;border-radius:999px;padding:7px 12px;font-size:13px;font-weight:600;
+  color:#24302c;box-shadow:inset 0 0 0 1px #e6e0d6;
+}
+body.mkt .place-bar{color:var(--muted);margin:14px 0 0}
+body.mkt .place-picker{margin-top:8px}
+body.mkt .place-picker label{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:600;max-width:460px}
+body.mkt .place-picker select{max-width:280px}
+body.mkt .badge{
+  font-size:13px;font-weight:600;padding:6px 12px;margin:8px 8px 0 0;
+  border-color:#cfc8bc;background:#fff;
+}
+body.mkt #county-reminder{margin-top:16px}
+body.mkt #home-other .lead,body.mkt #home-ambiguous .lead,body.mkt #home-launch .lead{margin-top:8px}
+
+.band{padding:72px 0}
+.band-mint{background:var(--teal-soft)}
+.band-deep{background:var(--paper-deep)}
+.band-ink{background:#17191c;color:#f4f1eb}
+.band-ink .lede,body.mkt .band-ink p{color:#d9d4cb}
+.band-ink h2{color:#fff}
+
+.math{margin-top:28px}
+.math-kicker{font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--teal-deep);margin:0 0 6px}
+.math-note{margin:0 0 16px;color:var(--muted);font-size:14px;max-width:40rem}
+.math-grid{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:12px}
+.math-card{
+  background:#fff;border-radius:22px;padding:22px 22px 18px;
+  box-shadow:0 1px 0 rgba(23,25,28,.04);
+}
+.math-card.ours{background:var(--ink);color:#fff}
+.math-card.ours p,.math-card.ours .formula{color:#d5d1c8}
+.math-card .amount{font-size:clamp(36px,4vw,52px);letter-spacing:-.04em;margin:8px 0 4px;line-height:1}
+.math-card .keep{margin:12px 0 0;font-size:15px}
+.math-card .formula{font-size:13px;margin:8px 0 0}
+.charge{margin:18px 0 0;font-size:14px;max-width:40rem}
+
+.runway{
+  position:relative;
+  height:400vh;
+  background:var(--paper);
+}
+.runway-stage{
+  position:sticky;
+  top:0;
+  height:100svh;
+  overflow:clip;
+  background:var(--paper);
+}
+.world-viewport{position:absolute;inset:0;overflow:clip;pointer-events:none}
+.world-svg{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  display:block;
+}
+.world{will-change:transform}
+html.js-cam .layer,
+html.js-cam .route,
+html.js-cam .rider,
+html.js-cam .scrub span::before{animation:none !important}
+.layer{will-change:transform}
+.tags,.filed-mark{opacity:0}
+.stamp-arm,.env-chip,.cypress-sway{transform-box:fill-box;transform-origin:center}
+.cypress-sway{transform-origin:50% 100%;animation:cypress-sway 10s ease-in-out infinite}
+@keyframes cypress-sway{50%{transform:rotate(1.1deg)}}
+.fog{animation:fog-drift 12s ease-in-out infinite}
+@keyframes fog-drift{50%{transform:translate3d(14px,0,0)}}
+.route{
+  fill:none;
+  stroke:#128f88;
+  stroke-width:1.5;
+  stroke-linecap:round;
+  stroke-dasharray:1;
+  stroke-dashoffset:1;
+}
+.runway:not(.is-live) .ambient{animation-play-state:paused}
+.pin-dot{animation:pin-blink 8s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes pin-blink{0%,100%{opacity:1}50%{opacity:.35}}
+.sheet{animation:sheet-shuffle 9s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes sheet-shuffle{0%,100%{transform:translate3d(0,0,0)}50%{transform:translate3d(0,-4px,0)}}
+.stamp-seal{animation:seal-pulse 8s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes seal-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.045)}}
+.dots circle{animation:dot-life 7s ease-in-out infinite}
+.dots circle:nth-child(2){animation-delay:-2s}
+.dots circle:nth-child(3){animation-delay:-4s}
+@keyframes dot-life{0%,100%{opacity:.35}50%{opacity:1}}
+.runway-ui{
+  position:relative;
+  z-index:2;
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  box-sizing:border-box;
+  padding:88px 24px 28px;
+  pointer-events:none;
+  max-width:1120px;
+  margin:0 auto;
+}
+.runway-ui a,.station-stack{pointer-events:auto}
+.runway-top h2{max-width:14ch}
+.station-stack{width:min(440px,100%);display:grid}
+.station{
+  grid-area:1 / 1;
+  background:#fffcf8;
+  border-radius:22px;
+  padding:16px 18px 14px;
+  border:1px solid #e6e0d6;
+  opacity:0;
+  visibility:hidden;
+  transition:opacity .2s ease-in-out;
+}
+.runway[data-station="check"] .station[data-beat="check"],
+.runway[data-station="estimate"] .station[data-beat="estimate"],
+.runway[data-station="file"] .station[data-beat="file"],
+.runway[data-station="confirm"] .station[data-beat="confirm"]{opacity:1;visibility:visible}
+.station .beat-kicker{font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--teal);margin:0 0 6px}
+.station h3{margin:0 0 6px}
+.station p{margin:0;color:#3d4541}
+.scrub{display:flex;align-items:center;gap:8px;margin-top:12px}
+.scrub span{
+  display:block;height:4px;width:100%;border-radius:999px;background:#e6e0d6;overflow:hidden;transform-origin:left center
+}
+.scrub span::before{
+  content:"";
+  display:block;height:100%;width:100%;background:#128f88;transform-origin:left center;
+  transform:scaleX(var(--p, 0));
+}
+.more-link{margin:10px 0 0}
+.fee-route{display:block;width:min(520px,100%);height:64px;margin:8px 0 18px}
+.fee-line{
+  fill:none;stroke:#17191c;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;
+  path-length:1;stroke-dasharray:1;stroke-dashoffset:1;
+  animation:draw-route linear both;
+  animation-timeline:view();
+  animation-range:entry 10% entry 70%;
+}
+.stamp{animation:stamp-live 8s ease-in-out infinite}
+@keyframes stamp-live{0%,100%{transform:rotate(-6deg) scale(1)}50%{transform:rotate(-6deg) scale(1.04)}}
+
+.plans{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:28px}
+body.mkt .plans{grid-template-columns:repeat(3,1fr)}
+.plan{
+  background:#fff;border-radius:24px;padding:22px 22px 20px;
+  box-shadow:inset 0 0 0 1px #e7e1d7;display:flex;flex-direction:column;gap:8px;min-height:100%;
+}
+.plan.featured{background:var(--ink);color:#fff;box-shadow:none}
+.plan.featured p{color:#d7d2c9}
+.plan .amount{font-size:clamp(32px,3vw,44px);letter-spacing:-.04em;line-height:1.05;margin:4px 0}
+.plan ul{margin:8px 0 0;padding-left:18px;color:#3d4541}
+.plan.featured ul{color:#e4dfd6}
+.plan .cta{margin-top:auto;padding-top:12px}
+
+.notice{
+  display:grid;grid-template-columns:1.1fr .9fr;gap:28px;align-items:center;
+}
+.paper{
+  background:#fff;border-radius:18px;padding:22px 22px 18px;
+  box-shadow:0 16px 40px rgba(40,32,20,.06), inset 0 0 0 1px #ece6dc;
+  transform:rotate(-.4deg);
+}
+.paper-top{display:flex;justify-content:space-between;gap:12px;align-items:baseline;margin-bottom:14px}
+.paper-kicker{font-size:12px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:var(--teal-deep);margin:0}
+.paper h3{font-size:22px;margin:0}
+.paper table{font-size:15px}
+.paper td{padding:10px 0;border-bottom:1px solid #eee8de}
+.paper td:last-child{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+.stamp{
+  display:inline-block;margin-top:14px;border:2px solid var(--teal);color:var(--teal);
+  border-radius:8px;padding:4px 8px;font-weight:700;letter-spacing:.12em;font-size:12px;
+  transform:rotate(-6deg);
+}
+.pilot-aside p{color:#3d4541}
+
+body.mkt details{border-top:1px solid var(--line);padding:16px 0}
+body.mkt details summary{font-size:18px;font-weight:600;letter-spacing:-.02em}
+body.mkt details p{max-width:40rem;color:#3d4541}
+body.mkt .card{background:#fff;border:1px solid #e6e0d6;border-radius:18px}
+
+.fineprint{
+  max-width:720px;margin:0 auto;padding:12px 24px 36px;
+  font-size:13px;line-height:1.5;color:#6b716c;
+}
+.fineprint p{margin:0 0 8px}
+.fineprint button{
+  background:none;border:0;padding:0;font:inherit;font-size:13px;color:#3d4541;
+  text-decoration:underline;text-underline-offset:2px;cursor:pointer;
+}
+
+body.mkt footer{background:var(--paper);border-top:1px solid var(--line);color:var(--muted)}
+body.mkt #launch-filing a{color:var(--teal-deep)}
+
+@media (max-width:900px){
+  .hero-grid,.story-layout,.notice,.math-grid{grid-template-columns:1fr}
+  .plans,body.mkt .plans{grid-template-columns:1fr}
+  .hero-frame{min-height:280px}
+  .runway-ui{padding:76px 16px 16px}
+  .runway-top h2{max-width:none}
+  .paper{transform:none}
+}
+@media (max-width:640px){
+  body.mkt header .wrap{height:auto}
+  body.mkt nav a.nav-cta{padding:7px 12px}
+}
+@media (prefers-reduced-motion:reduce){
+  .runway{height:auto}
+  .runway-stage{position:relative;height:auto;overflow:visible;display:block}
+  .world-viewport{position:relative;height:300px}
+  .world-svg{transform:none}
+  .layer,.rider,.route,.ambient,.hero-far,.hero-near,.fee-line,.stamp,.scrub span{
+    animation:none !important;transition:none !important;transform:none !important
+  }
+  .fee-line,.route{stroke-dashoffset:0}
+  .station{opacity:1 !important;visibility:visible !important}
+  .station-stack{display:flex;flex-direction:column;gap:12px;width:min(640px,100%)}
+  .scrub{display:none}
+  .runway-ui{height:auto;padding:28px 24px 8px}
+}

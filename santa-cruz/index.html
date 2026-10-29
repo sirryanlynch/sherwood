@@ -1,9 +1,19 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Santa Cruz County property tax check — Sherwood</title><meta name="description" content="Free over-assessment check for Santa Cruz County. You enter the numbers. County rules come from the county adapter."><link rel="stylesheet" href="../style.css"></head><body class="has-disclosure">
-<header><div class="wrap"><a class="logo" href="../index.html"><img src="../logo.png" alt="Sherwood" width="209" height="33"></a><nav><a href="../index.html">Check</a><a href="../how-it-works.html">How it works</a><a href="../pricing.html">Pricing</a><a href="../case-study.html">Pilot case</a><a href="../faq.html">FAQ</a><a href="../contact.html">Contact</a></nav></div></header>
+<title>Santa Cruz County property tax check — Sherwood</title><meta name="description" content="Free over-assessment check for Santa Cruz County. Flat $249 when we file, county fee included. You keep 100% of the savings.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="../marketing.css">
+</head><body class="has-disclosure mkt">
+<header><div class="wrap"><a class="logo" href="../index.html"><img src="../logo.png" alt="Sherwood" width="209" height="33"></a><nav><a href="../index.html">Check</a><a href="../how-it-works.html">How it works</a><a href="../pricing.html">Pricing</a><a href="../case-study.html">Pilot case</a><a href="../faq.html">FAQ</a><a href="../contact.html">Contact</a><a class="nav-cta" href="#check">Check my property</a></nav></div></header>
 <div id="disclosure-dialog" class="disclosure-dialog" role="dialog" aria-modal="true" aria-labelledby="disclosure-dialog-title" hidden><div class="disclosure-dialog-panel"><p id="disclosure-dialog-title" class="disclosure-dialog-title">Disclosures</p><div class="statutory-disclosure disclosure" role="note"><p><b>This assessment reduction filing service is not associated with any government agency. If you disagree with the assessed value of your property, you have the right to an informal assessment review, at no cost, by contacting the assessor's office directly. If you and the assessor cannot agree to the value of the property or if you do not wish to contact the assessor you can obtain and file an application for changed assessment with the county board of equalization or assessment appeals board on your own behalf. An appeals board has the authority to raise property values (but in no case higher than the Proposition 13 protected value) as well as to lower property values.</b></p></div><button type="button" class="btn ghost disclosure-close" data-disclosure-close>Close</button></div></div>
-<main><div class="wrap">
-<h1>Think <span data-headline-city>your</span> property is assessed too high?</h1>
+<main>
+<section class="hero"><div class="wrap hero-grid">
+<div>
+<p class="eyebrow">Santa Cruz County</p>
+<h1>Lower <span class="pill teal"><span data-headline-city>your</span> property tax</span> bill</h1>
+<p class="subhead">Free check in under a minute. <a href="../index.html#story">See the sample story</a>.</p>
 <div id="home-launch">
 <p class="lead" id="home-price">Check for free. If there's a case, we'll file it for you for $249.</p>
 <div data-order-badge></div>
@@ -21,20 +31,34 @@
 <div id="home-ambiguous" hidden>
 <p class="lead">Choose your county, then check your property.</p>
 </div>
+<div id="check">
 <div data-place-bar></div>
-<form id="check-form" data-kind="check" aria-label="Free over-assessment check">
-<label>Property address<input name="address" required autocomplete="street-address" placeholder="Street, city, ZIP" data-msg="Enter your property address."></label>
-<div><button class="btn" type="submit">Check my property</button></div>
+<form id="check-form" class="check-capture" data-kind="check" aria-label="Free over-assessment check">
+<label class="addr"><span class="sr-only">Property address</span><input name="address" required autocomplete="street-address" placeholder="Enter your home address" data-msg="Enter your property address."></label>
+<div><button class="btn teal" type="submit">Check my property</button></div>
 </form>
 <p class="small muted" id="home-under">Free check. No account needed to see your result. Results are estimates.</p>
-</div></main>
+</div>
+<ul class="chips">
+<li>Flat $249 when we file</li>
+<li>You keep 100% of savings</li>
+<li>Free check · no account for the result</li>
+</ul>
+</div>
+<figure class="hero-art"><div class="hero-frame">
+<svg class="hero-far" viewBox="0 0 640 420" fill="none" aria-hidden="true"><g stroke="#ddd6cb" stroke-width="1.5"><path d="M40 80 L220 170 L400 80 L220 -10 Z"/><path d="M80 200 L260 290 L440 200 L260 110 Z"/><path d="M140 300 L320 390 L500 300 L320 210 Z"/><path d="M40 80 L80 200 L140 300 M220 170 L260 290 L320 390 M400 80 L440 200 L500 300"/></g></svg>
+<img class="hero-near" src="../assets/illust/hero.svg" alt="Line drawing of a house on a parcel map beside an assessment notice.">
+</div></figure>
+</div></section>
+</main>
 <footer><div class="wrap"><p><b>Sherwood</b> · Santa Cruz County</p>
 <p>Launch-county clerk, from the adapter: <span data-fact="santa_cruz.clerk">loading…</span></p>
-<p><a href="../trust.html">Trust and data</a> · <a href="../privacy.html">Privacy policy</a></p>
+<p><a href="../trust.html">Trust and data</a> · <a href="../privacy.html">Privacy policy</a> · <a href="../how-it-works.html">How it works</a> · <a href="../case-study.html">Pilot case</a></p>
 <p>© 2026 Sherwood</p><p><button type="button" class="disclosure-link" data-disclosure-open aria-haspopup="dialog" aria-controls="disclosure-dialog">Disclosures</button></p></div></footer>
 <script type="module">
 sessionStorage.setItem("sherwood_county_param", "santa-cruz");
 </script>
+<script type="module" src="../js/marketing.js"></script>
 <script type="module" src="../app.js"></script>
 <script type="module" src="../js/boot.js"></script>
 </body></html>
