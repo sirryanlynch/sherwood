@@ -2,33 +2,9 @@ import { STATIONS, cameraFrames, stationIndex, worldMarkup } from "./world.js";
 
 const REDUCE = window.matchMedia("(prefers-reduced-motion: reduce)");
 
-function supportsScrollTimeline() {
-  return typeof CSS !== "undefined" && (
-    CSS.supports("animation-timeline", "scroll()") ||
-    CSS.supports("animation-timeline", "view()")
-  );
-}
-
-function installCameraKeyframes() {
-  if (document.getElementById("world-camera")) return;
-  const frames = cameraFrames();
-  const body = frames.map(([t, [x, y]]) => {
-    const pct = (t * 100).toFixed(2);
-    return `${pct}%{transform:translate3d(${x}px,${y}px,0)}`;
-  }).join("");
-  const far = frames.map(([t, [x, y]]) => {
-    const pct = (t * 100).toFixed(2);
-    return `${pct}%{transform:translate3d(${(x * 0.55).toFixed(1)}px,${(y * 0.55).toFixed(1)}px,0)}`;
-  }).join("");
-  const near = frames.map(([t, [x, y]]) => {
-    const pct = (t * 100).toFixed(2);
-    return `${pct}%{transform:translate3d(${(x * 1.12).toFixed(1)}px,${(y * 1.12).toFixed(1)}px,0)}`;
-  }).join("");
-  const style = document.createElement("style");
-  style.id = "world-camera";
-  style.textContent = `@keyframes world-pan{${body}}@keyframes world-pan-far{${far}}@keyframes world-pan-near{${near}}`;
-  document.head.appendChild(style);
-}
+/* Chromium previews were leaving the camera on the CSS timeline, which held each
+   station like a separate slide. The scroll position always writes the transform. */
+document.documentElement.classList.add("js-cam");
 
 function runwayProgress(runway) {
   const rect = runway.getBoundingClientRect();
@@ -67,40 +43,15 @@ function mountWorld(runway) {
 
 function bindRunway(runway) {
   mountWorld(runway);
-  const reduce = () => REDUCE.matches;
-  const timeline = supportsScrollTimeline();
-  if (!timeline) document.documentElement.classList.add("no-scroll-timeline");
-
   const world = runway.querySelector(".world");
-  const far = runway.querySelector(".layer-far");
-  const near = runway.querySelector(".layer-near");
-
-  let ticking = false;
-  const apply = () => {
-    ticking = false;
-    if (reduce()) {
-      runway.dataset.station = STATIONS[0];
-      return;
-    }
-    const progress = runwayProgress(runway);
-    const index = stationIndex(progress);
-    const name = STATIONS[index];
-    if (runway.dataset.station !== name) runway.dataset.station = name;
-    if (timeline) return;
-    const [x, y] = sampleCamera(progress);
-    if (world) world.style.transform = `translate3d(${x.toFixed(2)}px,${y.toFixed(2)}px,0)`;
-    if (far) far.style.transform = `translate3d(${(x * 0.55).toFixed(2)}px,${(y * 0.55).toFixed(2)}px,0)`;
-    if (near) near.style.transform = `translate3d(${(x * 1.12).toFixed(2)}px,${(y * 1.12).toFixed(2)}px,0)`;
-    runway.style.setProperty("--p", progress.toFixed(4));
-  };
-  const request = () => {
-    if (ticking) return;
-    ticking = true;
-    requestAnimationFrame(apply);
-  };
-  apply();
-  window.addEventListener("scroll", request, { passive: true });
-  window.addEventListener("resize", request);
+  const route = runway.querySelector(".route");
+  const rider = runway.querySelector(".rider");
+  if (rider && route) {
+    const d = route.getAttribute("d");
+    rider.style.offsetPath = `path('${d}')`;
+    rider.style.offsetRotate = "0deg";
+  }
+  runway._cam = { world, route, rider };
 
   if ("IntersectionObserver" in window) {
     const io = new IntersectionObserver(entries => {
@@ -110,6 +61,30 @@ function bindRunway(runway) {
   } else {
     runway.classList.add("is-live");
   }
+}
+
+function applyRunway(runway) {
+  const progress = runwayProgress(runway);
+  runway.style.setProperty("--p", progress.toFixed(4));
+  if (REDUCE.matches) {
+    runway.dataset.station = STATIONS[0];
+    const cam = runway._cam;
+    if (cam && cam.world) cam.world.style.transform = "";
+    return;
+  }
+  const name = STATIONS[stationIndex(progress)];
+  if (runway.dataset.station !== name) runway.dataset.station = name;
+  const [x, y] = sampleCamera(progress);
+  const cam = runway._cam;
+  if (!cam || !cam.world) return;
+  cam.world.style.transform = `translate3d(${x.toFixed(2)}px,${y.toFixed(2)}px,0)`;
+  if (cam.route) cam.route.style.strokeDashoffset = (1 - progress).toFixed(4);
+  if (cam.rider) cam.rider.style.offsetDistance = `${(progress * 100).toFixed(2)}%`;
+}
+
+function loop() {
+  requestAnimationFrame(loop);
+  document.querySelectorAll("[data-story]").forEach(applyRunway);
 }
 
 function bindEndCheck() {
@@ -134,9 +109,9 @@ function bindEndCheck() {
   }
 }
 
-installCameraKeyframes();
 document.querySelectorAll("[data-story]").forEach(bindRunway);
 bindEndCheck();
+requestAnimationFrame(loop);
 REDUCE.addEventListener("change", () => {
   document.querySelectorAll("[data-story]").forEach(runway => {
     const world = runway.querySelector(".world");

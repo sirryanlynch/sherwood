@@ -1,17 +1,20 @@
-/* One isometric appeal world. Camera stops are shared with the scroll scrub. */
+/* One isometric appeal world. The camera is a pure function of scroll progress. */
 export const STATIONS = ["check", "result", "plan", "intake", "sign", "file"];
 
-/* View center is 640,380. Each pair is the translate that parks that station there. */
-export const CAM = [
-  [160, 0],
-  [-380, -120],
-  [-900, -220],
-  [-1400, -340],
-  [-1900, -460],
-  [-2400, -580]
+/* Wide window (viewBox 1680×940). Stations sit ~440px apart so the next one stays in frame. */
+const FOCUS = [1040, 500];
+const SPOTS = [
+  [1040, 500],
+  [1480, 560],
+  [1920, 620],
+  [2360, 680],
+  [2800, 740],
+  [3240, 800]
 ];
 
-const HOLD = 0.07;
+export const CAM = SPOTS.map(([x, y]) => [FOCUS[0] - x, FOCUS[1] - y]);
+
+const HOLD = 0.04;
 const TRAVEL = (1 - HOLD * CAM.length) / (CAM.length - 1);
 
 export function cameraFrames() {
@@ -27,10 +30,26 @@ export function cameraFrames() {
 }
 
 export function stationIndex(progress) {
-  const cuts = [0.128, 0.314, 0.5, 0.686, 0.872];
+  const frames = cameraFrames();
   let index = 0;
-  for (const cut of cuts) if (progress >= cut) index += 1;
+  for (let i = 0; i < STATIONS.length - 1; i++) {
+    const endHold = frames[i * 2 + 1][0];
+    const startNext = frames[(i + 1) * 2][0];
+    if (progress >= (endHold + startNext) / 2) index = i + 1;
+  }
   return index;
+}
+
+function routeD() {
+  const pts = SPOTS.map(([x, y]) => [x, y + 36]);
+  let d = `M ${pts[0][0]} ${pts[0][1]}`;
+  for (let i = 1; i < pts.length; i++) {
+    const [x, y] = pts[i];
+    const [px, py] = pts[i - 1];
+    const cx = (px + x) / 2;
+    d += ` C ${cx} ${py} ${cx} ${y} ${x} ${y}`;
+  }
+  return d;
 }
 
 function round(n) {
@@ -39,15 +58,23 @@ function round(n) {
 
 function grid() {
   const lines = [];
-  for (let i = -6; i <= 42; i++) {
-    const x = i * 64;
-    lines.push(`M ${x} -160 L ${x + 1500} 590`);
+  for (let i = -12; i <= 86; i++) {
+    const x = i * 52;
+    lines.push(`M ${x} -280 L ${x + 1500} 470`);
+    lines.push(`M ${x + 1500} -280 L ${x} 470`);
+    lines.push(`M ${x} 360 L ${x + 1500} 1110`);
+    lines.push(`M ${x + 1500} 360 L ${x} 1110`);
   }
-  for (let i = -10; i <= 28; i++) {
-    const x = i * 64;
-    lines.push(`M ${x} 1280 L ${x + 1500} 530`);
-  }
-  return `<g class="layer-far" fill="none" stroke="#d9d3c8" stroke-width="1.5" stroke-linejoin="round">${lines.map(d => `<path d="${d}"/>`).join("")}</g>`;
+  return lines.map(d => `<path d="${d}"/>`).join("");
+}
+
+function crate(x, y) {
+  return `<g transform="translate(${x} ${y})">
+    <polygon points="-28,8 8,-10 44,8 8,26" fill="#fffcf8" stroke="#1c2421" stroke-width="1.5"/>
+    <polygon points="-28,8 8,26 8,46 -28,28" fill="#f6f2eb" stroke="#1c2421" stroke-width="1.5"/>
+    <polygon points="8,26 44,8 44,28 8,46" fill="#f3efe8" stroke="#1c2421" stroke-width="1.5"/>
+    <path d="M16 16 H32" stroke="#f3d36b" stroke-width="3" stroke-linecap="round"/>
+  </g>`;
 }
 
 const house = `
@@ -63,15 +90,20 @@ const house = `
 `;
 
 export function worldMarkup() {
-  return `<svg class="world-svg" viewBox="0 0 1280 760" fill="none" aria-hidden="true">
-  ${grid()}
+  const mids = SPOTS.slice(0, -1).map(([x, y], i) => {
+    const [nx, ny] = SPOTS[i + 1];
+    return [(x + nx) / 2, (y + ny) / 2 + 70];
+  });
+  return `<svg class="world-svg" viewBox="0 0 1680 940" preserveAspectRatio="xMidYMid slice" fill="none" aria-hidden="true">
   <g class="world">
-    <path class="route" pathLength="1" d="M640 420 C820 450 1000 490 1180 540 C1360 580 1520 610 1700 640 C1880 680 2040 720 2200 760 C2380 800 2540 840 2700 880 C2880 920 3040 960 3200 1000"/>
+    <g fill="none" stroke="#d5cfc3" stroke-width="1.5">${grid()}</g>
+    <path id="appeal-route" class="route" pathLength="1" d="${routeD()}"/>
+    ${mids.map(([x, y], i) => crate(x + (i % 2 ? 36 : -48), y)).join("")}
     <g class="rider">
       <rect x="-24" y="-30" width="48" height="60" rx="3" fill="#fffcf8" stroke="#1c2421" stroke-width="1.5"/>
       <path d="M-12 -12 H14 M-12 -2 H8 M-12 8 H12" stroke="#d5cfc3" stroke-width="1.5" stroke-linecap="round"/>
     </g>
-    <g transform="translate(640 380)">
+    <g class="station-anchor" data-anchor="check" transform="translate(1040 500) scale(0.72)">
       <ellipse cx="10" cy="78" rx="120" ry="16" fill="#e6e0d4"/>
       ${house}
       <g class="ambient pin">
@@ -86,7 +118,7 @@ export function worldMarkup() {
         <circle cx="-46" cy="-112" r="1.2"/>
       </g>
     </g>
-    <g transform="translate(1180 500)">
+    <g class="station-anchor" data-anchor="result" transform="translate(1480 560) scale(0.72)">
       <ellipse cx="20" cy="120" rx="90" ry="14" fill="#e6e0d4"/>
       <g transform="translate(-20 8) rotate(-7)">
         <rect x="16" y="8" width="150" height="190" rx="6" fill="#f3efe8" stroke="#cfc8bc" stroke-width="1.5"/>
@@ -99,7 +131,7 @@ export function worldMarkup() {
         <rect x="18" y="156" width="52" height="28" rx="4" fill="#d7efec" stroke="#128f88" stroke-width="1.5"/>
       </g>
     </g>
-    <g transform="translate(1700 600)">
+    <g class="station-anchor" data-anchor="plan" transform="translate(1920 620) scale(0.72)">
       <ellipse cx="30" cy="90" rx="110" ry="14" fill="#e6e0d4"/>
       <path d="M-90 40 L10 -10 L150 40 L50 100 Z" fill="#f3efe8" stroke="#1c2421" stroke-width="1.5"/>
       <path d="M-90 40 L10 70 L50 100 L-10 130 L-90 80 Z" fill="#fffcf8" stroke="#1c2421" stroke-width="1.5"/>
@@ -113,7 +145,7 @@ export function worldMarkup() {
         </g>
       </g>
     </g>
-    <g transform="translate(2200 720)">
+    <g class="station-anchor" data-anchor="intake" transform="translate(2360 680) scale(0.72)">
       <ellipse cx="0" cy="80" rx="100" ry="14" fill="#e6e0d4"/>
       <g transform="scale(.72) translate(-40 -20)">${house}</g>
       <g transform="translate(70 -40) rotate(8)">
@@ -128,7 +160,7 @@ export function worldMarkup() {
         <rect x="8" y="8" width="56" height="48" rx="3" fill="#f3efe8"/>
       </g>
     </g>
-    <g transform="translate(2700 840)">
+    <g class="station-anchor" data-anchor="sign" transform="translate(2800 740) scale(0.72)">
       <ellipse cx="10" cy="110" rx="100" ry="14" fill="#e6e0d4"/>
       <g transform="rotate(-5)">
         <rect x="-20" y="-20" width="200" height="230" rx="8" fill="#fffcf8" stroke="#1c2421" stroke-width="1.5"/>
@@ -141,7 +173,7 @@ export function worldMarkup() {
         <path d="M6 92 L0 112 L12 112 Z" fill="#1c2421"/>
       </g>
     </g>
-    <g transform="translate(3200 960)">
+    <g class="station-anchor" data-anchor="file" transform="translate(3240 800) scale(0.72)">
       <ellipse cx="20" cy="100" rx="120" ry="16" fill="#e6e0d4"/>
       <path d="M-80 20 L40 -40 L40 120 L-80 170 Z" fill="#fffcf8" stroke="#1c2421" stroke-width="1.5"/>
       <path d="M40 -40 L170 10 L170 160 L40 120 Z" fill="#f6f2eb" stroke="#1c2421" stroke-width="1.5"/>
@@ -155,18 +187,6 @@ export function worldMarkup() {
           <text x="0" y="12" text-anchor="middle" fill="#128f88" font-family="Outfit, Inter, sans-serif" font-size="11" font-weight="700">LOWERED</text>
         </g>
       </g>
-    </g>
-  </g>
-  <g class="layer-near">
-    <g transform="translate(980 640)">
-      <rect x="0" y="0" width="70" height="36" rx="3" fill="#fffcf8" stroke="#1c2421" stroke-width="1.5"/>
-      <rect x="8" y="10" width="70" height="36" rx="3" fill="#f7f4ee" stroke="#1c2421" stroke-width="1.5"/>
-      <rect x="22" y="18" width="18" height="4" rx="1" fill="#f3d36b"/>
-    </g>
-    <g transform="translate(2500 1180)">
-      <rect x="0" y="20" width="120" height="28" rx="4" fill="#fffcf8" stroke="#1c2421" stroke-width="1.5"/>
-      <circle cx="28" cy="52" r="14" fill="none" stroke="#128f88" stroke-width="6"/>
-      <circle cx="92" cy="52" r="14" fill="none" stroke="#128f88" stroke-width="6"/>
     </g>
   </g>
 </svg>`;
