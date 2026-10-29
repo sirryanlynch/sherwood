@@ -1,4 +1,4 @@
-import { STATIONS, cameraFrames, stationIndex, worldMarkup } from "./world.js";
+import { STATIONS, actState, cameraFrames, stationIndex, worldMarkup } from "./world.js";
 
 const REDUCE = window.matchMedia("(prefers-reduced-motion: reduce)");
 
@@ -43,15 +43,21 @@ function mountWorld(runway) {
 
 function bindRunway(runway) {
   mountWorld(runway);
-  const world = runway.querySelector(".world");
   const route = runway.querySelector(".route");
   const rider = runway.querySelector(".rider");
   if (rider && route) {
-    const d = route.getAttribute("d");
-    rider.style.offsetPath = `path('${d}')`;
+    rider.style.offsetPath = `path('${route.getAttribute("d")}')`;
     rider.style.offsetRotate = "0deg";
   }
-  runway._cam = { world, route, rider };
+  runway._cam = {
+    layers: [...runway.querySelectorAll(".layer")].map(el => [el, Number(el.dataset.k || 1)]),
+    route,
+    rider,
+    env: runway.querySelector(".env-chip"),
+    tags: runway.querySelector(".tags"),
+    arm: runway.querySelector(".stamp-arm"),
+    filed: runway.querySelector(".filed-mark")
+  };
 
   if ("IntersectionObserver" in window) {
     const io = new IntersectionObserver(entries => {
@@ -69,17 +75,27 @@ function applyRunway(runway) {
   if (REDUCE.matches) {
     runway.dataset.station = STATIONS[0];
     const cam = runway._cam;
-    if (cam && cam.world) cam.world.style.transform = "";
+    if (cam) cam.layers.forEach(([el]) => { el.style.transform = ""; });
     return;
   }
   const name = STATIONS[stationIndex(progress)];
   if (runway.dataset.station !== name) runway.dataset.station = name;
   const [x, y] = sampleCamera(progress);
   const cam = runway._cam;
-  if (!cam || !cam.world) return;
-  cam.world.style.transform = `translate3d(${x.toFixed(2)}px,${y.toFixed(2)}px,0)`;
-  if (cam.route) cam.route.style.strokeDashoffset = (1 - progress).toFixed(4);
-  if (cam.rider) cam.rider.style.offsetDistance = `${(progress * 100).toFixed(2)}%`;
+  if (!cam) return;
+  for (const [el, k] of cam.layers) {
+    el.style.transform = `translate3d(${(x * k).toFixed(2)}px,${(y * k).toFixed(2)}px,0)`;
+  }
+  const act = actState(progress);
+  if (cam.route) cam.route.style.strokeDashoffset = (1 - act.dist).toFixed(4);
+  if (cam.rider) cam.rider.style.offsetDistance = `${(act.dist * 100).toFixed(2)}%`;
+  if (cam.env) {
+    cam.env.style.opacity = act.env.toFixed(3);
+    cam.env.style.transform = `translate3d(0,${((1 - act.env) * -36).toFixed(1)}px,0)`;
+  }
+  if (cam.tags) cam.tags.style.opacity = act.tags.toFixed(3);
+  if (cam.arm) cam.arm.style.transform = `rotate(${(-34 * (1 - act.arm)).toFixed(2)}deg)`;
+  if (cam.filed) cam.filed.style.opacity = act.filed.toFixed(3);
 }
 
 function loop() {
@@ -114,13 +130,8 @@ bindEndCheck();
 requestAnimationFrame(loop);
 REDUCE.addEventListener("change", () => {
   document.querySelectorAll("[data-story]").forEach(runway => {
-    const world = runway.querySelector(".world");
-    const far = runway.querySelector(".layer-far");
-    const near = runway.querySelector(".layer-near");
     if (REDUCE.matches) {
-      if (world) world.style.transform = "";
-      if (far) far.style.transform = "";
-      if (near) near.style.transform = "";
+      runway.querySelectorAll(".layer").forEach(el => { el.style.transform = ""; });
       runway.dataset.station = STATIONS[0];
     }
   });

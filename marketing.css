@@ -168,7 +168,7 @@ body.mkt #home-other .lead,body.mkt #home-ambiguous .lead,body.mkt #home-launch 
 
 .runway{
   position:relative;
-  height:300vh;
+  height:400vh;
   background:var(--paper);
 }
 .runway-stage{
@@ -187,10 +187,17 @@ body.mkt #home-other .lead,body.mkt #home-ambiguous .lead,body.mkt #home-launch 
   display:block;
 }
 .world{will-change:transform}
-html.js-cam .world,
+html.js-cam .layer,
 html.js-cam .route,
 html.js-cam .rider,
 html.js-cam .scrub span::before{animation:none !important}
+.layer{will-change:transform}
+.tags,.filed-mark{opacity:0}
+.stamp-arm,.env-chip,.cypress-sway{transform-box:fill-box;transform-origin:center}
+.cypress-sway{transform-origin:50% 100%;animation:cypress-sway 10s ease-in-out infinite}
+@keyframes cypress-sway{50%{transform:rotate(1.1deg)}}
+.fog{animation:fog-drift 12s ease-in-out infinite}
+@keyframes fog-drift{50%{transform:translate3d(14px,0,0)}}
 .route{
   fill:none;
   stroke:#128f88;
@@ -237,11 +244,9 @@ html.js-cam .scrub span::before{animation:none !important}
   transition:opacity .2s ease-in-out;
 }
 .runway[data-station="check"] .station[data-beat="check"],
-.runway[data-station="result"] .station[data-beat="result"],
-.runway[data-station="plan"] .station[data-beat="plan"],
-.runway[data-station="intake"] .station[data-beat="intake"],
-.runway[data-station="sign"] .station[data-beat="sign"],
-.runway[data-station="file"] .station[data-beat="file"]{opacity:1;visibility:visible}
+.runway[data-station="estimate"] .station[data-beat="estimate"],
+.runway[data-station="file"] .station[data-beat="file"],
+.runway[data-station="confirm"] .station[data-beat="confirm"]{opacity:1;visibility:visible}
 .station .beat-kicker{font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--teal);margin:0 0 6px}
 .station h3{margin:0 0 6px}
 .station p{margin:0;color:#3d4541}
@@ -335,7 +340,7 @@ body.mkt #launch-filing a{color:var(--teal-deep)}
   .runway-stage{position:relative;height:auto;overflow:visible;display:block}
   .world-viewport{position:relative;height:300px}
   .world-svg{transform:none}
-  .world,.layer-far,.layer-near,.rider,.route,.ambient,.hero-far,.hero-near,.fee-line,.stamp,.scrub span{
+  .layer,.rider,.route,.ambient,.hero-far,.hero-near,.fee-line,.stamp,.scrub span{
     animation:none !important;transition:none !important;transform:none !important
   }
   .fee-line,.route{stroke-dashoffset:0}

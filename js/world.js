@@ -1,27 +1,24 @@
-/* One isometric appeal world. The camera is a pure function of scroll progress. */
-export const STATIONS = ["check", "result", "plan", "intake", "sign", "file"];
+/* Santa Cruz street, CAD symbols, one paper route. Camera is a pure function of scroll. */
+export const STATIONS = ["check", "estimate", "file", "confirm"];
 
-/* Wide window (viewBox 1680×940). Stations sit ~440px apart so the next one stays in frame. */
-const FOCUS = [1040, 500];
+const FOCUS = [1120, 520];
 const SPOTS = [
-  [1040, 500],
-  [1480, 560],
-  [1920, 620],
-  [2360, 680],
-  [2800, 740],
-  [3240, 800]
+  [1180, 540],
+  [1760, 660],
+  [2460, 800],
+  [1280, 560]
 ];
 
 export const CAM = SPOTS.map(([x, y]) => [FOCUS[0] - x, FOCUS[1] - y]);
 
-const HOLD = 0.04;
+const HOLD = 0.1;
 const TRAVEL = (1 - HOLD * CAM.length) / (CAM.length - 1);
 
 export function cameraFrames() {
   const frames = [];
   let t = 0;
   for (let i = 0; i < CAM.length; i++) {
-    frames.push([t, CAM[i]]);
+    frames.push([round(t), CAM[i]]);
     t += HOLD;
     frames.push([round(t), CAM[i]]);
     if (i < CAM.length - 1) t += TRAVEL;
@@ -40,154 +37,204 @@ export function stationIndex(progress) {
   return index;
 }
 
-function routeD() {
-  const pts = SPOTS.map(([x, y]) => [x, y + 36]);
-  let d = `M ${pts[0][0]} ${pts[0][1]}`;
-  for (let i = 1; i < pts.length; i++) {
-    const [x, y] = pts[i];
-    const [px, py] = pts[i - 1];
-    const cx = (px + x) / 2;
-    d += ` C ${cx} ${py} ${cx} ${y} ${x} ${y}`;
+/* Paper distance along the home → county → porch loop. Holds with the camera. */
+export function paperDist(progress) {
+  const keys = [[0, 0.03], [0.1, 0.03], [0.3, 0.3], [0.4, 0.3], [0.6, 0.58], [0.7, 0.58], [0.9, 0.98], [1, 0.98]];
+  return sampleKeys(keys, progress);
+}
+
+export function actState(progress) {
+  const p = clamp01(progress);
+  return {
+    env: clamp01((p - 0.015) / 0.085),
+    tags: clamp01((p - 0.2) / 0.1),
+    arm: clamp01((p - 0.42) / 0.18),
+    filed: clamp01((p - 0.78) / 0.12),
+    dist: paperDist(p)
+  };
+}
+
+function sampleKeys(keys, progress) {
+  const t = clamp01(progress);
+  let prev = keys[0];
+  for (let i = 1; i < keys.length; i++) {
+    const next = keys[i];
+    if (t <= next[0]) {
+      const span = next[0] - prev[0] || 1;
+      const u = (t - prev[0]) / span;
+      return prev[1] + (next[1] - prev[1]) * u;
+    }
+    prev = next;
   }
-  return d;
+  return keys[keys.length - 1][1];
+}
+
+function clamp01(n) {
+  return Math.min(1, Math.max(0, n));
 }
 
 function round(n) {
   return Math.round(n * 1000) / 1000;
 }
 
-function grid() {
-  const lines = [];
-  for (let i = -12; i <= 86; i++) {
-    const x = i * 52;
-    lines.push(`M ${x} -280 L ${x + 1500} 470`);
-    lines.push(`M ${x + 1500} -280 L ${x} 470`);
-    lines.push(`M ${x} 360 L ${x + 1500} 1110`);
-    lines.push(`M ${x + 1500} 360 L ${x} 1110`);
-  }
-  return lines.map(d => `<path d="${d}"/>`).join("");
+function iso(x, y, z = 0) {
+  return `${+(x - y).toFixed(1)},${+((x + y) * 0.5 - z).toFixed(1)}`;
 }
 
-function crate(x, y) {
-  return `<g transform="translate(${x} ${y})">
-    <polygon points="-28,8 8,-10 44,8 8,26" fill="#fffcf8" stroke="#1c2421" stroke-width="1.5"/>
-    <polygon points="-28,8 8,26 8,46 -28,28" fill="#f6f2eb" stroke="#1c2421" stroke-width="1.5"/>
-    <polygon points="8,26 44,8 44,28 8,46" fill="#f3efe8" stroke="#1c2421" stroke-width="1.5"/>
-    <path d="M16 16 H32" stroke="#f3d36b" stroke-width="3" stroke-linecap="round"/>
-  </g>`;
+function face(pts) {
+  return pts.map(([x, y, z]) => iso(x, y, z || 0)).join(" ");
 }
 
-const house = `
-  <polygon points="-30,-95 190,15 30,95 -190,-15" fill="#fffcf8" stroke="#1c2421" stroke-width="1.5"/>
-  <polygon points="-20,-60 120,10 120,-38 -20,-108" fill="#f7f4ee" stroke="#1c2421" stroke-width="1.5"/>
-  <polygon points="120,10 20,60 20,12 120,-38" fill="#fffcf8" stroke="#1c2421" stroke-width="1.5"/>
-  <polygon points="-20,-108 120,-38 0,-92" fill="#9fd4ce" stroke="#0e6e68" stroke-width="1.5"/>
-  <polygon points="120,-38 20,12 0,-92" fill="#128f88" stroke="#0e6e68" stroke-width="1.5"/>
-  <polygon points="20,12 -120,-58 0,-92" fill="#0f7f78" stroke="#0e6e68" stroke-width="1.5"/>
-  <polygon points="-120,-58 -20,-108 0,-92" fill="#b7ddd8" stroke="#0e6e68" stroke-width="1.5"/>
-  <polygon points="96,-2 112,6 112,-22 96,-30" fill="#128f88"/>
-  <polygon points="90,9 74,17 74,1 90,-7" fill="#d7efec" stroke="#128f88" stroke-width="1.5"/>
-`;
+function bungalow() {
+  const roof = "#b7b1a4";
+  const peak = [0, 0, 64];
+  const e = [[-78, -54, 42], [78, -54, 42], [78, 54, 42], [-78, 54, 42]];
+  return `
+    <polygon points="${face([[-70, -46, 0], [-70, 46, 0], [-70, 46, 42], [-70, -46, 42]])}" fill="#f3efe8" stroke="#1c2421" stroke-width="1.5"/>
+    <polygon points="${face([[70, -46, 0], [70, 46, 0], [70, 46, 42], [70, -46, 42]])}" fill="#f7f4ee" stroke="#1c2421" stroke-width="1.5"/>
+    <polygon points="${face([[-70, 46, 0], [70, 46, 0], [70, 46, 42], [-70, 46, 42]])}" fill="#fffcf8" stroke="#1c2421" stroke-width="1.5"/>
+    <polygon points="${face([e[0], e[1], peak])}" fill="${roof}" stroke="#1c2421" stroke-width="1.5"/>
+    <polygon points="${face([e[1], e[2], peak])}" fill="#c4beb2" stroke="#1c2421" stroke-width="1.5"/>
+    <polygon points="${face([e[2], e[3], peak])}" fill="#ada798" stroke="#1c2421" stroke-width="1.5"/>
+    <polygon points="${face([e[3], e[0], peak])}" fill="${roof}" stroke="#1c2421" stroke-width="1.5"/>
+    <polygon points="${face([[-46, 47, 16], [-18, 47, 16], [-18, 47, 30], [-46, 47, 30]])}" fill="#e7e1d6" stroke="#1c2421" stroke-width="1.5"/>
+    <polygon points="${face([[18, 47, 0], [40, 47, 0], [40, 47, 28], [18, 47, 28]])}" fill="#1c2421"/>
+    <polygon points="${face([[-78, 46, 4], [78, 46, 4], [92, 92, 4], [-92, 92, 4]])}" fill="#e7e1d6" stroke="#1c2421" stroke-width="1.5"/>
+    <polygon points="${face([[-78, 46, 4], [-78, 46, 22], [-92, 92, 22], [-92, 92, 4]])}" fill="#f6f2eb" stroke="#1c2421" stroke-width="1.5"/>
+    <polygon points="${face([[78, 46, 4], [92, 92, 4], [92, 92, 22], [78, 46, 22]])}" fill="#fffcf8" stroke="#1c2421" stroke-width="1.5"/>
+    <path d="M${iso(-70, 78, 20)} L${iso(70, 100, 20)}" stroke="#1c2421" stroke-width="1.5" fill="none"/>
+    <path d="M${iso(-40, 70, 8)} L${iso(-40, 70, 22)}" stroke="#1c2421" stroke-width="1.5"/>
+    <path d="M${iso(40, 70, 8)} L${iso(40, 70, 22)}" stroke="#1c2421" stroke-width="1.5"/>
+  `;
+}
+
+function cypress(far) {
+  const leaf = far ? "#8a8478" : "#3a443c";
+  const leaf2 = far ? "#9a9488" : "#2c342f";
+  const trunk = far ? "#6e6a62" : "#1c2421";
+  return `
+    <path d="M-1 22 C-8 -8 4 -46 10 -6 L12 24 Z" fill="${trunk}"/>
+    <path d="M-52 -2 C-28 -22 18 -16 58 -4 C24 -18 -16 2 -52 -2 Z" fill="${leaf}"/>
+    <path d="M-40 -16 C-8 -40 34 -36 56 -14 C26 -28 -6 -10 -40 -16 Z" fill="${leaf2}"/>
+    <path d="M-22 -28 C6 -52 40 -46 44 -24 C20 -36 0 -22 -22 -28 Z" fill="${leaf}"/>
+  `;
+}
+
+function county() {
+  return `
+    <polygon points="${face([[-110, -70, 0], [110, -70, 0], [110, 70, 0], [-110, 70, 0]])}" fill="#e7e1d6" stroke="#1c2421" stroke-width="1.5"/>
+    <polygon points="${face([[-96, -58, 0], [-96, 58, 0], [-96, 58, 78], [-96, -58, 78]])}" fill="#f3efe8" stroke="#1c2421" stroke-width="1.5"/>
+    <polygon points="${face([[96, -58, 0], [96, 58, 0], [96, 58, 78], [96, -58, 78]])}" fill="#f7f4ee" stroke="#1c2421" stroke-width="1.5"/>
+    <polygon points="${face([[-96, 58, 0], [96, 58, 0], [96, 58, 78], [-96, 58, 78]])}" fill="#fffcf8" stroke="#1c2421" stroke-width="1.5"/>
+    <polygon points="${face([[-110, -70, 78], [110, -70, 78], [110, 70, 78], [-110, 70, 78]])}" fill="#c4beb2" stroke="#1c2421" stroke-width="1.5"/>
+    <polygon points="${face([[-40, 59, 8], [-16, 59, 8], [-16, 59, 36], [-40, 59, 36]])}" fill="#e7e1d6" stroke="#1c2421" stroke-width="1.5"/>
+    <polygon points="${face([[10, 59, 8], [34, 59, 8], [34, 59, 36], [10, 59, 36]])}" fill="#e7e1d6" stroke="#1c2421" stroke-width="1.5"/>
+    <polygon points="${face([[-70, 70, 0], [70, 70, 0], [86, 110, 0], [-86, 110, 0]])}" fill="#ded8ce" stroke="#1c2421" stroke-width="1.5"/>
+    <polygon points="${face([[-24, 96, 16], [24, 96, 16], [24, 96, 28], [-24, 96, 28]])}" fill="#fffcf8" stroke="#1c2421" stroke-width="1.5"/>
+  `;
+}
+
+function packet() {
+  return `
+    <rect x="-22" y="-28" width="44" height="56" rx="2" fill="#fffcf8" stroke="#1c2421" stroke-width="1.5"/>
+    <path d="M-12 -10 H12 M-12 -2 H8 M-12 6 H10" stroke="#d5cfc3" stroke-width="1.5" stroke-linecap="round"/>
+  `;
+}
+
+const ROUTE = "M1180 640 C1400 690 1580 720 1760 740 C1980 770 2200 800 2460 860 C2280 900 1900 820 1500 760 C1360 730 1240 690 1180 660";
 
 export function worldMarkup() {
-  const mids = SPOTS.slice(0, -1).map(([x, y], i) => {
-    const [nx, ny] = SPOTS[i + 1];
-    return [(x + nx) / 2, (y + ny) / 2 + 70];
-  });
+  const tree = (x, y, scale, far) => `<g transform="translate(${x} ${y}) scale(${scale})">${far ? "" : `<g class="ambient cypress-sway">`}${cypress(far)}${far ? "" : "</g>"}</g>`;
   return `<svg class="world-svg" viewBox="0 0 1680 940" preserveAspectRatio="xMidYMid slice" fill="none" aria-hidden="true">
-  <g class="world">
-    <g fill="none" stroke="#d5cfc3" stroke-width="1.5">${grid()}</g>
-    <path id="appeal-route" class="route" pathLength="1" d="${routeD()}"/>
-    ${mids.map(([x, y], i) => crate(x + (i % 2 ? 36 : -48), y)).join("")}
-    <g class="rider">
-      <rect x="-24" y="-30" width="48" height="60" rx="3" fill="#fffcf8" stroke="#1c2421" stroke-width="1.5"/>
-      <path d="M-12 -12 H14 M-12 -2 H8 M-12 8 H12" stroke="#d5cfc3" stroke-width="1.5" stroke-linecap="round"/>
+  <defs>
+    <symbol id="bungalow" overflow="visible">${bungalow()}</symbol>
+    <symbol id="packet" overflow="visible">${packet()}</symbol>
+  </defs>
+  <g class="layer layer-sky" data-k="0.14">
+    <rect x="-900" y="-500" width="5200" height="1600" fill="#f4f1eb"/>
+    <rect x="-900" y="40" width="5200" height="70" fill="#ebe6dc"/>
+    <rect x="-900" y="150" width="5200" height="46" fill="#e3ddd2"/>
+    <g class="ambient fog" opacity="0.9">
+      <ellipse cx="400" cy="180" rx="280" ry="18" fill="#f7f4ee"/>
+      <ellipse cx="1600" cy="240" rx="340" ry="16" fill="#f7f4ee"/>
     </g>
-    <g class="station-anchor" data-anchor="check" transform="translate(1040 500) scale(0.72)">
-      <ellipse cx="10" cy="78" rx="120" ry="16" fill="#e6e0d4"/>
-      ${house}
-      <g class="ambient pin">
-        <path d="M20 -10 V-46" stroke="#128f88" stroke-width="1.5"/>
-        <circle class="pin-dot" cx="20" cy="-52" r="6" fill="#128f88"/>
-        <circle cx="20" cy="-52" r="2.2" fill="#fffcf8"/>
+    ${tree(180, 300, 0.7, true)}
+    ${tree(520, 250, 0.85, true)}
+    ${tree(2100, 180, 0.75, true)}
+    ${tree(2600, 220, 0.6, true)}
+    <polygon points=" -200,420 900,250 1680,300 2500,220 3400,360 3400,470 -200,560" fill="#e4ddd2" stroke="#cfc8bc" stroke-width="1.5"/>
+    <polygon points="-200,470 700,360 1500,400 2400,340 3400,430 3400,500 -200,590" fill="#ddd6cb"/>
+  </g>
+  <g class="layer layer-hills" data-k="0.38">
+    <polygon points="-300,560 600,430 1300,500 2000,420 2800,510 3400,460 3400,640 -300,720" fill="#d9d3c8" stroke="#1c2421" stroke-width="1.5"/>
+    <path d="M-200 640 H3600" stroke="#c9d2cc" stroke-width="8" stroke-linecap="round"/>
+  </g>
+  <g class="layer layer-world" data-k="1">
+    <polygon points="${face([[-260, -40, 0], [2900, -40, 0], [2900, 80, 0], [-260, 80, 0]])}" fill="#e6e0d4" stroke="#1c2421" stroke-width="1.5"/>
+    <path d="M${iso(-200, 20, 1)} L${iso(2800, 20, 1)}" stroke="#d5cfc3" stroke-width="1.5"/>
+    <g transform="translate(760 430) scale(0.82)"><use href="#bungalow"/></g>
+    <g class="station-anchor" data-anchor="check" transform="translate(1180 540)">
+      <use href="#bungalow"/>
+      <g transform="translate(20 70)">
+        <g class="env-chip">
+          <rect x="-16" y="-12" width="36" height="24" rx="2" fill="#fffcf8" stroke="#1c2421" stroke-width="1.5"/>
+          <path d="M-16 -12 L2 2 L20 -12" stroke="#1c2421" stroke-width="1.5" fill="none"/>
+        </g>
       </g>
-      <g class="ambient dots" fill="#128f88">
-        <circle cx="-70" cy="-120" r="2.2"/>
-        <circle cx="-54" cy="-132" r="1.5"/>
-        <circle cx="-84" cy="-136" r="1.3"/>
-        <circle cx="-46" cy="-112" r="1.2"/>
+      <g class="tags">
+        <g transform="translate(-120 -40)">
+          <rect x="0" y="0" width="54" height="18" rx="9" fill="#fffcf8" stroke="#1c2421" stroke-width="1.5"/>
+          <text x="27" y="13" text-anchor="middle" fill="#1c2421" font-family="Outfit, Inter, sans-serif" font-size="9" font-weight="600">Assessed</text>
+        </g>
+        <g transform="translate(70 -20)">
+          <rect x="0" y="0" width="48" height="18" rx="9" fill="#fffcf8" stroke="#1c2421" stroke-width="1.5"/>
+          <text x="24" y="13" text-anchor="middle" fill="#1c2421" font-family="Outfit, Inter, sans-serif" font-size="9" font-weight="600">Market</text>
+        </g>
+      </g>
+      <g class="filed-mark" transform="translate(-10 108)">
+        <rect x="0" y="0" width="46" height="16" rx="2" fill="none" stroke="#128f88" stroke-width="1.5"/>
+        <text x="23" y="12" text-anchor="middle" fill="#128f88" font-family="Outfit, Inter, sans-serif" font-size="8" font-weight="700">FILED</text>
       </g>
     </g>
-    <g class="station-anchor" data-anchor="result" transform="translate(1480 560) scale(0.72)">
-      <ellipse cx="20" cy="120" rx="90" ry="14" fill="#e6e0d4"/>
-      <g transform="translate(-20 8) rotate(-7)">
-        <rect x="16" y="8" width="150" height="190" rx="6" fill="#f3efe8" stroke="#cfc8bc" stroke-width="1.5"/>
-      </g>
-      <g class="ambient sheet">
-        <rect x="0" y="0" width="168" height="214" rx="8" fill="#fffcf8" stroke="#1c2421" stroke-width="1.5"/>
-        <rect x="0" y="0" width="168" height="36" rx="8" fill="#128f88"/>
-        <rect x="0" y="22" width="168" height="14" fill="#128f88"/>
-        <path d="M18 58 H120 M18 74 H140 M18 90 H100 M18 114 H130 M18 130 H90" stroke="#d5cfc3" stroke-width="1.5" stroke-linecap="round"/>
-        <rect x="18" y="156" width="52" height="28" rx="4" fill="#d7efec" stroke="#128f88" stroke-width="1.5"/>
-      </g>
+    <g transform="translate(1680 640) scale(0.78)"><use href="#bungalow"/></g>
+    <g transform="translate(2060 730) scale(0.62)">
+      <polygon points="${face([[-50, -36, 0], [50, -36, 0], [50, 36, 0], [-50, 36, 0]])}" fill="#e7e1d6" stroke="#1c2421" stroke-width="1.5"/>
+      <polygon points="${face([[-44, -30, 0], [-44, 30, 0], [-44, 30, 32], [-44, -30, 32]])}" fill="#f3efe8" stroke="#1c2421" stroke-width="1.5"/>
+      <polygon points="${face([[44, -30, 0], [44, 30, 0], [44, 30, 32], [44, -30, 32]])}" fill="#f7f4ee" stroke="#1c2421" stroke-width="1.5"/>
+      <polygon points="${face([[-44, 30, 0], [44, 30, 0], [44, 30, 32], [-44, 30, 32]])}" fill="#fffcf8" stroke="#1c2421" stroke-width="1.5"/>
+      <polygon points="${face([[-54, -36, 32], [54, -36, 32], [54, 36, 36], [-54, 36, 36]])}" fill="#b7b1a4" stroke="#1c2421" stroke-width="1.5"/>
     </g>
-    <g class="station-anchor" data-anchor="plan" transform="translate(1920 620) scale(0.72)">
-      <ellipse cx="30" cy="90" rx="110" ry="14" fill="#e6e0d4"/>
-      <path d="M-90 40 L10 -10 L150 40 L50 100 Z" fill="#f3efe8" stroke="#1c2421" stroke-width="1.5"/>
-      <path d="M-90 40 L10 70 L50 100 L-10 130 L-90 80 Z" fill="#fffcf8" stroke="#1c2421" stroke-width="1.5"/>
-      <path d="M10 -10 L150 40 L150 90 L10 130 L10 70 Z" fill="#f7f4ee" stroke="#1c2421" stroke-width="1.5"/>
-      <g transform="translate(20 -70)">
-        <g class="ambient sheet">
-          <rect width="120" height="150" rx="6" fill="#fffcf8" stroke="#1c2421" stroke-width="1.5"/>
-          <path d="M14 28 H90 M14 44 H70" stroke="#d5cfc3" stroke-width="1.5" stroke-linecap="round"/>
-          <rect x="14" y="70" width="40" height="28" rx="3" fill="#f3d36b"/>
-          <rect x="62" y="70" width="40" height="28" rx="3" fill="#d7efec" stroke="#128f88" stroke-width="1.5"/>
+    <g transform="translate(980 470) scale(0.55)">
+      <polygon points="${face([[-36, -16, 6], [36, -16, 6], [36, 16, 6], [-36, 16, 6]])}" fill="#f7f4ee" stroke="#1c2421" stroke-width="1.5"/>
+      <polygon points="${face([[-36, 16, 6], [36, 16, 6], [36, 16, 22], [-36, 16, 22]])}" fill="#fffcf8" stroke="#1c2421" stroke-width="1.5"/>
+      <polygon points="${face([[36, -16, 6], [36, 16, 6], [36, 16, 22], [36, -16, 22]])}" fill="#f3efe8" stroke="#1c2421" stroke-width="1.5"/>
+      <circle cx="${iso(28, 10, 6).split(",")[0]}" cy="${iso(28, 10, 6).split(",")[1]}" r="5" fill="none" stroke="#1c2421" stroke-width="1.5"/>
+    </g>
+    <g transform="translate(900 620)">
+      <path d="M0 0 V-28" stroke="#1c2421" stroke-width="1.5"/>
+      <rect x="-8" y="-40" width="18" height="12" rx="1" fill="#fffcf8" stroke="#1c2421" stroke-width="1.5"/>
+    </g>
+    ${tree(640, 390, 0.9, false)}
+    ${tree(1500, 500, 1, false)}
+    ${tree(2140, 640, 0.85, false)}
+    <path id="appeal-route" class="route" pathLength="1" d="${ROUTE}"/>
+    <g class="rider"><use href="#packet"/></g>
+    <g class="station-anchor" data-anchor="file" transform="translate(2460 800)">
+      ${county()}
+      <text x="8" y="128" text-anchor="middle" fill="#1c2421" font-family="Outfit, Inter, sans-serif" font-size="13" font-weight="600">Clerk</text>
+      <g transform="translate(70 20)">
+        <g class="stamp-arm">
+          <rect x="-5" y="-48" width="10" height="52" rx="3" fill="#128f88"/>
+          <circle cx="0" cy="6" r="10" fill="none" stroke="#128f88" stroke-width="2"/>
         </g>
       </g>
     </g>
-    <g class="station-anchor" data-anchor="intake" transform="translate(2360 680) scale(0.72)">
-      <ellipse cx="0" cy="80" rx="100" ry="14" fill="#e6e0d4"/>
-      <g transform="scale(.72) translate(-40 -20)">${house}</g>
-      <g transform="translate(70 -40) rotate(8)">
-        <g class="ambient sheet">
-          <rect width="92" height="112" rx="5" fill="#fffcf8" stroke="#128f88" stroke-width="1.5"/>
-          <rect x="8" y="8" width="76" height="62" rx="3" fill="#d7efec"/>
-          <path d="M16 62 L36 44 L52 56 L70 36 L84 62" stroke="#128f88" stroke-width="1.5" fill="none"/>
-        </g>
-      </g>
-      <g transform="translate(28 10) rotate(-8)">
-        <rect width="72" height="88" rx="5" fill="#fffcf8" stroke="#cfc8bc" stroke-width="1.5"/>
-        <rect x="8" y="8" width="56" height="48" rx="3" fill="#f3efe8"/>
-      </g>
-    </g>
-    <g class="station-anchor" data-anchor="sign" transform="translate(2800 740) scale(0.72)">
-      <ellipse cx="10" cy="110" rx="100" ry="14" fill="#e6e0d4"/>
-      <g transform="rotate(-5)">
-        <rect x="-20" y="-20" width="200" height="230" rx="8" fill="#fffcf8" stroke="#1c2421" stroke-width="1.5"/>
-        <path d="M0 16 H120 M0 36 H150 M0 64 H100" stroke="#e0dad0" stroke-width="1.5" stroke-linecap="round"/>
-        <path d="M4 120 C30 96 48 140 74 112 S120 90 150 124" stroke="#1c2421" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-        <path d="M4 140 H150" stroke="#128f88" stroke-width="1.5" stroke-linecap="round"/>
-      </g>
-      <g transform="translate(150 20) rotate(28)">
-        <rect width="12" height="92" rx="6" fill="#128f88"/>
-        <path d="M6 92 L0 112 L12 112 Z" fill="#1c2421"/>
-      </g>
-    </g>
-    <g class="station-anchor" data-anchor="file" transform="translate(3240 800) scale(0.72)">
-      <ellipse cx="20" cy="100" rx="120" ry="16" fill="#e6e0d4"/>
-      <path d="M-80 20 L40 -40 L40 120 L-80 170 Z" fill="#fffcf8" stroke="#1c2421" stroke-width="1.5"/>
-      <path d="M40 -40 L170 10 L170 160 L40 120 Z" fill="#f6f2eb" stroke="#1c2421" stroke-width="1.5"/>
-      <rect x="-40" y="40" width="40" height="52" rx="3" fill="#fffcf8" stroke="#cfc8bc" stroke-width="1.5"/>
-      <rect x="70" y="60" width="52" height="64" rx="3" fill="#d7efec" stroke="#128f88" stroke-width="1.5"/>
-      <g transform="translate(150 -20)">
-        <g class="ambient stamp-seal">
-          <circle cx="0" cy="0" r="46" fill="#fffcf8" stroke="#128f88" stroke-width="1.5"/>
-          <circle cx="0" cy="0" r="36" stroke="#128f88" stroke-width="1.5"/>
-          <text x="0" y="-4" text-anchor="middle" fill="#128f88" font-family="Outfit, Inter, sans-serif" font-size="11" font-weight="700">VALUE</text>
-          <text x="0" y="12" text-anchor="middle" fill="#128f88" font-family="Outfit, Inter, sans-serif" font-size="11" font-weight="700">LOWERED</text>
-        </g>
-      </g>
-    </g>
+  </g>
+  <g class="layer layer-fore" data-k="1.2">
+    <g transform="translate(80 760)">${cypress(false)}</g>
+    <g transform="translate(1520 860) scale(1.35)"><g class="ambient cypress-sway">${cypress(false)}</g></g>
+    <path d="M40 820 H520" stroke="#1c2421" stroke-width="1.5"/>
+    <path d="M80 820 V760 M160 820 V748 M240 820 V756 M320 820 V744 M400 820 V762" stroke="#1c2421" stroke-width="1.5"/>
   </g>
 </svg>`;
 }
