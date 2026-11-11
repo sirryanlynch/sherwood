@@ -1,5 +1,5 @@
 import { maybeLoadDemo } from "./demo.js";
-import { customerCountyLine, getCounty, loadCounties } from "./counties.js";
+import { countyDetailsLabel, customerCountyLine, getCounty, loadCounties } from "./counties.js";
 
 maybeLoadDemo();
 import { contactLine, customerLine, esc, formatDay, money } from "./format.js";
@@ -39,9 +39,15 @@ async function fillLaunchFacts() {
   }
   const slots = document.querySelectorAll("[data-fact]");
   const needsPlans = document.getElementById("home-price") || document.getElementById("faq-prices") || document.getElementById("how-plans");
-  if (!slots.length && !document.getElementById("launch-facts") && !document.getElementById("launch-filing") && !document.getElementById("launch-fee") && !needsPlans && !document.querySelector("[data-order-badge]")) return;
+  if (!slots.length && !document.getElementById("launch-facts") && !document.getElementById("launch-filing") && !document.getElementById("launch-fee") && !needsPlans && !document.querySelector("[data-order-badge]") && !document.querySelector("[data-county-details]")) return;
   const county = await getCounty("santa_cruz");
   if (!county) return;
+  const detailsLabel = countyDetailsLabel(county);
+  if (detailsLabel) {
+    document.querySelectorAll("[data-county-details]").forEach(el => {
+      el.textContent = detailsLabel;
+    });
+  }
   slots.forEach(el => {
     if (el.getAttribute("data-fact") === "santa_cruz.clerk") {
       el.textContent = contactLine(county.filing.clerk);

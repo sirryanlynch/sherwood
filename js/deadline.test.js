@@ -9,6 +9,7 @@ import { paymentsAdapter } from "./adapters/payments.js";
 import { loadDemoCase } from "./demo.js";
 import { MONITOR_TERMS, confirmationBody, enrollMonitor, startIncludedYear } from "./monitor.js";
 import { MONITOR } from "./pricing.js";
+import { countyDetailsLabel } from "./counties.js";
 
 const memory = new Map();
 const sessionMemory = new Map();
@@ -221,9 +222,9 @@ test("customer pages do not mention the pilot filing or October 12", () => {
   assert.equal(banned.test(read("backend/functions/counties/santa_cruz.json")), false);
 });
 
-test("customer pages do not say your county's rules or unless your county", () => {
+test("customer pages do not say your county's rules, unless your county, or launch-county rules", () => {
   const read = path => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
-  const banned = /your county's rules|unless your county/i;
+  const banned = /county's rules|unless your county|launch-county rules/i;
   for (const page of customerPages()) {
     assert.equal(banned.test(visibleCopy(read(page))), false, page);
   }
@@ -235,6 +236,14 @@ test("customer pages do not say your county's rules or unless your county", () =
     assert.equal(banned.test(read(file)), false, file);
   }
   assert.match(read("dashboard.html"), /Keep paying your property taxes on time\. An appeal does not pause your bill\./);
+  assert.equal(/launch-county/i.test(read("faq.html")), false);
+  assert.equal(/launch-county/i.test(read("index.html")), false);
+  assert.equal(read("faq.html").includes("Santa Cruz County's details"), false);
+  const santaCruz = JSON.parse(read("data/counties/santa_cruz.json"));
+  assert.equal(countyDetailsLabel(santaCruz), "Santa Cruz County's details");
+  assert.equal(countyDetailsLabel({ county: "Yolo County" }), "Yolo County's details");
+  assert.match(read("js/boot.js"), /countyDetailsLabel\(county\)/);
+  assert.match(read("faq.html"), /data-county-details[\s\S]*proportionate refund/);
 });
 
 test("customer pages do not show the word adapter", () => {
