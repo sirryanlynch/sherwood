@@ -54,7 +54,7 @@ Email-only can carry the five events. It does not leave the customer a place to 
 
 9. **Hero.** The homepage H1 stays “Your property tax appeal, handled.” Ryan’s sign-off on that line is still open.
 
-10. **Founder’s own filing as homepage proof.** The homepage no longer has the pilot section. Site navigation, including the Santa Cruz footer, no longer links to the case study. That filing is the founder’s own, not a Sherwood customer result, and it cannot be used as proof until Ryan approves publishing it. The case study page itself is unchanged and can still be opened by its address.
+10. **Founder’s own filing as homepage proof.** The homepage no longer has the pilot section. Site navigation, including the Santa Cruz footer, no longer links to the case study. Customer pages do not mention it. That filing is the founder’s own, not a Sherwood customer result, and it cannot be used as proof until Ryan approves publishing it. The case study page itself is unchanged and can still be opened by its address.
 
 ## Finance note for Ryan
 

@@ -1,5 +1,6 @@
 import "../boot.js";
 import { notify } from "../adapters/notify.js";
+import { compsBlockHtml } from "../comps.js";
 import { customerCountyLine, getCounty } from "../counties.js";
 import { paymentsAdapter } from "../adapters/payments.js";
 import { borderlineReviewLine, deadlineReminderPlan, withUnsubscribe } from "../deadlineReminders.js";
@@ -194,11 +195,7 @@ function render(matter, county) {
         <ul>${rules}</ul>
         <ul>${timelines}</ul>
         <p>Clerk: ${esc(contactLine(county.filing.clerk))}</p>
-        <div class="card" aria-label="Comparable sales locked">
-          <p class="muted small" style="margin-top:0">Comparable sales <span class="chip chip-sample">Sample</span></p>
-          <p class="blur" aria-hidden="true">0000 Sample St · $0,000,000</p>
-          <p class="small muted" style="margin-bottom:0">Locked because this demo does not have comparable sales for your address. We do not invent them. The pilot method is on the case study page, and those sales belong to that pilot, not to this check.</p>
-        </div>
+        ${compsBlockHtml(matter)}
       </div>
       <div class="result-decision">
         ${decision}

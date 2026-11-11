@@ -51,13 +51,13 @@ if (gate) {
           ${plans.map(plan => cardHtml(plan, lines, savings)).join("")}
         </div>
         ${plans.some(plan => plan.id === "dfy") ? hearingAckHtml(onlyDfy ? "dfy" : "") : ""}
-        <label class="check" id="monitor-included"><input type="checkbox" name="monitorRenewal" required> The free monitor year starts when the filing charge is captured, not when the card is saved. A declined or never-filed case does not get that year. After a captured charge it renews at $49/yr. ${esc(MONITOR_TERMS)} Cancel before the renewal date and the renewal is not charged.</label>
+        <div class="check" id="monitor-included"><input id="monitor-renewal" type="checkbox" name="monitorRenewal" required><label for="monitor-renewal">The free monitor year starts when the filing charge is captured, not when the card is saved. A declined or never-filed case does not get that year. After a captured charge it renews at $49/yr. ${esc(MONITOR_TERMS)} Cancel before the renewal date and the renewal is not charged.</label></div>
         ${notes}
         <div class="card-save">
           <label>Card<input name="card" disabled placeholder="Simulated. No card number is accepted."></label>
           <div>
             <p>${esc(CARD_SAVE_NOTE)}</p>
-            <label class="check"><input type="checkbox" name="cardConsent" required> I agree to save my card on those terms.</label>
+            <div class="check"><input id="card-consent" type="checkbox" name="cardConsent" required><label for="card-consent">I agree to save my card on those terms.</label></div>
           </div>
         </div>
         <button class="btn" type="submit">Continue</button>

@@ -9,7 +9,6 @@ bindDisclosureDialog();
 mountCompactNav();
 
 function mountCompactNav() {
-  if (!document.body.classList.contains("mkt")) return;
   const header = document.querySelector("header");
   const nav = header && header.querySelector("nav");
   const wrap = header && header.querySelector(".wrap");
