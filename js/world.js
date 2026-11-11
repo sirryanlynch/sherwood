@@ -184,16 +184,16 @@ export function worldMarkup() {
       <g class="tags">
         <g transform="translate(-120 -40)">
           <rect x="0" y="0" width="54" height="18" rx="9" fill="#fffcf8" stroke="#1c2421" stroke-width="1.5"/>
-          <text x="27" y="13" text-anchor="middle" fill="#1c2421" font-family="Outfit, Inter, sans-serif" font-size="9" font-weight="600">Assessed</text>
+          <text x="27" y="13" text-anchor="middle" fill="#1c2421" font-family="Inter, sans-serif" font-size="9" font-weight="600">Assessed</text>
         </g>
         <g transform="translate(70 -20)">
           <rect x="0" y="0" width="48" height="18" rx="9" fill="#fffcf8" stroke="#1c2421" stroke-width="1.5"/>
-          <text x="24" y="13" text-anchor="middle" fill="#1c2421" font-family="Outfit, Inter, sans-serif" font-size="9" font-weight="600">Market</text>
+          <text x="24" y="13" text-anchor="middle" fill="#1c2421" font-family="Inter, sans-serif" font-size="9" font-weight="600">Market</text>
         </g>
       </g>
       <g class="filed-mark" transform="translate(-10 108)">
         <rect x="0" y="0" width="46" height="16" rx="2" fill="none" stroke="#128f88" stroke-width="1.5"/>
-        <text x="23" y="12" text-anchor="middle" fill="#128f88" font-family="Outfit, Inter, sans-serif" font-size="8" font-weight="700">FILED</text>
+        <text x="23" y="12" text-anchor="middle" fill="#128f88" font-family="Inter, sans-serif" font-size="8" font-weight="700">FILED</text>
       </g>
     </g>
     <g transform="translate(1680 640) scale(0.78)"><use href="#bungalow"/></g>
@@ -221,7 +221,7 @@ export function worldMarkup() {
     <g class="rider"><use href="#packet"/></g>
     <g class="station-anchor" data-anchor="file" transform="translate(2460 800)">
       ${county()}
-      <text x="8" y="128" text-anchor="middle" fill="#1c2421" font-family="Outfit, Inter, sans-serif" font-size="13" font-weight="600">Clerk</text>
+      <text x="8" y="128" text-anchor="middle" fill="#1c2421" font-family="Inter, sans-serif" font-size="13" font-weight="600">Clerk</text>
       <g transform="translate(70 20)">
         <g class="stamp-arm">
           <rect x="-5" y="-48" width="10" height="52" rx="3" fill="#128f88"/>
