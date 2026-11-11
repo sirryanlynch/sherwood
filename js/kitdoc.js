@@ -1,3 +1,4 @@
+import { customerCountyLine } from "./counties.js";
 import { money } from "./format.js";
 
 export function shortExplanation(matter, county) {
@@ -11,7 +12,7 @@ export function statementOfFacts(matter, county) {
   const intake = matter.intake || {};
   const lines = [
     "Statement of Facts — preview. Not filed. Not legal advice.",
-    `County adapter: ${county.county} (${county.status_label}).`,
+    `County: ${county.county}${customerCountyLine(county) ? ` (${customerCountyLine(county)})` : ""}.`,
     `Property: ${matter.address || "not entered"}`,
     `APN: ${intake.apn || "not entered"}`,
     `Assessed value entered: ${money(matter.assessed)}`,

@@ -1,5 +1,5 @@
 import "../boot.js";
-import { getCounty } from "../counties.js";
+import { customerCountyLine, getCounty } from "../counties.js";
 import { esc } from "../format.js";
 import { contactLine } from "../format.js";
 import { sendCaseEmail } from "../caseMail.js";
@@ -20,7 +20,7 @@ if (gate) {
     const exemption = county.homeowner_exemption;
     root.innerHTML = `
       <h1>Intake</h1>
-      <p class="lead">${esc(plan.name)} for ${esc(matter.address)}. ${esc(county.county)} (${esc(county.status_label)}).</p>
+      <p class="lead">${esc(plan.name)} for ${esc(matter.address)}. ${esc(county.county)}${customerCountyLine(county) ? ` (${esc(customerCountyLine(county))})` : ""}.</p>
       <form id="intake-form" class="wide">
         <fieldset><legend>Property</legend>
           <label>Address<input name="address" required value="${esc(matter.address)}"></label>

@@ -73,7 +73,8 @@ test("filing is recommended only when the low estimate clears $249", () => {
   });
   assert.equal(decision.outcome, "go");
   assert.ok(decision.savings.low >= 249);
-  assert.equal(decision.savings.mid, decision.savings.amount);
+  assert.ok(decision.savings.low < decision.savings.mid);
+  assert.ok(decision.savings.mid < decision.savings.high);
   assert.equal(decision.savings.high, decision.savings.amount);
   assert.equal(recommendsFiling(decision), true);
   assert.equal(customerOutcome("go").title, "You likely have a case.");

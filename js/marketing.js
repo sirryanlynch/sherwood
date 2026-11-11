@@ -136,7 +136,8 @@ function bindCheckDock() {
   const sync = () => {
     const check = document.querySelector("#check-form");
     const waiting = !!(check && check.hidden);
-    go.textContent = waiting ? "Email me a reminder" : "Check my property";
+    const parentDoor = document.documentElement.classList.contains("for-parent");
+    go.textContent = waiting ? "Email me a reminder" : (parentDoor ? "Check for a parent" : "Check my property");
     const view = window.innerHeight || 0;
     const panelBox = panel.getBoundingClientRect();
     const sectionVisible = panelBox.top < view - 64 && panelBox.bottom > 88;
@@ -166,8 +167,13 @@ function paintDoor() {
   const waitlist = document.querySelector("#portfolio-waitlist");
   if (note) {
     if (id === "family") {
-      note.hidden = false;
-      note.innerHTML = `<ul class="checks"><li>The owner or their legal representative signs.</li><li>A power of attorney or conservatorship is reviewed by a person.</li><li>You both get every email.</li></ul>`;
+      if (document.querySelector("#parent-lead")) {
+        note.hidden = true;
+        note.replaceChildren();
+      } else {
+        note.hidden = false;
+        note.innerHTML = `<ul class="checks"><li>The owner or their legal representative signs.</li><li>A power of attorney or conservatorship is reviewed by a person.</li><li>You both get every email.</li></ul>`;
+      }
     } else {
       note.hidden = id === "home";
       note.textContent = (DOOR_COPY[id] && DOOR_COPY[id].note) || "";

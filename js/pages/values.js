@@ -1,5 +1,5 @@
 import "../boot.js";
-import { loadCounties } from "../counties.js";
+import { customerCountyLine, getCounty, loadCounties } from "../counties.js";
 import { readAttribution } from "../attribution.js";
 import { decide } from "../engine.js";
 import { adapterFeeNotes, planPriceLines } from "../pricing.js";
@@ -20,10 +20,12 @@ if (!check || !check.address) {
 }
 
 if (check && check.address) {
-const counties = await loadCounties();
-select.innerHTML = counties.map(c => `<option value="${esc(c.id)}">${esc(c.county)} — ${esc(c.status_label)}</option>`).join("");
+let counties = [];
 const place = currentPlace(check.address);
-if (place.id && counties.some(c => c.id === place.id)) select.value = place.id;
+
+function optionHtml(list) {
+  return list.map(c => `<option value="${esc(c.id)}">${esc(c.county)}${customerCountyLine(c) ? ` — ${esc(customerCountyLine(c))}` : ""}</option>`).join("");
+}
 
 function selectedCounty() {
   return counties.find(c => c.id === select.value);
@@ -48,6 +50,17 @@ function showCounty() {
   banner.innerHTML = bits.map(line => `<p>${esc(line)}</p>`).join("");
 }
 select.addEventListener("change", showCounty);
+const first = await getCounty(place.id || "santa_cruz");
+if (first) {
+  counties = [first];
+  select.innerHTML = optionHtml(counties);
+  select.value = first.id;
+  showCounty();
+}
+counties = await loadCounties();
+select.innerHTML = optionHtml(counties);
+if (place.id && counties.some(c => c.id === place.id)) select.value = place.id;
+else if (first) select.value = first.id;
 showCounty();
 
 form.noValidate = true;

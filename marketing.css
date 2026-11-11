@@ -53,6 +53,7 @@ body.mkt h1{
   letter-spacing:-.02em;
   margin:12px 0 16px;
 }
+body.mkt .hero h1 + .subhead{margin-top:0}
 body.mkt h2{
   font-size:clamp(26px,2.5vw,32px);
   font-weight:600;
@@ -255,6 +256,15 @@ body.mkt .check-hero #county-reminder label{flex:none;width:100%;gap:6px}
 }
 
 .band{padding:72px 0}
+.mobile-fold{border:0;padding:0}
+.mobile-fold > summary{cursor:pointer;font-weight:600;padding:8px 0}
+@media (min-width:801px){
+  .mobile-fold > summary{display:none}
+}
+@media (max-width:800px){
+  body.mkt .band{padding:36px 0}
+  #check-again{display:none}
+}
 .band-mint{background:var(--teal-soft)}
 .band-deep{background:var(--paper-2);color:var(--ink)}
 .band-ink{background:var(--paper-2);color:var(--ink)}
