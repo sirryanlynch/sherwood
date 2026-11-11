@@ -53,9 +53,27 @@ export function orderCloseLine(county) {
   return `Orders for us to file close ${SHORT_MONTHS[cutoff.getMonth()]} ${cutoff.getDate()}, ${cutoff.getFullYear()}.`;
 }
 
+function monthDay(iso) {
+  const date = parseISODate(iso);
+  if (!date) return "";
+  return `${SHORT_MONTHS[date.getMonth()]} ${date.getDate()}`;
+}
+
+/* Pre-order screens. The case page, after an order, shows only the county deadline. */
+export function preorderDeadlineLabel(county) {
+  const end = county && county.filing && county.filing.regular_window && county.filing.regular_window.end;
+  const day = monthDay(end);
+  return day ? `County filing deadline: ${day}` : "";
+}
+
+export function preorderCutoffLabel(county) {
+  const day = monthDay(orderCutoffIso(county));
+  return day ? `Our order cutoff: ${day}` : "";
+}
+
 export function orderBadgeHtml(county) {
-  const deadline = deadlineBadge(county);
-  const close = orderCloseLine(county);
+  const deadline = preorderDeadlineLabel(county);
+  const close = preorderCutoffLabel(county);
   return [
     deadline ? `<p class="badge">${esc(deadline)}</p>` : "",
     close ? `<p class="badge">${esc(close)}</p>` : ""

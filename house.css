@@ -2,10 +2,10 @@
    Type leads. The bungalow is ambient on the right. Figures are samples. */
 
 .house-runway{
-  --paper:#f4efe6;
-  --ink:#2b2824;
-  --greige:#cfc6b8;
-  --teal:#2f7f7a;
+  --paper:#ffffff;
+  --ink:#111111;
+  --greige:#e6e6e3;
+  --teal:#128f88;
   height:560vh;
   position:relative;
   background:var(--paper);

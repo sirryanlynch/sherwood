@@ -131,6 +131,9 @@ function onThisLanding(place) {
 }
 
 function paint(place) {
+  document.querySelectorAll("[data-place-footer]").forEach(el => {
+    el.textContent = place && place.status === "launch" ? "Sherwood · Santa Cruz County" : "Sherwood";
+  });
   renderBar(place);
   paintHeadline(currentAddress());
   const launch = document.querySelector("#home-launch");

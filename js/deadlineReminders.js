@@ -1,6 +1,7 @@
 import { deadlineBadge } from "./engine.js";
 import { isoDay, parseISODate } from "./format.js";
 import { orderCloseLine, orderCutoffIso } from "./offer.js";
+import { EMAIL_POSTAL_PLACEHOLDER } from "./caseMail.js";
 import { DISCLOSURES_URL } from "./statutoryDisclosure.js";
 
 export const REMINDER_LEAD_DAYS = [14, 7, 2];
@@ -45,6 +46,7 @@ export function deadlineReminderPlan(county) {
           countyLine ? `${countyLine}. That is the county filing deadline. Our order cutoff is a different date.` : "This county file does not list a filing deadline.",
           "You asked for these reminders. This message was stored in this browser. It was not sent.",
           "Unsubscribe: unsubscribe.html?token=TOKEN",
+          EMAIL_POSTAL_PLACEHOLDER,
           `Disclosures: ${DISCLOSURES_URL}`
         ].join("\n")
       });
@@ -62,6 +64,7 @@ export function deadlineReminderPlan(county) {
           "The order cutoff is when Sherwood stops taking We file it orders. It is not the county filing deadline.",
           "You asked for these reminders. This message was stored in this browser. It was not sent.",
           "Unsubscribe: unsubscribe.html?token=TOKEN",
+          EMAIL_POSTAL_PLACEHOLDER,
           `Disclosures: ${DISCLOSURES_URL}`
         ].join("\n")
       });

@@ -10,6 +10,7 @@ import { AUTHORIZATION_RETENTION, retainUntil } from "../retention.js";
 import { advanceMatter, logHearingFollowUp } from "../caseStatus.js";
 import { sendCaseEmail } from "../caseMail.js";
 import { parseNotice } from "../notices.js";
+import { loadDemoCase } from "../demo.js";
 import { loadDb, saveDb } from "../store.js";
 
 const STAGES = ["filed", "acknowledged", "assessor_review", "hearing_scheduled", "decision", "refund", "monitor", "kit_ready"];
@@ -43,6 +44,8 @@ function paint() {
   root.innerHTML = `
     <h1>Ops</h1>
     <p class="lead">This view reads appeals saved in this browser. It is not a secure admin and it is not on a server.</p>
+    <p><button class="btn" type="button" id="load-demo">Load demo case</button></p>
+    <p class="small muted">Seeds a simulated Santa Cruz appeal so a reviewer can open the result, checkout, signing, and the case page. Add ?demo=1 to any of those pages for the same seed.</p>
     <h2>Mark filed, then charge</h2>
     <p class="small muted">We file it saves a card. The charge runs only when this appeal already has a filing time, a filing ID, and a county confirmation, and the filing is not simulated. Recording the confirmation is a separate step and does not charge the card.</p>
     ${chargeQueue(db.matters)}
@@ -72,6 +75,11 @@ function paint() {
     ${unstaged.length ? table(unstaged) : `<p class="small muted">None.</p>`}
     <h2>Deadlines by county adapter</h2>
     <ul>${calendar}</ul>`;
+  const demoButton = root.querySelector("#load-demo");
+  if (demoButton) demoButton.addEventListener("click", () => {
+    loadDemoCase();
+    location.href = "dashboard.html";
+  });
   root.querySelectorAll("[data-charge]").forEach(button => {
     button.addEventListener("click", async () => {
       const id = button.getAttribute("data-charge");

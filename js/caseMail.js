@@ -1,5 +1,12 @@
 import { notify } from "./adapters/notify.js";
 import { HEARING_PACKET_LINE, HEARING_STATEMENT } from "./pricing.js";
+import { DISCLOSURES_URL } from "./statutoryDisclosure.js";
+
+export const EMAIL_POSTAL_PLACEHOLDER = "[postal address pending]";
+
+function emailFooter() {
+  return ["", EMAIL_POSTAL_PLACEHOLDER, `Disclosures: ${DISCLOSURES_URL}`].join("\n");
+}
 
 export const CASE_EMAIL_KINDS = ["received", "signed", "filed", "hearing_scheduled", "decision"];
 
@@ -43,13 +50,15 @@ export function caseEmailDraft(kind, matter, county) {
       `We received your request to file an appeal for ${address} in ${countyName}.`,
       "You review and sign. We do the paperwork and the deadline.",
       "Your card is saved and is not charged until the county confirms the filing.",
-      "This message was stored in this browser. It was not sent to an email provider."
+      "This message was stored in this browser. It was not sent to an email provider.",
+      emailFooter()
     ].join("\n"),
     signed: [
       `The authorization for ${address} is signed.`,
       scopeLine(matter),
       HEARING_PACKET_LINE,
-      "This message was stored in this browser. It was not sent to an email provider."
+      "This message was stored in this browser. It was not sent to an email provider.",
+      emailFooter()
     ].join("\n"),
     filed: [
       `A filing record is stored for ${address}.`,
@@ -57,21 +66,24 @@ export function caseEmailDraft(kind, matter, county) {
       "Attached in this demo: authorization.pdf and application-preview.pdf.",
       "The county portal was not contacted.",
       "Your card is still not charged. The charge waits until the county confirms the filing.",
-      "This message was stored in this browser. It was not sent to an email provider."
+      "This message was stored in this browser. It was not sent to an email provider.",
+      emailFooter()
     ].join("\n"),
     hearing_scheduled: [
       `A hearing step is on your case for ${address}.`,
       `Hearing date on this record: ${hearingDate}.`,
       HEARING_PACKET_LINE,
       "Confirm on your case page that you got this notice. We send one follow-up if you do not confirm, then we log it.",
-      "This message was stored in this browser. It was not sent to an email provider."
+      "This message was stored in this browser. It was not sent to an email provider.",
+      emailFooter()
     ].join("\n"),
     decision: [
       `A decision step is on your case for ${address}.`,
       (matter && matter.decisionNote) || "No county decision is loaded. This demo does not invent one.",
       HEARING_STATEMENT,
       "If the assessor offers a settlement, you decide whether to accept it.",
-      "This message was stored in this browser. It was not sent to an email provider."
+      "This message was stored in this browser. It was not sent to an email provider.",
+      emailFooter()
     ].join("\n")
   };
   return {
@@ -93,7 +105,8 @@ export function hearingFollowUpDraft(matter) {
       "This is the one follow-up.",
       "Confirm on your case page that you got the hearing notice.",
       "You attend the hearing. We prepare the packet.",
-      "This message was stored in this browser. It was not sent to an email provider."
+      "This message was stored in this browser. It was not sent to an email provider.",
+      emailFooter()
     ].join("\n"),
     attachments: []
   };

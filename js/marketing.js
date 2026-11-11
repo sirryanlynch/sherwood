@@ -165,8 +165,13 @@ function paintDoor() {
   const extra = document.querySelector("#portfolio-extra");
   const waitlist = document.querySelector("#portfolio-waitlist");
   if (note) {
-    note.hidden = id === "home";
-    note.textContent = (DOOR_COPY[id] && DOOR_COPY[id].note) || "";
+    if (id === "family") {
+      note.hidden = false;
+      note.innerHTML = `<ul class="checks"><li>The owner or their legal representative signs.</li><li>A power of attorney or conservatorship is reviewed by a person.</li><li>You both get every email.</li></ul>`;
+    } else {
+      note.hidden = id === "home";
+      note.textContent = (DOOR_COPY[id] && DOOR_COPY[id].note) || "";
+    }
   }
   if (extra) extra.hidden = id !== "portfolio";
   if (waitlist) waitlist.hidden = id !== "portfolio";

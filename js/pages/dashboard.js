@@ -3,6 +3,7 @@ import { getCounty } from "../counties.js";
 import { contactLine, esc, formatDay } from "../format.js";
 import { CASE_EMAIL_KINDS } from "../caseMail.js";
 import { authorizationScope, nextActionLine, taxYearLabel } from "../caseStatus.js";
+import { preorderDeadlineLabel } from "../offer.js";
 import { HEARING_PACKET_LINE } from "../pricing.js";
 import { downloadPdf } from "../recordPdf.js";
 import { requireMatter, saveMatter } from "../store.js";
@@ -81,7 +82,7 @@ function paint(matter, user, county) {
     <div class="card">
       <h2>Key dates</h2>
       <ul>
-        <li>Filing deadline on the adapter: ${esc(formatDay(county.filing && county.filing.current_year_deadline))}</li>
+        <li>${esc(preorderDeadlineLabel(county) || "County filing deadline: not set")}</li>
         <li>Filed: ${filing ? esc(formatDay(filing.filedAt)) : "not filed"}</li>
         <li>Hearing: ${matter.hearing && matter.hearing.date ? esc(formatDay(matter.hearing.date)) : "not on this record"}</li>
       </ul>

@@ -1,4 +1,7 @@
+import { maybeLoadDemo } from "./demo.js";
 import { getCounty, loadCounties } from "./counties.js";
+
+maybeLoadDemo();
 import { contactLine, esc, formatDay, money } from "./format.js";
 import { landingDfyEnabled, orderBadgeHtml } from "./offer.js";
 import { filingFeeNote, landingHomeLine, planPriceLines } from "./pricing.js";

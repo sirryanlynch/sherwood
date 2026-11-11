@@ -13,9 +13,9 @@ export function authorizationScope(matter) {
   const auth = matter && matter.agentAuthorization;
   if (!auth || !auth.signedAt) return "No signed authorization is stored on this appeal yet.";
   const years = Array.isArray(auth.taxYears) && auth.taxYears.length
-    ? auth.taxYears.join(", ")
+    ? auth.taxYears.map(year => String(year)).join("; ")
     : "not stored";
-  return `Signed ${formatDay(auth.signedAt)} by ${auth.signerName || "the signer"}, title ${auth.signerTitle || "not stored"}. Property: ${auth.parcel || matter.address || "the parcel"}. Tax years: ${years}. The filing year and earlier years, four at most. Filing only. The named agent does not attend the hearing.`;
+  return `Signed ${formatDay(auth.signedAt)} by ${auth.signerName || "the signer"}, title ${auth.signerTitle || "not stored"}. Property: ${auth.parcel || matter.address || "the parcel"}. Tax years, each listed: ${years}. The filing year and earlier years, four at most. Filing only. The named agent does not attend the hearing.`;
 }
 
 /* One line. The hearing line wins when a hearing is on the record. */

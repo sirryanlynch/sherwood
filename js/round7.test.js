@@ -50,8 +50,9 @@ test("Santa Cruz We file it stops at the end of Nov 25 and the close line is a f
   assert.equal(deadlineBadge(county), "County filing deadline: Nov 30, 2026");
   assert.equal(orderCloseLine(county), "Orders for us to file close Nov 25, 2026.");
   const badge = orderBadgeHtml(county);
-  assert.match(badge, /County filing deadline: Nov 30, 2026/);
-  assert.match(badge, /Orders for us to file close Nov 25, 2026\./);
+  assert.match(badge, /County filing deadline: Nov 30/);
+  assert.match(badge, /Our order cutoff: Nov 25/);
+  assert.equal(badge.includes("County filing deadline: Nov 25"), false);
   assert.equal(badge.includes("data-order-countdown"), false);
   assert.equal(/\d+ days left/.test(badge), false);
   assert.equal(orderCloseLine(readCounty("alameda")), "Orders for us to file close Sep 10, 2026.");

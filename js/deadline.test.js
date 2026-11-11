@@ -1,18 +1,23 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { caseEmailDraft } from "./caseMail.js";
 import { deadlineReminderPlan, cutoffSubject, borderlineReviewLine } from "./deadlineReminders.js";
 import { paymentsAdapter } from "./adapters/payments.js";
+import { loadDemoCase } from "./demo.js";
 import { enrollMonitor, startIncludedYear } from "./monitor.js";
 
 const memory = new Map();
-if (!globalThis.localStorage) {
-  globalThis.localStorage = {
-    getItem(key) { return memory.has(key) ? memory.get(key) : null; },
-    setItem(key, value) { memory.set(key, String(value)); },
-    removeItem(key) { memory.delete(key); }
+const sessionMemory = new Map();
+function memoryStore(map) {
+  return {
+    getItem(key) { return map.has(key) ? map.get(key) : null; },
+    setItem(key, value) { map.set(key, String(value)); },
+    removeItem(key) { map.delete(key); }
   };
 }
+if (!globalThis.localStorage) globalThis.localStorage = memoryStore(memory);
+if (!globalThis.sessionStorage) globalThis.sessionStorage = memoryStore(sessionMemory);
 
 const county = JSON.parse(readFileSync(new URL("../data/counties/santa_cruz.json", import.meta.url), "utf8"));
 
@@ -64,15 +69,28 @@ test("the free monitor year starts at capture, not at card save", () => {
   assert.equal(record.status, "active");
 });
 
+test("a reviewer demo seeds a Santa Cruz case", () => {
+  const matter = loadDemoCase();
+  assert.equal(matter.countyId, "santa_cruz");
+  assert.equal(matter.outcome, "go");
+  assert.equal(matter.planId, "dfy");
+  assert.match(matter.kit.statement, /Simulated/);
+});
+
 test("customer copy drops the decline-after-intake refund and splits the two dates", () => {
   const read = path => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
   assert.equal(read("pricing.html").includes("If we decline to file after intake, full refund"), false);
   assert.match(read("pricing.html"), /declining before that means you pay nothing/);
   assert.equal(read("js/pages/results.js").includes("If we decide not to file after intake, you pay nothing"), false);
   assert.match(read("index.html"), /If you have a case, we prepare and file it for \$249, county fee included/);
-  assert.match(read("index.html"), /Orders for us to file close Nov 25, 2026/);
+  assert.match(read("index.html"), /County filing deadline: Nov 30/);
+  assert.match(read("index.html"), /Our order cutoff: Nov 25/);
+  assert.equal(read("index.html").includes("One Santa Cruz home, filed October 12, 2026"), false);
   assert.match(read("santa-cruz/index.html"), /Have your Santa Cruz County appeal filed\. Orders close Nov 25\./);
   assert.match(read("santa-cruz/index.html"), /county filing deadline is Nov 30/);
   assert.match(read("js/pages/checkout.js"), /name="cardConsent"/);
+  const filed = caseEmailDraft("filed", { address: "1 Main", filing: { id: "file_1" } }, { county: "Santa Cruz" });
+  assert.match(filed.body, /\[postal address pending\]/);
+  assert.match(filed.body, /Disclosures: https:\/\/sirryanlynch\.github\.io\/sherwood\/disclosures\//);
   assert.match(read("js/pages/results.js"), /Email me reminders/);
 });
