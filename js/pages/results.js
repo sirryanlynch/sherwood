@@ -106,8 +106,8 @@ function render(matter, county) {
   const rules = (county.rules || []).filter(showFact).map(rule => `<li>${esc(rule)}</li>`).join("");
   const timelines = (county.timelines || []).filter(row => showFact(row.text)).map(row => `<li>${esc(row.text)}</li>`).join("");
   const win = (county.filing && county.filing.regular_window) || {};
-  const source = win.source_url ? `<a href="${esc(win.source_url)}">${esc(win.source_url)}</a>` : "not set on this adapter";
-  const verified = win.verified_date ? formatDay(win.verified_date) : "not set on this adapter";
+  const source = win.source_url ? `<a href="${esc(win.source_url)}">${esc(win.source_url)}</a>` : "not set in your county's details";
+  const verified = win.verified_date ? formatDay(win.verified_date) : "not set in your county's details";
   const offer = purchaseOffer(county, new Date(), matter.supplementalNoticeDate);
   const privacy = `<p class="privacy-note">We use your email and approximate location only to run your check and send what you ask for. <a href="privacy.html">Privacy policy</a>.</p>`;
   const canBuy = offer.diy || offer.dfy;
@@ -177,7 +177,7 @@ function render(matter, county) {
         <p>${esc(MONITOR.summary)}</p>
         ${monitorOfferHtml({ email: matter.email, enrolled: !!matter.monitor, cancelToken: matter.monitor && matter.monitor.cancelToken })}
       </div>
-      <p class="small muted">Assessor contact from the adapter: ${esc(contactLine(county.assessor_office))}</p>`;
+      <p class="small muted">Assessor contact from your county's details: ${esc(contactLine(county.assessor_office))}</p>`;
   } else {
     decision = `
       <h1>Reminder only</h1>

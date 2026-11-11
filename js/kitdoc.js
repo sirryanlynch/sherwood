@@ -18,7 +18,7 @@ export function statementOfFacts(matter, county) {
     `Assessed value entered: ${money(matter.assessed)}`,
     `Opinion of market value entered: ${money(matter.market)}`,
     `Difference: ${money(matter.reduction)}`,
-    county.valuation && county.valuation.note ? `Valuation note from the adapter: ${county.valuation.note}` : "",
+    county.valuation && county.valuation.note ? `Valuation note from your county's details: ${county.valuation.note}` : "",
     "Comparable sales: none attached. This demo does not invent sales. A live kit needs MLS or a licensed data source.",
     `Condition, as you entered it: roof age ${intake.roofAge || "not set"}; damage: ${intake.damage || "none entered"}; remodels: ${intake.remodels || "none entered"}; systems: ${intake.systems || "none entered"}.`,
     `Owner-occupied, as entered: ${intake.ownerOccupied || "not set"}.`,

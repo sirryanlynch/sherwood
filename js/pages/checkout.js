@@ -153,16 +153,16 @@ if (gate) {
 
 function closedHtml(county, window, offer) {
   const win = (county.filing && county.filing.regular_window) || {};
-  const source = win.source_url ? `<a href="${esc(win.source_url)}">${esc(win.source_url)}</a>` : "not set on this adapter";
-  const verified = win.verified_date ? formatDay(win.verified_date) : "not set on this adapter";
+  const source = win.source_url ? `<a href="${esc(win.source_url)}">${esc(win.source_url)}</a>` : "not set in your county's details";
+  const verified = win.verified_date ? formatDay(win.verified_date) : "not set in your county's details";
   const closed = !offer || offer.closed || window.state !== "open";
   const title = closed ? "The filing window is closed" : "Checkout is not open for this county";
   const lead = closed
-    ? "Checkout cannot proceed. This county's filing window is not open on the adapter."
+    ? "Checkout cannot proceed. Your county's filing window is not open."
     : (offerMessage(county, offer) || "Filing is not for sale in this county.");
   const windowLine = closed
     ? `<p>${esc(nextWindowCopy(county, new Date()))}</p>`
-    : (orderBadgeHtml(county) || "<p>The filing window on this adapter is open. Purchase is not available.</p>");
+    : (orderBadgeHtml(county) || "<p>Your county's filing window is open. Purchase is not available.</p>");
   const informal = closed && county.informal_review
     ? `<h2>Free informal review</h2><p>${esc(county.informal_review)}</p>`
     : "";

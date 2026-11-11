@@ -77,7 +77,7 @@ if (gate) {
     const exemptionSelect = root.querySelector("[name=hoExemption]");
     const paintExemption = () => {
       if (!exemption) {
-        note.textContent = "This county adapter has no Homeowner's Exemption facts. We will not quote a dollar figure.";
+        note.textContent = "Your county's details have no Homeowner's Exemption facts. We will not quote a dollar figure.";
         return;
       }
       if (exemptionSelect.value === "Yes") {

@@ -166,26 +166,45 @@ test("customer copy drops the decline-after-intake refund and splits the two dat
   assert.match(read("js/pages/results.js"), /Email me reminders/);
 });
 
-test("customer pages do not mention the pilot filing or October 12", () => {
-  const read = path => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
-  const banned = /\bpilot\b|october 12|oct\.?\s*12/i;
+function visibleCopy(html) {
+  return html
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<[^>]+>/g, " ");
+}
+
+function customerPages() {
   const pages = [];
   const walk = (dirUrl, prefix) => {
     for (const name of readdirSync(dirUrl, { withFileTypes: true })) {
       if (name.isDirectory()) {
         if (name.name === "docs" || name.name === "node_modules" || name.name === "backend") continue;
         walk(new URL(`${name.name}/`, dirUrl), `${prefix}${name.name}/`);
-      } else if (name.name.endsWith(".html") && name.name !== "case-study.html") {
+      } else if (name.name.endsWith(".html") && name.name !== "case-study.html" && name.name !== "admin.html") {
         pages.push(`${prefix}${name.name}`);
       }
     }
   };
   walk(new URL("../", import.meta.url), "");
+  return pages;
+}
+
+test("customer pages do not mention the pilot filing or October 12", () => {
+  const read = path => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
+  const banned = /\bpilot\b|pilot result|october 12|oct\.?\s*12/i;
+  const pages = customerPages();
   assert.ok(pages.includes("faq.html"));
   assert.ok(pages.includes("index.html"));
   for (const page of pages) {
-    assert.equal(banned.test(read(page)), false, page);
+    const html = read(page);
+    assert.equal(banned.test(html), false, page);
+    assert.equal(banned.test(visibleCopy(html)), false, `${page} visible`);
   }
+  for (const sheet of ["style.css", "marketing.css"]) {
+    assert.equal(/pilot result/i.test(read(sheet)), false, sheet);
+  }
+  assert.equal(read("index.html").includes("pilot result"), false);
+  assert.equal(read("index.html").includes("not the pilot"), false);
   assert.match(read("js/boot.js"), /We file through the county's e-file portal\./);
   assert.match(read("js/boot.js"), /County e-file fee: included in the We file it price/);
   assert.match(read("js/boot.js"), /not yet confirmed for this county/);
@@ -200,4 +219,17 @@ test("customer pages do not mention the pilot filing or October 12", () => {
   assert.equal(customerLine(apn), apn.trim());
   assert.equal(banned.test(read("data/counties/santa_cruz.json")), false);
   assert.equal(banned.test(read("backend/functions/counties/santa_cruz.json")), false);
+});
+
+test("customer pages do not show the word adapter", () => {
+  const read = path => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
+  const pages = customerPages();
+  assert.ok(pages.includes("index.html"));
+  assert.ok(pages.includes("pricing.html"));
+  assert.ok(pages.includes("faq.html"));
+  assert.ok(pages.includes("how-it-works.html"));
+  assert.ok(pages.includes("dashboard.html"));
+  for (const page of pages) {
+    assert.equal(/\badapter\b/i.test(visibleCopy(read(page))), false, page);
+  }
 });

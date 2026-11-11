@@ -77,7 +77,7 @@ async function fillLaunchFacts() {
   if (filing) {
     const prices = `We file it ${lines.dfy}`;
     filing.innerHTML = `
-      <p>Launch county, from the adapter: ${esc(county.county)} County. ${esc(county.filing.efile ? "We file through the county's e-file portal." : "Paper.")}</p>
+      <p>Launch county: ${esc(county.county)} County. ${esc(county.filing.efile ? "We file through the county's e-file portal." : "Paper.")}</p>
       <p>Portal: <a href="${esc(county.filing.portal_url)}">${esc(county.filing.portal_url)}</a></p>
       <p>${esc(prices)}</p>
       <p>${esc(county.agent.source)} ${esc(county.agent.perjury)}</p>`;
@@ -110,7 +110,7 @@ function mountChrome() {
 mountChrome();
 fillLaunchFacts().catch(err => {
   document.querySelectorAll("[data-fact]").forEach(el => {
-    el.textContent = "County adapter failed to load.";
+    el.textContent = "County details failed to load.";
   });
   console.error(err);
 });

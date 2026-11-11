@@ -56,9 +56,9 @@ export function uid(prefix) {
 }
 
 export function contactLine(contact) {
-  if (!contact) return "Not in this adapter.";
+  if (!contact) return "Not in your county's details.";
   const parts = [contact.phone, contact.email, contact.address].filter(Boolean);
-  return parts.length ? parts.join(" · ") : "Not in this adapter.";
+  return parts.length ? parts.join(" · ") : "Not in your county's details.";
 }
 
 /* County tips are shown as written. Pilot wording is removed in the adapter files, not dropped here. */

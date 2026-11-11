@@ -64,7 +64,7 @@ function paintGate(root, matter, user, county) {
   const blocks = [];
   if (!signed) {
     const title = doc.doc_title || "the agent authorization";
-    const source = doc.source || "This adapter does not define an agent authorization document.";
+    const source = doc.source || "Your county's rules do not define an agent authorization document.";
     const pending = auth && (pendingAgentContact(auth.agentName) || pendingAgentContact(auth.agentAddress) || pendingAgentContact(auth.agentPhone));
     if (pending) blocks.push("Agent name, address, and phone are still [pending]. Filing stays off until those are real details.");
     blocks.push(`Filing stays off until the agent authorization is complete: date signed, tax years (4 at most), parcel, agent name, address, and phone, and your signature and title. ${title}. ${source}`);
@@ -72,17 +72,17 @@ function paintGate(root, matter, user, county) {
   if (!certOk) blocks.push("The homeowner certification is not signed yet.");
   if (matter.outcome === "borderline" && !matter.reviewed) blocks.push("A person has to mark this review complete before filing.");
   if (matter.authority === "poa" && !matter.poaReviewed) blocks.push("A power of attorney or conservatorship was uploaded. A person has to review it before filing.");
-  if (county.status !== "verified") blocks.push(county.template_warning || county.status_label || "This adapter is not verified.");
-  if (season.state !== "open") blocks.push("The filing window on this adapter is not open, so filing stays off.");
+  if (county.status !== "verified") blocks.push(county.template_warning || county.status_label || "Your county's details are not verified.");
+  if (season.state !== "open") blocks.push("Your county's filing window is not open, so filing stays off.");
   const cardOk = matter.cardCheck && matter.cardCheck.status === "succeeded";
   if (!cardOk) blocks.push("The $0 card check failed. Update your card before filing. Nothing was charged.");
   const canFile = blocks.length === 0;
   root.innerHTML = `
     <h1>File with the county</h1>
-    <p class="lead">Sherwood files only after the agent authorization on this adapter is signed and stored on this appeal.</p>
+    <p class="lead">Sherwood files only after the agent authorization in your county's rules is signed and stored on this appeal.</p>
     <div class="card">
-      <p>Document: <b>${esc(doc.doc_title || "Not defined on this adapter")}</b></p>
-      <p class="small muted">${esc(doc.source || "No source on this adapter.")} Verified on the adapter: ${doc.verified === true ? "yes" : "no"}.</p>
+      <p>Document: <b>${esc(doc.doc_title || "Not defined in your county's rules")}</b></p>
+      <p class="small muted">${esc(doc.source || "No source in your county's details.")} Verified in your county's details: ${doc.verified === true ? "yes" : "no"}.</p>
       ${signed ? `<p>Signed by ${esc(auth.signerName)} at ${esc(auth.signedAt)}. Stored on this appeal.</p>` : `<p>Not signed yet.</p>`}
       ${signed && auth.rule6Label ? `<p>Local Rule 6: ${esc(auth.rule6Label)}.</p>` : ""}
       ${blocks.length ? `<ul>${blocks.map(line => `<li>${esc(line)}</li>`).join("")}</ul>` : `<p>The authorization is on this appeal. You can record the filing.</p>`}
@@ -127,7 +127,7 @@ async function submitFiling(root, matter, user, county) {
   }
   const result = await efileAdapter.submit({ matter, county });
   if (!result.ok) {
-    root.innerHTML = `<h1>Not submitted</h1><p>${esc(result.reason || "The e-file adapter did not submit.")}</p>${stepsHtml(county)}`;
+    root.innerHTML = `<h1>Not submitted</h1><p>${esc(result.reason || "The county e-file did not submit.")}</p>${stepsHtml(county)}`;
     return;
   }
   if (!signedBeforeFiling(matter.agentAuthorization, result.filedAt, county)) {
@@ -153,7 +153,7 @@ async function submitFiling(root, matter, user, county) {
 
 function stepsHtml(county) {
   const steps = (county.filing.paper_steps || []).map(step => `<li>${esc(step)}</li>`).join("");
-  const portal = county.filing.portal_url ? `<p>Portal: <a href="${esc(county.filing.portal_url)}">${esc(county.filing.portal_url)}</a></p>` : "<p>No portal URL on this adapter.</p>";
+  const portal = county.filing.portal_url ? `<p>Portal: <a href="${esc(county.filing.portal_url)}">${esc(county.filing.portal_url)}</a></p>` : "<p>No portal URL in your county's details.</p>";
   return `${portal}<ol>${steps}</ol><p>Clerk: ${esc(contactLine(county.filing.clerk))}</p>`;
 }
 
