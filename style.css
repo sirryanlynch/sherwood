@@ -139,7 +139,8 @@ button.link{background:none;border:0;padding:0;font:inherit;text-decoration:unde
 .mobile-cta{margin-top:20px}
 @media(min-width:900px){
   .pay-split{grid-template-columns:7fr 5fr;gap:48px}
-  .pay-decision,.result-decision{position:sticky;top:24px;align-self:start}
+  .pay-decision{align-self:start}
+  .result-decision{position:sticky;top:24px;align-self:start}
   .pay-decision .plans,.pay-decision .card-save{grid-template-columns:1fr}
   #pay .btn{width:auto;min-width:240px}
   .split .scope{grid-template-columns:1fr}

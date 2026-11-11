@@ -260,6 +260,29 @@ test("customer pages do not link to the ops page", () => {
   assert.match(admin, /Staff demo only\. Not access-controlled in this prototype\./);
 });
 
+test("site root pages do not link to product notes", () => {
+  const read = path => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
+  const root = new URL("../", import.meta.url);
+  const pages = readdirSync(root).filter(name => name.endsWith(".html"));
+  assert.ok(pages.includes("case-study.html"));
+  assert.ok(pages.includes("index.html"));
+  assert.ok(pages.includes("faq.html"));
+  assert.ok(pages.includes("pricing.html"));
+  assert.ok(pages.includes("trust.html"));
+  for (const page of pages) {
+    const html = read(page);
+    assert.equal(/docs\//i.test(html), false, page);
+    assert.equal(/PRODUCT_FLOW/i.test(html), false, page);
+    assert.equal(/product notes/i.test(html), false, page);
+  }
+  const checkout = read("js/pages/checkout.js");
+  const renewal = checkout.indexOf("If you turn on renewal:");
+  const cardCheck = checkout.indexOf("We verify the card with a $0 check");
+  const button = checkout.indexOf('type="submit">Continue');
+  assert.ok(renewal > -1 && cardCheck > renewal && button > cardCheck);
+  assert.equal(/\.pay-decision\{[^}]*position:\s*sticky/.test(read("style.css")), false);
+});
+
 test("customer pages do not show the word adapter", () => {
   const read = path => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
   const pages = customerPages();
