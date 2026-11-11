@@ -246,6 +246,20 @@ test("customer pages do not say your county's rules, unless your county, or laun
   assert.match(read("faq.html"), /data-county-details[\s\S]*proportionate refund/);
 });
 
+test("customer pages do not link to the ops page", () => {
+  const read = path => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
+  const pages = customerPages();
+  for (const page of ["index.html", "results.html", "values.html", "contact.html", "how-it-works.html"]) {
+    assert.ok(pages.includes(page), page);
+  }
+  for (const page of pages) {
+    assert.equal(read(page).includes("admin.html"), false, page);
+  }
+  const admin = read("admin.html");
+  assert.match(admin, /<meta name="robots" content="noindex">/);
+  assert.match(admin, /Staff demo only\. Not access-controlled in this prototype\./);
+});
+
 test("customer pages do not show the word adapter", () => {
   const read = path => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
   const pages = customerPages();
