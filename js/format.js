@@ -61,12 +61,7 @@ export function contactLine(contact) {
   return parts.length ? parts.join(" · ") : "Not in this adapter.";
 }
 
-/* Drop sentences that name the founder's filing. County facts stay in the adapter. */
+/* County tips are shown as written. Pilot wording is removed in the adapter files, not dropped here. */
 export function customerLine(text) {
-  if (text == null) return "";
-  return String(text)
-    .split(/(?<=\.)\s+/)
-    .filter(sentence => !/\bpilot\b|october 12|oct\.?\s*12/i.test(sentence))
-    .join(" ")
-    .trim();
+  return text == null ? "" : String(text).trim();
 }

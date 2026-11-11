@@ -39,11 +39,20 @@ if (gate) {
   }
 }
 
+function sourceLink(doc, county) {
+  const source = doc.source || "";
+  const match = source.match(/https?:\/\/\S+/);
+  if (!match) return esc(source || "This county file does not state a source.");
+  const url = match[0].replace(/[).,]+$/, "");
+  const label = county && county.id === "santa_cruz"
+    ? "Santa Cruz County filing instructions (PDF)"
+    : "County filing instructions";
+  return `<a href="${esc(url)}">${label}</a>`;
+}
+
 function paintExplainer(root, matter, county, onContinue) {
   const doc = county.agent_authorization || {};
-  const why = doc.verified
-    ? esc(doc.source || "This adapter does not state a source.")
-    : `${esc(doc.source || "This adapter does not state a source.")} This adapter has not verified that an agent may file.`;
+  const extra = doc.verified ? "" : " This county file has not verified that an agent may file.";
   const years = taxYearChoices(county, new Date());
   root.innerHTML = `
     <h1>Before you sign</h1>
@@ -51,8 +60,7 @@ function paintExplainer(root, matter, county, onContinue) {
     <div class="card">
       <p><b>What you're signing.</b> You authorize the named agent to sign filings only, for this parcel and the tax years you select, up to 4. You still sign the perjury certification yourself. The agent does not attend a hearing for you.</p>
       <p>${esc(HEARING_PACKET_LINE)}</p>
-      <p><b>Why the county needs it.</b> ${why}</p>
-      ${rule6Explainer(doc)}
+      <details><summary>Why the county needs it</summary><p>${sourceLink(doc, county)}${esc(extra)}</p>${rule6Explainer(doc)}</details>
       <p>How to revoke: ${esc(doc.revocation || "[pending verification]")}</p>
     </div>
     ${summaryHtml(matter, years[0], null)}

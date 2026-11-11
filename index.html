@@ -42,7 +42,7 @@
 <div data-order-badge></div>
 </div>
 <div id="home-ambiguous">
-<p class="check-hint">Choose your county, then enter the address.</p>
+<p class="check-hint">Enter the address. County: Santa Cruz County · change.</p>
 </div>
 <form id="check-form" class="check-capture" data-kind="check" aria-label="Free over-assessment check">
 <label class="addr"><span class="sr-only">Property address</span><input name="address" required autocomplete="street-address" placeholder="Enter your home address" data-msg="Enter your property address."></label>
@@ -106,27 +106,16 @@
 <p class="eyebrow">Is it worth it?</p>
 <h2>We only recommend filing when the numbers say so.</h2>
 <p class="lede">Your result shows a low, likely, and high savings estimate next to our $249 fee. If even the low estimate doesn't cover the fee, the result says <b>No action recommended</b>, and we don't sell you a filing.</p>
+<details class="mobile-fold"><summary>Why a higher bill isn't always an appeal</summary>
 <div class="card">
 <p><b>A higher bill isn't always an appeal.</b> Tax rates and voter-approved charges can raise your bill without changing your assessed value. We separate the two and only file on value.</p>
 </div>
+</details>
 <p class="cta"><a class="btn" href="#check">See if I have a case</a></p>
 </div>
 </section>
 
-<section class="band" id="notice-link">
-<div class="wrap">
-<h2>Not sure what your notice means?</h2>
-<p>Assessed value, taxable value, market value. See what each one means, in plain words. <a href="understand/">Explain my notice</a></p>
-</div>
-</section>
-
-<section class="band band-deep" id="steward-link">
-<div class="wrap">
-<h2>Watching more than one property, or one for a parent?</h2>
-<p>Run a free check on each parcel, and add the $49/yr monitor so you hear when filing again makes sense. Filing for someone else? They sign an authorization first.</p>
-<p class="cta"><a class="btn" href="steward/">Monitoring and family</a> <a class="btn ghost" href="index.html?for=parent">I'm checking for a parent</a> <a class="btn ghost" href="index.html?for=portfolio">I manage several properties</a></p>
-</div>
-</section>
+<section class="band" id="other-doors"><div class="wrap"><h2>Other ways in</h2><p class="door-links"><a href="understand/">Explain my notice</a> · <a href="index.html?for=parent">I'm checking for a parent</a> · <a href="index.html?for=portfolio">I manage several properties</a></p></div></section>
 
 <section class="band band-mint" id="fee">
 <div class="wrap">
@@ -253,8 +242,10 @@
 </aside>
 </main>
 <footer><div class="wrap"><p data-place-footer><b>Sherwood</b></p>
-<p>Launch-county clerk, from the adapter: <span data-fact="santa_cruz.clerk">loading…</span></p>
+<details class="mobile-fold"><summary>County clerk and links</summary>
+<p>County clerk: <span data-fact="santa_cruz.clerk">loading…</span></p>
 <p><a href="how-it-works.html">How it works</a> · <a href="understand/">Explain my notice</a> · <a href="steward/">Monitoring and family</a> · <a href="trust.html">Trust and data</a> · <a href="privacy.html">Privacy policy</a> · <a href="contact.html">Contact</a> · <a href="dashboard.html">Your appeal</a> · <a href="admin.html">Ops</a> · <a href="docs/PRODUCT_FLOW.md">Product notes</a></p>
+</details>
 <p>© 2026 Sherwood</p><p><button type="button" class="disclosure-link" data-disclosure-open aria-haspopup="dialog" aria-controls="disclosure-dialog">Disclosures</button></p></div></footer>
 <script type="module" src="js/marketing.js"></script>
 <script type="module" src="app.js"></script>

@@ -4,9 +4,14 @@ import { customerCountyLine, getCounty, loadCounties } from "./counties.js";
 maybeLoadDemo();
 import { contactLine, customerLine, esc, formatDay, money } from "./format.js";
 import { landingDfyEnabled, orderBadgeHtml } from "./offer.js";
-import { filingFeeNote, landingHomeLine, planPriceLines } from "./pricing.js";
+import { dfyServiceAmount, filingFeeNote, landingHomeLine, plainDollars, planPriceLines } from "./pricing.js";
 
-const SIM = "Simulated on this device. Payment, signatures, county filing, and email or SMS do not leave this browser.";
+const demoNote = (() => {
+  try { return sessionStorage.getItem("sherwood_demo") === "1"; }
+  catch (e) { return false; }
+})();
+const SIM = "Simulated on this device. Payment, signatures, county filing, and email or SMS do not leave this browser."
+  + (demoNote ? " Reviewer demo. Simulated case, not a county filing." : "");
 
 function paintOrderBadge(county) {
   const host = document.querySelector("[data-order-badge]");
@@ -50,21 +55,22 @@ async function fillLaunchFacts() {
     const efileListed = fee && typeof fee.amount === "number" && fee.amount > 0;
     const paperListed = paper && typeof paper.amount === "number" && paper.amount > 0;
     const prices = `We file it ${lines.dfy}`;
+    const servicePrice = plainDollars(dfyServiceAmount());
     const hearingFormat = customerLine(county.hearing && county.hearing.format);
     const exemptionNote = customerLine(county.homeowner_exemption && county.homeowner_exemption.note);
     facts.innerHTML = `
       <p class="small muted">These lines are rendered from the ${esc(customerCountyLine(county) || county.county + " County")}.</p>
       <ul>
-        <li>Regular window: ${esc(county.filing.regular_window.label)}. Deadline on the adapter: ${esc(formatDay(county.filing.current_year_deadline))}. Source: ${county.filing.regular_window.source_url ? `<a href="${esc(county.filing.regular_window.source_url)}">${esc(county.filing.regular_window.source_url)}</a>` : "not set"}.</li>
+        <li>Regular window: ${esc(county.filing.regular_window.label)}. County deadline: ${esc(formatDay(county.filing.current_year_deadline))}. Source: ${county.filing.regular_window.source_url ? `<a href="${esc(county.filing.regular_window.source_url)}">${esc(county.filing.regular_window.source_url)}</a>` : "not set"}.</li>
         <li>Sherwood prices: ${esc(prices)}</li>
-        <li>County e-file fee, from the adapter: ${efileListed ? "included in We file it." : "not listed on this adapter."}</li>
-        <li>Paper filing fee, from the adapter: ${paperListed ? "included in We file it." : "not confirmed on this adapter."}</li>
+        <li>County e-file fee: included in the We file it price (${esc(servicePrice)}).</li>
+        <li>Paper filing fee: ${paperListed ? "included in the We file it price." : "not yet confirmed for this county."}</li>
         <li>Portal: <a href="${esc(county.filing.portal_url)}">${esc(county.filing.portal_url)}</a></li>
         <li>Clerk: ${esc(contactLine(county.filing.clerk))}</li>
         <li>Assessor: ${esc(contactLine(county.assessor_office))}</li>
         <li>Supplemental: ${esc(county.filing.supplemental_window)}</li>
         <li>Hearing: ${esc(county.hearing.notice)}${hearingFormat ? ` ${esc(hearingFormat)}` : ""}</li>
-        <li>Homeowner's Exemption, from this adapter: $${county.homeowner_exemption.assessed_reduction.toLocaleString("en-US")} off assessed value, about $${county.homeowner_exemption.approx_annual_dollars}/yr.${exemptionNote ? ` ${esc(exemptionNote)}` : ""}</li>
+        <li>Homeowner's Exemption: $${county.homeowner_exemption.assessed_reduction.toLocaleString("en-US")} off assessed value, about $${county.homeowner_exemption.approx_annual_dollars}/yr.${exemptionNote ? ` ${esc(exemptionNote)}` : ""}</li>
       </ul>`;
   }
   const filing = document.getElementById("launch-filing");
@@ -88,7 +94,7 @@ async function fillLaunchFacts() {
 
 function mountChrome() {
   document.querySelectorAll("[data-sim]").forEach(el => {
-    if (!el.textContent.trim()) el.textContent = SIM;
+    if (!el.textContent.trim()) el.innerHTML = `<span class="chip chip-simulated">Simulated</span> ${esc(SIM)}`;
   });
   const bar = document.querySelector("[data-progress]");
   if (bar) {

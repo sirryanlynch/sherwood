@@ -41,8 +41,8 @@ function showCounty() {
   const bits = [
     county.template_warning,
     county.filing.regular_window && county.filing.regular_window.label,
-    county.filing.efile ? "E-file flag is true on this adapter." : "",
-    county.filing.wet_signature_required ? "A wet signature is required. We file it is not available." : "",
+    county.filing.efile ? "You can file online in this county." : "",
+    county.filing.wet_signature_required ? "A wet signature is required. Filing is not available." : "",
     prices.join(". "),
     offerMessage(county, offer),
     ...adapterFeeNotes(county)

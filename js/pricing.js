@@ -55,7 +55,7 @@ export function hearingAckHtml(planId) {
   const state = hearingAckState(planId);
   const hidden = state.visible ? "" : " hidden";
   const required = state.required ? " required" : "";
-  return `<div class="check" id="hearing-ack"${hidden}><input id="hearing-ack-box" type="checkbox" name="hearingAck" data-hearing-ack${required}><label for="hearing-ack-box">${HEARING_STATEMENT}</label></div>`;
+  return `<div id="hearing-ack"${hidden}><p class="small muted">${HEARING_STATEMENT}</p><div class="check"><input id="hearing-ack-box" type="checkbox" name="hearingAck" data-hearing-ack${required}><label for="hearing-ack-box">I understand I attend the hearing.</label></div></div>`;
 }
 
 export const MONITOR = {

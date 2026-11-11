@@ -11,7 +11,7 @@ import { VALUE_VS_RATE, WE_DO, YOU_DO, customerOutcome } from "../outcome.js";
 import { slugForCountyId } from "../place.js";
 import { reminderMessage } from "../place-ui.js";
 import { confirmationBody, createMonitorRemote, enrollMonitor, monitorOfferHtml } from "../monitor.js";
-import { MONITOR, planPriceLines } from "../pricing.js";
+import { MONITOR, dfyServiceAmount, plainDollars, planPriceLines } from "../pricing.js";
 import { createLead, createReminder } from "../reminders.js";
 import { currentMatter, saveMatter } from "../store.js";
 
@@ -56,12 +56,18 @@ function rangeHtml(savings) {
   if (!savings || savings.low == null || !(savings.high > 0)) {
     return `<p>${esc((savings && savings.note) || "No dollar estimate on this check.")}</p>`;
   }
+  const fee = dfyServiceAmount();
+  const span = savings.high - savings.low;
+  const feePct = span > 0 && fee > savings.low && fee < savings.high ? ((fee - savings.low) / span) * 100 : null;
+  const feeMark = feePct == null ? "" : `<i class="range-fee" style="left:${feePct}%"></i>`;
+  const feeLabel = feePct == null ? "" : `<p class="small muted">Our fee ${esc(plainDollars(fee))}</p>`;
   return `
     <p><span class="chip chip-estimate">Estimate</span></p>
     <p>Estimated first-year savings: <b class="evidence">${esc(money(savings.low))}</b> – <b class="evidence">${esc(money(savings.high))}</b> (most likely ${esc(money(savings.mid))}).</p>
     <div class="range" role="img" aria-label="Low, likely, and high savings estimates">
-      <div class="range-track"><i class="range-fill"></i><i class="range-mark" style="left:75%"></i></div>
+      <div class="range-track"><i class="range-fill"></i><i class="range-mark" style="left:50%"></i>${feeMark}</div>
       <div class="range-labels"><span>Low ${esc(money(savings.low))}</span><span>Likely ${esc(money(savings.mid))}</span><span>High ${esc(money(savings.high))}</span></div>
+      ${feeLabel}
     </div>
     <p class="small muted">${esc(savings.bandNote || "")}</p>
     <p class="small muted">${esc(savings.note || "")}</p>`;
@@ -154,8 +160,10 @@ function render(matter, county) {
       <p><a href="understand/">Explain my notice</a></p>
       <div class="card">
         <h3>Annual monitor</h3>
+        <details><summary>See monitor terms</summary>
         <p>${esc(money(MONITOR.price))} a year per property. ${esc(MONITOR.summary)} The first year is not included unless you file.</p>
         ${monitorOfferHtml({ email: matter.email, enrolled: !!matter.monitor, cancelToken: matter.monitor && matter.monitor.cancelToken })}
+        </details>
       </div>`;
   } else if (offer.closed || matter.outcome === "off_season") {
     decision = `
@@ -180,18 +188,20 @@ function render(matter, county) {
 
   const deadline = matter.window && matter.window.state === "open" ? orderBadgeHtml(county) : "";
   root.innerHTML = `
-    <p class="outcome-mark" data-outcome="${esc(face.id)}">${esc(face.label)}</p>
-    ${deadline}
+    <div class="result-pills">
+      <p class="outcome-mark" data-outcome="${esc(face.id)}">${esc(face.label)}</p>
+      ${deadline}
+    </div>
     <div class="split result-layout">
       <div class="result-evidence">
         <p class="lead">For ${esc(matter.address)}. ${esc(county.county)}${customerCountyLine(county) ? ` (${esc(customerCountyLine(county))})` : ""}.</p>
         ${evidenceHtml(matter)}
         ${priceLine(county, offer)}
-        <p class="small muted">${matter.outcome === "off_season" ? esc(nextWindowCopy(county, new Date())) : `Window: ${esc(matter.window && matter.window.label || "not set")}. Adapter deadline: ${esc(formatDay(county.filing.current_year_deadline))}.`}</p>
+        <p class="small muted">${matter.outcome === "off_season" ? esc(nextWindowCopy(county, new Date())) : `Window: ${esc(matter.window && matter.window.label || "not set")}. County deadline: ${esc(formatDay(county.filing.current_year_deadline))}.`}</p>
         <p class="small muted"><span class="chip chip-record">From your county record</span> Deadline source: ${source}. Verified: ${esc(verified)}.</p>
         ${valueRateHtml()}
-        ${scopeHtml()}
-        <h2>What this county adapter says</h2>
+        ${matter.outcome === "no_go" ? "" : scopeHtml()}
+        <h2>What this county file says</h2>
         <ul>${rules}</ul>
         <ul>${timelines}</ul>
         <p>Clerk: ${esc(contactLine(county.filing.clerk))}</p>

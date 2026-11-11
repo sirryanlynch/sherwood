@@ -74,7 +74,7 @@ function renderBar(place) {
         <label>County
           <select data-place-select>
             <option value="">Choose…</option>
-            <option value="santa-cruz">Santa Cruz County, CA</option>
+            <option value="santa-cruz" ${place && place.slug === "santa-cruz" ? "selected" : ""}>Santa Cruz County, CA</option>
             <option value="other">Another county</option>
           </select>
         </label>
@@ -130,7 +130,14 @@ function onThisLanding(place) {
   return !!(id && place && place.status === "preview" && place.id === id);
 }
 
+function shownPlace(place) {
+  if (!place || place.status !== "ambiguous") return place;
+  const county = countyBySlug("santa-cruz");
+  return county ? choiceFromCounty(county, "default") : place;
+}
+
 function paint(place) {
+  place = shownPlace(place);
   document.querySelectorAll("[data-place-footer]").forEach(el => {
     el.textContent = place && place.status === "launch" ? "Sherwood · Santa Cruz County" : "Sherwood";
   });

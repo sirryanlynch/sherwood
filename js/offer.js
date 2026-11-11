@@ -148,7 +148,7 @@ export function offerMessage(county, offer) {
   if (!offer) return "";
   if (offer.closed) return "";
   if (offer.paper) {
-    return "We file it is not available in this county yet. A typed signature is not valid on a paper filing. Leave your email for a reminder.";
+    return "Filing is not available in this county yet. A typed signature is not valid on a paper filing. Leave your email for a reminder.";
   }
   if (offer.registration) {
     return "We file it stays off until agent registration for this county is active. Leave your email for a reminder.";

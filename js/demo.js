@@ -31,7 +31,7 @@ export function loadDemoCase() {
     tax,
     confidence: "sure",
     outcome: "go",
-    reasons: ["Reviewer demo. Simulated case, not a county filing."],
+    reasons: ["The market value you entered is below the assessed value, the low savings estimate covers the We file it fee, and the filing window is open."],
     reduction,
     savings: {
       amount,

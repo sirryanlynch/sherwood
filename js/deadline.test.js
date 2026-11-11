@@ -61,7 +61,7 @@ test("a $0 card check can pass or fail without charging", async () => {
 });
 
 test("the free monitor year starts at capture, not at card save", () => {
-  const record = enrollMonitor({ email: "a@b.co", matterId: "m", includedWithFiling: true });
+  const record = enrollMonitor({ email: "a@b.co", matterId: "m", includedWithFiling: true, renewal: true });
   assert.equal(record.status, "pending_capture");
   assert.equal(record.renewsOn, null);
   assert.equal(record.yearStartedAt, null);
@@ -69,6 +69,25 @@ test("the free monitor year starts at capture, not at card save", () => {
   assert.equal(record.yearStartedAt, "2026-11-20T00:00:00.000Z");
   assert.equal(record.renewsOn, "2027-11-20");
   assert.equal(record.status, "active");
+});
+
+test("a filing includes the first monitor year when renewal is unchecked", () => {
+  const record = enrollMonitor({ email: "a@b.co", matterId: "m", includedWithFiling: true, renewal: false });
+  assert.equal(record.includedWithFiling, true);
+  assert.equal(record.renewal, false);
+  assert.equal(record.status, "pending_capture");
+  startIncludedYear(record, "2026-11-20T00:00:00.000Z");
+  assert.equal(record.yearStartedAt, "2026-11-20T00:00:00.000Z");
+  assert.equal(record.renewsOn, null);
+  assert.equal(record.status, "active");
+  const checkout = readFileSync(new URL("./pages/checkout.js", import.meta.url), "utf8");
+  assert.match(checkout, /Your first year of monitoring is included\./);
+  assert.match(checkout, /Renew monitoring at /);
+  assert.match(checkout, /plainDollars\(MONITOR\.price\)/);
+  assert.equal(checkout.includes('name="monitorRenewal" required'), false);
+  assert.equal(checkout.includes('get("monitorRenewal") !== "on"'), false);
+  assert.match(checkout, /We verify the card with a \$0 check and charge /);
+  assert.match(checkout, /plainDollars\(dfyServiceAmount\(\)\)/);
 });
 
 test("likely savings sit strictly between low and high", () => {
@@ -150,9 +169,17 @@ test("customer pages do not mention the pilot filing or October 12", () => {
     assert.equal(banned.test(read(page)), false, page);
   }
   assert.match(read("js/boot.js"), /We file through the county's e-file portal\./);
+  assert.match(read("js/boot.js"), /County e-file fee: included in the We file it price/);
+  assert.match(read("js/boot.js"), /not yet confirmed for this county/);
+  assert.match(read("js/boot.js"), /dfyServiceAmount\(\)/);
   assert.equal(banned.test(read("js/boot.js")), false);
   assert.equal(banned.test(read("js/engine.js")), false);
   assert.equal(banned.test(read("js/pages/sign.js")), false);
-  assert.match(customerLine("The e-file portal charged $50 on October 12, 2026. A paper amount is not confirmed for 2026."), /not confirmed/);
-  assert.equal(/\bpilot\b|october 12/i.test(customerLine("Register, then file online. The pilot filing used a 9-section application.")), false);
+  const santaCruz = JSON.parse(read("data/counties/santa_cruz.json"));
+  const apn = santaCruz.filing.portal_notes.find(note => /APN/.test(note));
+  assert.match(apn, /Retry before treating it as a rejection/);
+  assert.equal(banned.test(apn), false);
+  assert.equal(customerLine(apn), apn.trim());
+  assert.equal(banned.test(read("data/counties/santa_cruz.json")), false);
+  assert.equal(banned.test(read("backend/functions/counties/santa_cruz.json")), false);
 });

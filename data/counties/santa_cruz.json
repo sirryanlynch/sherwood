@@ -3,13 +3,13 @@
   "county": "Santa Cruz",
   "state": "CA",
   "status": "verified",
-  "status_label": "Verified from the October 12, 2026 pilot kit",
+  "status_label": "Verified",
   "verified": "2026-10-13",
   "appeals_board": {
     "name": "Assessment Appeals Board",
     "file_with": "Clerk of the Board",
     "address": "701 Ocean Street, Room 520, Santa Cruz, CA 95060",
-    "address_note": "Filing address per the county adapter and the pilot filing guide (AAB Local Rules). The cover-letter template and one checklist line say Room 500. This product shows Room 520 and does not resolve that conflict."
+    "address_note": "Filing address per the county file (AAB Local Rules). The cover-letter template and one checklist line say Room 500. This product shows Room 520 and does not resolve that conflict."
   },
   "assessor_office": {
     "address": "701 Ocean Street, Room 130, Santa Cruz, CA 95060",
@@ -25,10 +25,10 @@
     "portal_url": "https://www2.santacruzcountyca.gov/AAB/Home/Index",
     "explanation_chars": 150,
     "portal_notes": [
-      "Register, then file online. The pilot filing used a 9-section application.",
+      "Register, then file online. The application has 9 sections.",
       "The explanation field fits only about 150 characters. Attach the Statement of Facts at the DocuSign step.",
       "The portal has no roll-year field for a regular assessment; the current year is implied.",
-      "A transient 'Failure to find valid APN' notice appeared in the pilot and then cleared. Retry before treating it as a rejection.",
+      "A transient 'Failure to find valid APN' notice can appear and then clear. Retry before treating it as a rejection.",
       "A fee waiver is on the county portal. The county decides who qualifies."
     ],
     "filing_fee": {
@@ -42,7 +42,7 @@
       "refundable": false,
       "unit": "per application",
       "as_of": "2026-10-12",
-      "label": "$50.00 nonrefundable per application via the e-file portal (portal price as of the October 12, 2026 filing)."
+      "label": "$50.00 nonrefundable per application via the e-file portal."
     },
     "paper_fee": {
       "amount": null,
@@ -52,7 +52,7 @@
       "payable_to": "County of Santa Cruz",
       "label": "Paper filing fee is not confirmed for 2026. Do not quote a paper amount. The e-file portal fee is $50."
     },
-    "fee_conflict": "The e-file portal charged $50 on October 12, 2026. A paper amount is not confirmed for 2026.",
+    "fee_conflict": "A paper filing fee is not confirmed for this county.",
     "current_year_deadline": "2026-11-30",
     "regular_window": {
       "start": "2026-07-02",
@@ -159,7 +159,7 @@
       "who": "homeowner",
       "required_for": [],
       "product_step": true,
-      "text": "The pilot kit has no stipulation form. This step exists so a later offer has a place to be signed by the homeowner. It is not a county fact and it is not legal advice."
+      "text": "This county file does not include a stipulation form. This step exists so a later offer has a place to be signed by the homeowner. It is not a county fact and it is not legal advice."
     }
   ],
   "agent_authorization": {
@@ -199,7 +199,7 @@
     "registration_note": "No county agent registration found; unconfirmed."
   },
   "hearing": {
-    "format": "Not stated in the pilot kit. Use the format on the hearing notice and confirm it with the clerk.",
+    "format": "Not stated in this county file. Use the format on the hearing notice and confirm it with the clerk.",
     "notice": "You get a hearing notice at least 45 days before the hearing date.",
     "notice_minimum_days": 45,
     "decision_window": "The board has 2 years from filing to hear and decide.",
@@ -228,7 +228,7 @@
   "homeowner_exemption": {
     "assessed_reduction": 7000,
     "approx_annual_dollars": 86,
-    "note": "Separate from the appeal. A one-time claim for a primary residence. About $86 a year at the pilot property's figures. Call the Assessor; there is not an appeal-style deadline on this claim in the kit.",
+    "note": "Separate from the appeal. A one-time claim for a primary residence. About $86 a year at this county's exemption figures. Call the Assessor; there is not an appeal-style deadline on this claim in the kit.",
     "phone": "(831) 454-2002"
   },
   "informal_review": "The Assessor accepts a Prop 8 decline-in-value review request (2026 residential form ASRR5: https://www.assessor.santacruzcountyca.gov/portals/39/asr/forms/ASRR5%20Residential%20RR%202026.pdf). It is free. Its deadline is unconfirmed. It does not extend the November 30 AAB deadline.",
@@ -240,10 +240,10 @@
     ],
     "acknowledged": [
       "Waiting on the county is normal. The board has up to two years.",
-      "Watch for mail or email. The pilot portal lets you pick mail or email for correspondence."
+      "Watch for mail or email. The county portal lets you pick mail or email for correspondence."
     ],
     "assessor_review": [
-      "The assessor may discuss value with you. The pilot kit does not include a stipulation form.",
+      "The assessor may discuss value with you. This county file does not include a stipulation form.",
       "Any agreement is your decision. Sherwood does not tell you to accept or decline.",
       "You would sign a stipulation yourself. Sherwood does not sign it as you."
     ],

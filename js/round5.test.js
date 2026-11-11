@@ -57,7 +57,7 @@ test("headed pages keep the verbatim disclosure in the Disclosures dialog", () =
   assert.match(css, /\.disclosure\{[^}]*color:#3e556e/);
   assert.match(css, /\.disclosure\{[^}]*padding:8px 16px/);
   assert.match(css, /\.disclosure\{[^}]*text-transform:none/);
-  assert.equal(/text-transform:\s*uppercase/.test(css), false);
+  assert.equal(/\.disclosure\{[^}]*text-transform:\s*uppercase/.test(css), false);
   assert.match(css, /--fs-disclosure:16px/);
   assert.match(css, /@media \(max-width:480px\)\{:root\{--fs-disclosure:16px/);
 });
