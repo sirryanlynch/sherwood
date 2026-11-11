@@ -2,7 +2,10 @@ import "../boot.js";
 import { paymentsAdapter } from "../adapters/payments.js";
 import { readAttribution } from "../attribution.js";
 import { money, esc, formatDay } from "../format.js";
-import { CHECKOUT_PLANS, HEARING_STATEMENT, adapterFeeNotes, hearingAckHtml, hearingAckState, planPriceLines } from "../pricing.js";
+import { notify } from "../adapters/notify.js";
+import { confirmationBody, createMonitorRemote, enrollMonitor, MONITOR_TERMS } from "../monitor.js";
+import { WE_DO, YOU_DO } from "../outcome.js";
+import { CARD_SAVE_NOTE, CHECKOUT_PLANS, HEARING_STATEMENT, adapterFeeNotes, hearingAckHtml, hearingAckState, planPriceLines } from "../pricing.js";
 import { getCounty } from "../counties.js";
 import { filingWindow, nextWindowCopy } from "../engine.js";
 import { offerMessage, orderBadgeHtml, purchaseOffer, reminderButtonLabel, reminderOnly } from "../offer.js";
@@ -25,26 +28,38 @@ if (gate) {
   if (!plans.length) {
     root.innerHTML = closedHtml(county, season, offer);
     bindReminder(root, matter, county);
-  } else if (matter.outcome === "no_go") {
+  } else if (matter.outcome !== "go") {
     location.href = "results.html";
   } else {
-    const savings = matter.savings && matter.savings.amount;
+    const savings = matter.savings || null;
     const lines = planPriceLines(county);
     const notes = adapterFeeNotes(county).map(line => `<p class="small muted">${esc(line)}</p>`).join("");
     const limit = offerMessage(county, offer);
     const onlyDfy = plans.length === 1 && plans[0].id === "dfy";
     root.innerHTML = `
-      <h1>Choose a plan</h1>
+      <h1>We file it</h1>
       ${orderBadgeHtml(county)}
       <p class="lead">${esc(matter.address)}</p>
+      <p>We only recommend filing when your low estimate covers the fee.</p>
+      <div class="scope">
+        <div><h3>We do</h3><ul>${WE_DO.map(line => `<li>${esc(line)}</li>`).join("")}</ul></div>
+        <div><h3>You do</h3><ul>${YOU_DO.map(line => `<li>${esc(line)}</li>`).join("")}</ul></div>
+      </div>
       ${limit ? `<p>${esc(limit)}</p>` : ""}
       <form id="pay" class="wide">
         <div class="plans">
           ${plans.map(plan => cardHtml(plan, lines, savings)).join("")}
         </div>
         ${plans.some(plan => plan.id === "dfy") ? hearingAckHtml(onlyDfy ? "dfy" : "") : ""}
+        <label class="check" id="monitor-included"><input type="checkbox" name="monitorRenewal" required> The free monitor year starts when the filing charge is captured, not when the card is saved. A declined or never-filed case does not get that year. After a captured charge it renews at $49/yr. ${esc(MONITOR_TERMS)} Cancel before the renewal date and the renewal is not charged.</label>
         ${notes}
-        <p class="small muted">Simulated Stripe. The card is saved and not charged. There is no card field.</p>
+        <div class="card-save">
+          <label>Card<input name="card" disabled placeholder="Simulated. No card number is accepted."></label>
+          <div>
+            <p>${esc(CARD_SAVE_NOTE)}</p>
+            <label class="check"><input type="checkbox" name="cardConsent" required> I agree to save my card on those terms.</label>
+          </div>
+        </div>
         <button class="btn" type="submit">Continue</button>
       </form>`;
     const payForm = document.querySelector("#pay");
@@ -57,6 +72,8 @@ if (gate) {
       const plan = plans.find(p => p.id === formData.get("plan"));
       if (!plan) return;
       if (plan.id === "dfy" && formData.get("hearingAck") !== "on") return;
+      if (plan.id === "dfy" && formData.get("monitorRenewal") !== "on") return;
+      if (formData.get("cardConsent") !== "on") return;
       const liveOffer = purchaseOffer(county, new Date(), matter.supplementalNoticeDate);
       const stillOpen = plan.id === "dfy" ? liveOffer.dfy : liveOffer.diy;
       if (!stillOpen) {
@@ -85,6 +102,32 @@ if (gate) {
       matter.paymentId = null;
       matter.paidAt = null;
       matter.src = setup.src;
+      if (plan.id === "dfy") {
+        const record = enrollMonitor({
+          email: user.email,
+          matterId: matter.id,
+          userId: user.id,
+          setupIntentId: setup.id,
+          includedWithFiling: true
+        });
+        matter.monitor = {
+          id: record.id,
+          at: record.consentedAt,
+          price: record.price,
+          cancelToken: record.cancelToken,
+          retainUntil: record.retainUntil,
+          renewsOn: record.renewsOn,
+          includedWithFiling: true
+        };
+        await notify.outbox({
+          channel: "email",
+          to: user.email,
+          kind: "monitor_confirm",
+          simulated: true,
+          body: confirmationBody(record)
+        });
+        await createMonitorRemote(record);
+      }
       saveMatter(matter);
       if (matter.email) {
         try { await markConverted({ email: matter.email, county_slug: slugForCountyId(matter.countyId) }); }
@@ -171,9 +214,13 @@ function syncHearingAck(form) {
 function cardHtml(plan, lines, savings) {
   const price = plan.id === "dfy" ? lines.dfy : "";
   const waiver = plan.id === "diy" && lines.feeNote ? `<p class="small muted">${esc(lines.feeNote)}</p>` : "";
-  const estimate = savings == null
+  const band = savings && typeof savings === "object" ? savings : null;
+  const amount = band ? band.amount : savings;
+  const estimate = amount == null
     ? "No dollar estimate on this check."
-    : `${ESTIMATE_LABEL} ${money(savings)}.`;
+    : band && band.low != null
+      ? `${ESTIMATE_LABEL} Low ${money(band.low)}, likely ${money(band.mid)}, high ${money(band.high)}.`
+      : `${ESTIMATE_LABEL} ${money(amount)}.`;
   const flag = plan.timingFlag ? `<p><b>${esc(plan.timingFlag)}</b></p>` : "";
   return `
     <label class="card">

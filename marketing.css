@@ -2,22 +2,26 @@
    The statutory disclosure box in style.css is unchanged and stays in the dialog. */
 
 body.mkt{
-  --paper:#f4f1eb;
-  --paper-deep:#ebe6dc;
-  --ink:#17191c;
-  --muted:#5c635e;
-  --line:#e3ddd2;
+  --paper:#ffffff;
+  --paper-2:#f6f6f4;
+  --paper-deep:#f6f6f4;
+  --ink:#111111;
+  --ink-2:#5b5f66;
+  --muted:#5b5f66;
+  --line:#e6e6e3;
   --teal:#128f88;
   --teal-deep:#0c6c66;
-  --teal-soft:#e5f3f1;
+  --teal-soft:#e8f4f2;
+  --gold:#f3d36b;
   --yellow:#f3d36b;
-  --white:#fffcf8;
+  --white:#ffffff;
+  --alert:#b3261e;
   background:var(--paper);
   color:var(--ink);
   font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
 }
 body.mkt [hidden]{display:none !important}
-body.mkt h1,body.mkt h2,body.mkt h3,.mkt .amount{font-family:Outfit,Inter,ui-sans-serif,system-ui,sans-serif}
+body.mkt h1,body.mkt h2,body.mkt h3,.mkt .amount{font-family:Inter,ui-sans-serif,system-ui,sans-serif}
 body.mkt ::selection{background:var(--yellow);color:var(--ink)}
 html:has(body.mkt){scroll-behavior:smooth}
 @media (prefers-reduced-motion:reduce){
@@ -29,7 +33,7 @@ body.mkt main > .wrap{padding-top:48px;padding-bottom:56px}
 body.mkt .wrap{max-width:1120px}
 body.mkt header{
   position:sticky;top:0;z-index:20;
-  background:rgba(244,241,235,.88);
+  background:rgba(255,255,255,.92);
   backdrop-filter:saturate(1.2) blur(12px);
   border-bottom:1px solid transparent;
 }
@@ -43,20 +47,20 @@ body.mkt nav a.nav-cta{
 body.mkt nav a.nav-cta:hover{background:var(--teal-deep);color:#fff}
 
 body.mkt h1{
-  font-size:clamp(40px,6.2vw,72px);
-  font-weight:600;
-  line-height:1.02;
-  letter-spacing:-.045em;
+  font-size:clamp(36px,5vw,56px);
+  font-weight:700;
+  line-height:1.07;
+  letter-spacing:-.02em;
   margin:12px 0 16px;
 }
 body.mkt h2{
-  font-size:clamp(28px,3.2vw,42px);
+  font-size:clamp(26px,2.5vw,32px);
   font-weight:600;
-  line-height:1.08;
-  letter-spacing:-.035em;
+  line-height:1.2;
+  letter-spacing:-.02em;
   margin:0 0 14px;
 }
-body.mkt h3{font-size:18px;font-weight:600;letter-spacing:-.02em;line-height:1.25;margin:0 0 6px}
+body.mkt h3{font-size:20px;font-weight:600;letter-spacing:-.02em;line-height:1.4;margin:0 0 6px}
 body.mkt p.lead,body.mkt .lede{font-size:18px;line-height:1.5;color:#3d4541;max-width:38rem}
 body.mkt .narrow{max-width:36rem}
 body.mkt a{text-underline-offset:3px}
@@ -224,6 +228,10 @@ body.mkt .check-hero #county-reminder label{flex:none;width:100%;gap:6px}
   content:"";display:inline-block;width:6px;height:6px;margin-right:8px;
   border-radius:50%;background:#128f88;transform:translateY(-1px);
 }
+.deadline-chip{display:none}
+@media (max-width:800px){
+  .deadline-chip:not([hidden]){display:block;position:sticky;top:0;z-index:25;background:#17191c;color:#fff;text-align:center;font-size:13px;padding:8px 12px}
+}
 .check-dock{display:none}
 @media (min-width:720px){
   .trust-strip{flex-direction:row;flex-wrap:wrap;gap:8px 18px}
@@ -248,10 +256,10 @@ body.mkt .check-hero #county-reminder label{flex:none;width:100%;gap:6px}
 
 .band{padding:72px 0}
 .band-mint{background:var(--teal-soft)}
-.band-deep{background:var(--paper-deep)}
-.band-ink{background:#17191c;color:#f4f1eb}
-.band-ink .lede,body.mkt .band-ink p{color:#d9d4cb}
-.band-ink h2{color:#fff}
+.band-deep{background:var(--paper-2);color:var(--ink)}
+.band-ink{background:var(--paper-2);color:var(--ink)}
+.band-ink .lede,body.mkt .band-ink p{color:var(--ink-2)}
+.band-ink h2{color:var(--ink)}
 
 .math{margin-top:28px}
 .math-kicker{font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--teal-deep);margin:0 0 6px}
@@ -457,7 +465,7 @@ body.mkt header.nav-open .nav-menu::after{opacity:1;transform:rotate(-45deg)}
     display:none;position:absolute;top:100%;left:0;right:0;z-index:21;
     flex-direction:column;align-items:stretch;gap:0;
     margin:0;padding:6px 20px 14px;
-    background:#f4f1eb;
+    background:#ffffff;
     border-bottom:1px solid #e6e1d8;
   }
   body.mkt header.nav-open nav{display:flex}

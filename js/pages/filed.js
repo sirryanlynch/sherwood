@@ -1,12 +1,13 @@
 import "../boot.js";
 import { efileAdapter } from "../adapters/efile.js";
-import { notify } from "../adapters/notify.js";
+import { paymentsAdapter } from "../adapters/payments.js";
 import { getCounty } from "../counties.js";
 import { AGENT_CONTACT, OWNER_COPY_LINE, authorizationReady, pendingAgentContact, signedBeforeFiling, signedDateText } from "../authorization.js";
 import { AUTHORIZATION_RETENTION } from "../retention.js";
 import { contactLine, esc } from "../format.js";
 import { filingWindow } from "../engine.js";
 import { planById, planPriceLines } from "../pricing.js";
+import { sendCaseEmail } from "../caseMail.js";
 import { requireMatter, saveMatter } from "../store.js";
 
 const gate = requireMatter("filed.html");
@@ -29,8 +30,29 @@ if (gate) {
   } else if (matter.filing) {
     paintFiled(root, matter, county);
   } else {
+    await ensureCardCheck(matter, user);
     paintGate(root, matter, user, county);
   }
+}
+
+async function ensureCardCheck(matter, user) {
+  if (matter.cardCheck && matter.cardCheck.setupIntentId === matter.setupIntentId && matter.cardCheck.force === (matter.forceCardFail === true)) return;
+  const result = await paymentsAdapter.revalidateCard({
+    userId: user.id,
+    matterId: matter.id,
+    setupIntentId: matter.setupIntentId,
+    fail: matter.forceCardFail === true
+  });
+  matter.cardCheck = {
+    id: result.id,
+    status: result.status,
+    reason: result.reason || "",
+    amount: 0,
+    at: result.createdAt,
+    setupIntentId: matter.setupIntentId || null,
+    force: matter.forceCardFail === true
+  };
+  saveMatter(matter);
 }
 
 function paintGate(root, matter, user, county) {
@@ -49,8 +71,11 @@ function paintGate(root, matter, user, county) {
   }
   if (!certOk) blocks.push("The homeowner certification is not signed yet.");
   if (matter.outcome === "borderline" && !matter.reviewed) blocks.push("A person has to mark this review complete before filing.");
+  if (matter.authority === "poa" && !matter.poaReviewed) blocks.push("A power of attorney or conservatorship was uploaded. A person has to review it before filing.");
   if (county.status !== "verified") blocks.push(county.template_warning || county.status_label || "This adapter is not verified.");
   if (season.state !== "open") blocks.push("The filing window on this adapter is not open, so filing stays off.");
+  const cardOk = matter.cardCheck && matter.cardCheck.status === "succeeded";
+  if (!cardOk) blocks.push("The $0 card check failed. Update your card before filing. Nothing was charged.");
   const canFile = blocks.length === 0;
   root.innerHTML = `
     <h1>File with the county</h1>
@@ -63,17 +88,39 @@ function paintGate(root, matter, user, county) {
       ${blocks.length ? `<ul>${blocks.map(line => `<li>${esc(line)}</li>`).join("")}</ul>` : `<p>The authorization is on this appeal. You can record the filing.</p>`}
     </div>
     <button class="btn" id="file-btn" type="button" ${canFile ? "" : "disabled"}>Record the filing</button>
+    ${cardOk ? "" : `<p class="cta"><button class="btn" id="update-card" type="button">Update card</button></p>`}
     ${canFile ? "" : `<p class="cta"><a href="sign.html?round=1">Return to signing</a></p>`}
     ${stepsHtml(county)}`;
   const button = root.querySelector("#file-btn");
   if (button && canFile) {
     button.addEventListener("click", () => submitFiling(root, matter, user, county));
   }
+  const update = root.querySelector("#update-card");
+  if (update) {
+    update.addEventListener("click", async () => {
+      matter.forceCardFail = false;
+      const setup = await paymentsAdapter.saveCard({
+        userId: user.id,
+        matterId: matter.id,
+        plan: planById(matter.planId) || { id: matter.planId }
+      });
+      matter.setupIntentId = setup.id;
+      matter.chargeStatus = "card_saved";
+      matter.cardCheck = null;
+      saveMatter(matter);
+      await ensureCardCheck(matter, user);
+      paintGate(root, matter, user, county);
+    });
+  }
 }
 
 async function submitFiling(root, matter, user, county) {
   const button = root.querySelector("#file-btn");
   if (button) button.disabled = true;
+  if (!matter.cardCheck || matter.cardCheck.status !== "succeeded") {
+    root.innerHTML = `<h1>Not submitted</h1><p>The card check has not succeeded, so nothing was filed.</p>`;
+    return;
+  }
   if (!authorizationReady(matter.agentAuthorization, county) || !signedBeforeFiling(matter.agentAuthorization, new Date().toISOString(), county)) {
     root.innerHTML = `<h1>Not submitted</h1><p>The agent authorization is missing a required field, or it was not signed before filing, so nothing was filed.</p>`;
     return;
@@ -99,15 +146,8 @@ async function submitFiling(root, matter, user, county) {
   matter.stage = "filed";
   matter.stageHistory = [{ stage: "filed", at: filing.filedAt, simulated: true }];
   saveMatter(matter);
-  if (user.prefs && user.prefs.email) {
-    await notify.outbox({
-      channel: "email",
-      to: user.email,
-      kind: "filed",
-      simulated: true,
-      body: `Simulated filing ${filing.id} recorded in this browser. Not sent to the county.`
-    });
-  }
+  await sendCaseEmail("filed", matter, county);
+  saveMatter(matter);
   paintFiled(root, matter, county);
 }
 

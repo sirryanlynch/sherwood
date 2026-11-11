@@ -7,6 +7,7 @@ import { getCounty } from "../counties.js";
 import { esc, formatShortDay } from "../format.js";
 import { HEARING_PACKET_LINE, planById } from "../pricing.js";
 import { AUTHORIZATION_RETENTION, retainUntil } from "../retention.js";
+import { sendCaseEmail } from "../caseMail.js";
 import { requireMatter, saveMatter } from "../store.js";
 
 const gate = requireMatter("sign.html");
@@ -76,8 +77,13 @@ function rule6Label(county, id) {
   return match ? match.label : "";
 }
 
+function yearListHtml(years) {
+  const list = (Array.isArray(years) ? years : [years]).filter(Boolean);
+  if (!list.length) return `<div data-tax-years><p>Tax years covered: none selected. Up to 4.</p></div>`;
+  return `<div data-tax-years><p>Tax years covered, each year listed:</p><ul>${list.map(year => `<li>${esc(year)}</li>`).join("")}</ul></div>`;
+}
+
 function summaryHtml(matter, years, signedAt) {
-  const list = Array.isArray(years) ? years : [years];
   const dateLine = signedAt
     ? `Date signed: ${signedDateText(signedAt)}. This is the day it was signed. It was not backdated.`
     : `Date signed: ${formatShortDay(new Date())}. This is the day you sign. It cannot be set to an earlier date.`;
@@ -85,7 +91,7 @@ function summaryHtml(matter, years, signedAt) {
     <div class="card">
       <h3>Agent authorization summary (state rule 305)</h3>
       <p>Parcel: ${esc(parcelLabel(matter))}.</p>
-      <p data-tax-years>Tax years covered: ${esc(list.filter(Boolean).join(", "))}. Up to 4.</p>
+      ${yearListHtml(years)}
       <p>${esc(OWNER_COPY_LINE)}</p>
       <p>${esc(dateLine)}</p>
       <p>The named agent signs filings only.</p>
@@ -106,8 +112,9 @@ function paintForm(root, matter, county, step, round, envelope) {
   root.innerHTML = `
     <p class="banner">Simulated embedded signing. Not a DocuSign session. Sherwood cannot sign as you.</p>
     <h1>${esc(step.title)}</h1>
-    <p class="lead">Round ${esc(String(round))} of the model. Signer: the homeowner. Adapter: ${esc(county.county)}.</p>
-    ${step.id === "agent_authorization" ? summaryHtml(matter, yearChoices[0], null) : ""}
+    <p class="lead">Round ${esc(String(round))} of the model. Signer: ${matter.role === "advocate" ? "the owner, or the legal representative" : "the homeowner"}. Adapter: ${esc(county.county)}.</p>
+    ${matter.role === "advocate" ? `<p>The payer can be someone else. The owner signs this authorization, unless a power of attorney or conservatorship was uploaded for review.</p>` : ""}
+    ${step.id === "agent_authorization" ? summaryHtml(matter, [yearChoices[0]].filter(Boolean), null) : ""}
     <div class="card">
       <p>${esc(step.text)}</p>
       ${round === 2 ? `<h3>Statement you are attaching</h3><pre style="white-space:pre-wrap;font:inherit">${esc(matter.kit.statement)}</pre>` : ""}
@@ -123,13 +130,13 @@ function paintForm(root, matter, county, step, round, envelope) {
       <button class="btn" type="submit">Sign</button>
     </form>`;
   if (step.id === "agent_authorization") {
-    const yearLine = root.querySelector("[data-tax-years]");
     const syncYears = () => {
       const picked = normalizeTaxYears(
         [...root.querySelectorAll("input[name=taxYear]:checked")].map(el => el.value),
         yearChoices
       );
-      if (yearLine) yearLine.textContent = `Tax years covered: ${picked.join(", ") || "none selected"}. Up to 4.`;
+      const yearLine = root.querySelector("[data-tax-years]");
+      if (yearLine) yearLine.outerHTML = yearListHtml(picked);
     };
     root.querySelectorAll("input[name=taxYear]").forEach(el => el.addEventListener("change", syncYears));
   }
@@ -180,6 +187,7 @@ function paintForm(root, matter, county, step, round, envelope) {
       };
     }
     if (round === 3) matter.stipulationDecision = "Accepted in the demo. The signature is simulated and there is no stipulation form in the pilot kit.";
+    if (round === 2) await sendCaseEmail("signed", matter, county);
     saveMatter(matter);
     if (round === 1) location.href = "sign.html?round=2";
     else if (round === 2) location.href = "filed.html";

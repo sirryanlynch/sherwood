@@ -35,7 +35,7 @@ function makeHouse(parent, o) {
       b += lap(W, RMAX + 10, h - 4);
       for (let y = RMAX - 7; y > 9999; y -= 7) { const dx = (W / 2) * (RMAX - y) / R; b += L(dx + 3, y, W - dx - 3, y, 'thin'); } // gable shingles
       b += L(W / 2 - 14, RMAX - R * .32, W / 2 + 14, RMAX - R * .32) + L(W / 2, RMAX - R * .32 - 9, W / 2, RMAX - R * .32 + 9, 'thin'); // vent
-      if (front) b += win(W / 2 - 98, RMAX + 26, 50, 54) + win(W / 2 + 48, RMAX + 26, 50, 54) + `<rect class="door" x="${W / 2 - 20}" y="${RMAX + 36}" width="40" height="${H - 36}" rx="20 20 0 0"/>` + `<path class="door" d="M${W / 2 - 20} ${RMAX + H}V${RMAX + 56}A20 20 0 0 1 ${W / 2 + 20} ${RMAX + 56}V${RMAX + H}Z"/>` + `<circle class="knob" cx="${W / 2 + 12}" cy="${RMAX + 100}" r="2.5"/>`;
+      if (front) b += win(W / 2 - 98, RMAX + 26, 50, 54) + win(W / 2 + 48, RMAX + 26, 50, 54) + `<rect class="door" x="${W / 2 - 20}" y="${RMAX + 36}" width="40" height="${H - 36}" rx="20"/>` + `<path class="door" d="M${W / 2 - 20} ${RMAX + H}V${RMAX + 56}A20 20 0 0 1 ${W / 2 + 20} ${RMAX + 56}V${RMAX + H}Z"/>` + `<circle class="knob" cx="${W / 2 + 12}" cy="${RMAX + 100}" r="2.5"/>`;
       else b += win(W / 2 - 28, RMAX + 30, 56, 48);
       P[n]?.remove(); face(n, W, h, o.wall, b, `polygon(0 ${RMAX}px,50% ${top}px,100% ${RMAX}px,100% 100%,0 100%)`);
     }

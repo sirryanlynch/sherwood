@@ -1,10 +1,16 @@
 import "../boot.js";
 import { paymentsAdapter } from "../adapters/payments.js";
 import { chargeReady, chargeSavedCardIfReady, countyFeeUncaptured, recordCountyConfirmation } from "../chargeGate.js";
+import { startIncludedYear } from "../monitor.js";
+import { deadlineReminderPlan } from "../deadlineReminders.js";
 import { planById } from "../pricing.js";
 import { loadCounties } from "../counties.js";
 import { formatDay, esc, parseISODate } from "../format.js";
 import { AUTHORIZATION_RETENTION, retainUntil } from "../retention.js";
+import { advanceMatter, logHearingFollowUp } from "../caseStatus.js";
+import { sendCaseEmail } from "../caseMail.js";
+import { parseNotice } from "../notices.js";
+import { loadDemoCase } from "../demo.js";
 import { loadDb, saveDb } from "../store.js";
 
 const STAGES = ["filed", "acknowledged", "assessor_review", "hearing_scheduled", "decision", "refund", "monitor", "kit_ready"];
@@ -32,11 +38,14 @@ function paint() {
     }
     const source = win.source_url ? `<a href="${esc(win.source_url)}">${esc(win.source_url)}</a>` : "source not set";
     const verified = win.verified_date ? formatDay(win.verified_date) : "verified date not set";
-    return `<li><b>${esc(county.county)}</b> — ${esc(county.status_label)}. ${esc(win.label || "no window")}. ${esc(distance)}. Deadline field: ${esc(formatDay(county.filing.current_year_deadline))}. ${source}. Verified ${esc(verified)}.</li>`;
+    const reminders = deadlineReminderPlan(county).map(row => `<li>${esc(row.sendOn)} · ${esc(row.days)} days before ${esc(row.anchor === "order_cutoff" ? "our order cutoff" : "the county filing deadline")} · ${esc(row.subject)}</li>`).join("");
+    return `<li><b>${esc(county.county)}</b> — ${esc(county.status_label)}. ${esc(win.label || "no window")}. ${esc(distance)}. Deadline field: ${esc(formatDay(county.filing.current_year_deadline))}. ${source}. Verified ${esc(verified)}.${reminders ? `<ul>${reminders}</ul>` : ""}</li>`;
   }).join("");
   root.innerHTML = `
     <h1>Ops</h1>
     <p class="lead">This view reads appeals saved in this browser. It is not a secure admin and it is not on a server.</p>
+    <p><button class="btn" type="button" id="load-demo">Load demo case</button></p>
+    <p class="small muted">Seeds a simulated Santa Cruz appeal so a reviewer can open the result, checkout, signing, and the case page. Add ?demo=1 to any of those pages for the same seed.</p>
     <h2>Mark filed, then charge</h2>
     <p class="small muted">We file it saves a card. The charge runs only when this appeal already has a filing time, a filing ID, and a county confirmation, and the filing is not simulated. Recording the confirmation is a separate step and does not charge the card.</p>
     ${chargeQueue(db.matters)}
@@ -46,6 +55,18 @@ function paint() {
     ${authorizationRows(db.matters)}
     <h2>Paid cases by src</h2>
     ${paidBySrc(db.matters)}
+    <h2>Authority review</h2>
+    <p class="small muted">A power of attorney or conservatorship stays here until a person marks it reviewed. Filing stays off until then.</p>
+    ${poaQueue(db.matters)}
+    <h2>Demo stage</h2>
+    <p class="small muted">Advance one stage is an ops preview. It does not contact the county, and it does not set the county confirmation the charge gate requires.</p>
+    ${stageControls(db.matters)}
+    <h2>Log a forwarded notice</h2>
+    <form id="ops-notice">
+      <label>Appeal<select name="matter">${db.matters.map(m => `<option value="${esc(m.id)}">${esc(m.address || m.id)}</option>`).join("")}</select></label>
+      <label>Notice<textarea name="body" rows="4" required></textarea></label>
+      <button class="btn" type="submit">Save notice</button>
+    </form>
     <h2>Review queue</h2>
     ${queue.length ? queue.map(m => `<div class="card"><p><b>${esc(m.address)}</b> · ${esc(m.outcome)} · ${esc(m.countyId)}</p><ul>${(m.reasons || []).map(r => `<li>${esc(r)}</li>`).join("")}</ul><button class="btn" type="button" data-review="${esc(m.id)}">Mark reviewed</button></div>`).join("") : `<p>No borderline checks waiting.</p>`}
     <h2>Pipeline</h2>
@@ -54,6 +75,11 @@ function paint() {
     ${unstaged.length ? table(unstaged) : `<p class="small muted">None.</p>`}
     <h2>Deadlines by county adapter</h2>
     <ul>${calendar}</ul>`;
+  const demoButton = root.querySelector("#load-demo");
+  if (demoButton) demoButton.addEventListener("click", () => {
+    loadDemoCase();
+    location.href = "dashboard.html";
+  });
   root.querySelectorAll("[data-charge]").forEach(button => {
     button.addEventListener("click", async () => {
       const id = button.getAttribute("data-charge");
@@ -82,6 +108,15 @@ function paint() {
       if (charge.status === "succeeded") {
         matter.paymentId = charge.id;
         matter.paidAt = charge.createdAt;
+        const mon = (next.monitors || []).find(item => matter.monitor && item.id === matter.monitor.id);
+        if (mon) {
+          startIncludedYear(mon, charge.createdAt);
+          matter.monitor.yearStartedAt = mon.yearStartedAt;
+          matter.monitor.renewsOn = mon.renewsOn;
+          matter.monitor.status = mon.status;
+        }
+      } else if (matter.monitor && matter.monitor.includedWithFiling) {
+        matter.monitor.freeYear = "not_started";
       }
       saveDb(next);
       paint();
@@ -107,6 +142,28 @@ function paint() {
       paint();
     });
   });
+  root.querySelectorAll("[data-card-fail]").forEach(button => {
+    button.addEventListener("click", () => {
+      const next = loadDb();
+      const matter = next.matters.find(m => m.id === button.getAttribute("data-card-fail"));
+      if (!matter) return;
+      matter.forceCardFail = true;
+      matter.cardCheck = null;
+      saveDb(next);
+      paint();
+    });
+  });
+  root.querySelectorAll("[data-card-pass]").forEach(button => {
+    button.addEventListener("click", () => {
+      const next = loadDb();
+      const matter = next.matters.find(m => m.id === button.getAttribute("data-card-pass"));
+      if (!matter) return;
+      matter.forceCardFail = false;
+      matter.cardCheck = null;
+      saveDb(next);
+      paint();
+    });
+  });
   root.querySelectorAll("[data-review]").forEach(button => {
     button.addEventListener("click", () => {
       const id = button.getAttribute("data-review");
@@ -117,6 +174,75 @@ function paint() {
       paint();
     });
   });
+  root.querySelectorAll("[data-poa]").forEach(button => {
+    button.addEventListener("click", () => {
+      const next = loadDb();
+      const matter = next.matters.find(m => m.id === button.getAttribute("data-poa"));
+      if (!matter) return;
+      matter.poaReviewed = true;
+      if (matter.poa) matter.poa.status = "reviewed";
+      saveDb(next);
+      paint();
+    });
+  });
+  root.querySelectorAll("[data-advance]").forEach(button => {
+    button.addEventListener("click", async () => {
+      const next = loadDb();
+      const matter = next.matters.find(m => m.id === button.getAttribute("data-advance"));
+      if (!matter) return;
+      const county = counties.find(c => c.id === matter.countyId);
+      const result = advanceMatter(matter, county);
+      const note = root.querySelector("#advance-note");
+      if (!result.advanced) {
+        if (note) note.textContent = result.blocked || "This preview did not move.";
+        return;
+      }
+      if (result.emailKind) await sendCaseEmail(result.emailKind, matter, county);
+      saveDb(next);
+      paint();
+    });
+  });
+  root.querySelectorAll("[data-followup]").forEach(button => {
+    button.addEventListener("click", async () => {
+      const next = loadDb();
+      const matter = next.matters.find(m => m.id === button.getAttribute("data-followup"));
+      if (!matter) return;
+      const county = counties.find(c => c.id === matter.countyId);
+      await logHearingFollowUp(matter, county);
+      saveDb(next);
+      paint();
+    });
+  });
+  const noticeForm = root.querySelector("#ops-notice");
+  if (noticeForm) noticeForm.addEventListener("submit", e => {
+    e.preventDefault();
+    if (!noticeForm.reportValidity()) return;
+    const data = new FormData(noticeForm);
+    const next = loadDb();
+    const matter = next.matters.find(m => m.id === data.get("matter"));
+    if (!matter) return;
+    const body = String(data.get("body") || "").trim();
+    const parsed = parseNotice(body);
+    matter.notices = Array.isArray(matter.notices) ? matter.notices : [];
+    matter.notices.push({ at: new Date().toISOString(), body, ...parsed });
+    saveDb(next);
+    paint();
+  });
+}
+
+function poaQueue(matters) {
+  const rows = matters.filter(m => m.authority === "poa" && m.poa && !m.poaReviewed);
+  if (!rows.length) return `<p>No authority documents waiting.</p>`;
+  return rows.map(m => `<div class="card"><p><b>${esc(m.address)}</b> · ${esc(m.poa.name || "upload")} · pending review</p><button class="btn" type="button" data-poa="${esc(m.id)}">Mark authority reviewed</button></div>`).join("");
+}
+
+function stageControls(matters) {
+  if (!matters.length) return `<p class="small muted">No appeals in this browser.</p>`;
+  return `<p id="advance-note" class="small muted"></p>` + matters.map(m => `<div class="card"><p><b>${esc(m.address || m.id)}</b> · stage ${esc(m.stage || "none")}</p>
+    <button class="btn" type="button" data-advance="${esc(m.id)}">Advance one stage</button>
+    ${m.hearingNotice && m.hearingNotice.sentAt && !m.hearingNotice.confirmedAt && !m.hearingNotice.followUpSent ? `<button class="btn ghost" type="button" data-followup="${esc(m.id)}">Send the one hearing follow-up</button>` : ""}
+    ${m.hearingNotice && m.hearingNotice.log ? `<p class="small muted">${esc(m.hearingNotice.log)}</p>` : ""}
+  </div>`).join("");
 }
 
 function sourceLabel(matter) {
@@ -143,7 +269,14 @@ function chargeQueue(matters) {
       <button class="btn ghost" type="button" data-charge="${esc(matter.id)}" data-fail="1" ${done ? "disabled" : ""}>Record a failed charge</button>`
       : `<p class="small muted">The charge stays off until this appeal has a filing time, a filing ID, and a county confirmation, and the filing is not simulated.</p>`;
     const flag = countyFeeUncaptured(matter) ? `<p class="badge">${esc(feeFlagText(matter))}</p>` : "";
+    const check = matter.cardCheck;
+    const checkLine = check
+      ? `<p>Card check: ${esc(check.status)}${check.reason ? ` · ${esc(check.reason)}` : ""}. Amount $0.</p>`
+      : `<p class="small muted">No card check stored yet. The filing page runs a $0 authorization.</p>`;
     return `<div class="card"><p><b>${esc(matter.address)}</b></p><p>Charge: ${esc(status)}.${esc(detail)}</p>
+      ${checkLine}
+      <p><button class="btn ghost" type="button" data-card-fail="${esc(matter.id)}">Fail the next card check</button>
+      <button class="btn ghost" type="button" data-card-pass="${esc(matter.id)}">Clear a failed card check</button></p>
       ${flag}
       ${confirmationForm(matter)}
       ${buttons}</div>`;

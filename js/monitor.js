@@ -1,6 +1,5 @@
 import { backendEnabled, functionsUrl } from "./config.js";
 import { uid } from "./format.js";
-import { CARD_SAVE_NOTE } from "./pricing.js";
 import { retainUntil, shiftYears } from "./retention.js";
 import { DISCLOSURES_URL } from "./statutoryDisclosure.js";
 import { updateDb, loadDb } from "./store.js";
@@ -12,7 +11,11 @@ export function confirmationBody(record) {
   return [
     "Annual monitor confirmation",
     "",
-    "You agreed to the annual monitor at $49 a year.",
+    record.includedWithFiling && !record.yearStartedAt
+      ? "The free monitor year starts when the filing charge is captured. A declined or never-filed case does not get that year. After a captured charge, it renews at $49 a year."
+      : record.includedWithFiling
+        ? "The first year is included with your filing. It renews at $49 a year."
+        : "You agreed to the annual monitor at $49 a year.",
     MONITOR_TERMS,
     "This confirmation is yours to keep.",
     `Cancel online: ${link}`,
@@ -28,7 +31,7 @@ export function monitorOfferHtml({ email, enrolled, cancelToken }) {
   return `
     <form id="monitor-form" class="wide">
       <p>${MONITOR_TERMS}</p>
-      <p>${CARD_SAVE_NOTE}</p>
+      <p>Nothing is charged today. The $49 renewal is charged only if the monitor is still on at the renewal date. Cancel before that date and the renewal is not charged.</p>
       <label class="check"><input type="checkbox" name="renewalConsent"> I agree to these automatic renewal terms.</label>
       <label>Email<input name="email" type="email" required value="${escapeAttr(email || "")}" autocomplete="email"></label>
       <button class="btn" type="submit">Start the annual monitor</button>
@@ -42,7 +45,7 @@ function escapeAttr(value) {
   }[ch]));
 }
 
-export function enrollMonitor({ email, matterId, userId, setupIntentId }) {
+export function enrollMonitor({ email, matterId, userId, setupIntentId, includedWithFiling }) {
   const now = new Date().toISOString();
   const record = {
     id: uid("mon"),
@@ -51,24 +54,36 @@ export function enrollMonitor({ email, matterId, userId, setupIntentId }) {
     userId: userId || null,
     price: 49,
     dueToday: 0,
+    includedWithFiling: includedWithFiling === true,
     interval: "year",
     terms: MONITOR_TERMS,
     consented: true,
     consentedAt: now,
     retainUntil: retainUntil(now),
-    renewsOn: shiftYears(now, 1).slice(0, 10),
+    yearStartedAt: null,
+    renewsOn: includedWithFiling === true ? null : shiftYears(now, 1).slice(0, 10),
+    status: includedWithFiling === true ? "pending_capture" : "active",
     cancelToken: uid("cancel"),
     setupIntentId: setupIntentId || null,
     chargeStatus: "card_saved",
     paymentId: null,
     paidAt: null,
-    status: "active",
     renewalNoticeSent: false
   };
   updateDb(db => {
     db.monitors = db.monitors || [];
     db.monitors.push(record);
   });
+  return record;
+}
+
+/* The free year starts at capture, not when the card is saved. */
+export function startIncludedYear(record, capturedAt) {
+  if (!record || record.includedWithFiling !== true || record.status === "canceled") return record;
+  if (!capturedAt) return record;
+  record.yearStartedAt = capturedAt;
+  record.renewsOn = shiftYears(capturedAt, 1).slice(0, 10);
+  record.status = "active";
   return record;
 }
 

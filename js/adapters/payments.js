@@ -71,5 +71,30 @@ export const paymentsAdapter = {
     };
     updateDb(db => { db.payments.push(charge); });
     return charge;
+  },
+  /* $0 authorization before filing. A saved card that fails this check cannot be filed. */
+  async revalidateCard({ userId, matterId, setupIntentId, fail }) {
+    const createdAt = new Date().toISOString();
+    let setup = null;
+    updateDb(db => {
+      setup = db.payments.find(item => item.id === setupIntentId && item.object === "setup_intent") || null;
+    });
+    const ok = !fail && setup && (setup.status === "card_saved" || setup.status === "succeeded");
+    const row = {
+      id: uid("authz"),
+      provider: "stripe",
+      object: "authorization",
+      simulated: true,
+      userId,
+      matterId,
+      setupIntentId: setupIntentId || null,
+      amount: 0,
+      currency: "USD",
+      status: ok ? "succeeded" : "failed",
+      reason: ok ? "" : (setup ? "The simulated card check was declined." : "No saved card."),
+      createdAt
+    };
+    updateDb(db => { db.payments.push(row); });
+    return row;
   }
 };

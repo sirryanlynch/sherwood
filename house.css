@@ -2,10 +2,10 @@
    Type leads. The bungalow is ambient on the right. Figures are samples. */
 
 .house-runway{
-  --paper:#f4efe6;
-  --ink:#2b2824;
-  --greige:#cfc6b8;
-  --teal:#2f7f7a;
+  --paper:#ffffff;
+  --ink:#111111;
+  --greige:#e6e6e3;
+  --teal:#128f88;
   height:560vh;
   position:relative;
   background:var(--paper);
@@ -136,6 +136,14 @@
   .house-runway .rail span[data-k]{font-size:11px;padding:4px 8px}
   .house-runway .prog{margin:0 8px;min-width:28px}
   .house-runway .beat{display:none}
+}
+@media (max-width:900px){
+  .house-runway{height:auto}
+  .house-runway .stage{position:relative;top:auto;height:auto;overflow:visible}
+  .house-runway .viewport,.house-runway .rail{display:none}
+  .house-runway .cards.hero{position:relative;left:auto;right:auto;top:auto;bottom:auto;width:auto;height:auto;padding:8px 24px 28px}
+  .house-runway .hero .card{position:relative;opacity:1 !important;transform:none !important}
+  .house-runway .hero .card:not(:first-child){display:none}
 }
 @media (prefers-reduced-motion:reduce){
   .house-runway{height:auto}

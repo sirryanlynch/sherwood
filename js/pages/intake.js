@@ -2,6 +2,8 @@ import "../boot.js";
 import { getCounty } from "../counties.js";
 import { esc } from "../format.js";
 import { contactLine } from "../format.js";
+import { sendCaseEmail } from "../caseMail.js";
+import { currentPersona } from "../personas.js";
 import { planById } from "../pricing.js";
 import { requireMatter, saveMatter } from "../store.js";
 
@@ -41,12 +43,31 @@ if (gate) {
           <label>Photos or reports<input name="files" type="file" accept="image/*,.pdf" multiple></label>
           <p class="small muted" id="file-note"></p>
         </fieldset>
+        <fieldset><legend>Who this filing is for</legend>
+          <label>Who is asking Sherwood to file?<select name="role" id="role" required>
+            <option value="owner" ${matter.persona === "family" ? "" : "selected"}>I own this property</option>
+            <option value="advocate" ${matter.persona === "family" ? "selected" : ""}>I am helping a parent or relative</option>
+          </select></label>
+          <div id="advocate-fields" ${matter.persona === "family" ? "" : "hidden"}>
+            <p>The owner, or their legal representative, signs the authorization before we file anything. If you hold a power of attorney or a conservatorship, upload it and a person checks it before filing. You both get every email.</p>
+            <label>Owner's name<input name="ownerName" autocomplete="name"></label>
+            <label>Owner's email<input name="ownerEmail" type="email" autocomplete="email"></label>
+            <label>Your name<input name="advocateName" autocomplete="name"></label>
+            <label>Your email<input name="advocateEmail" type="email" autocomplete="email"></label>
+            <label>How will this be authorized?<select name="authority">
+              <option value="owner_signs">The owner will sign</option>
+              <option value="poa">I am uploading a power of attorney or conservatorship</option>
+            </select></label>
+            <label>Power of attorney or conservatorship<input name="poa" type="file" accept="image/*,.pdf"></label>
+            <p class="small muted" id="poa-note"></p>
+          </div>
+        </fieldset>
         <fieldset><legend>Who is signing</legend>
           <label>Full name<input name="name" required autocomplete="name"></label>
           <label>Email<input name="email" type="email" required value="${esc(matter.email || "")}"></label>
           <p class="privacy-note">We use your email and approximate location only to run your check and send what you ask for. <a href="privacy.html">Privacy policy</a>.</p>
           <label>Phone<input name="phone" type="tel" required></label>
-          <label class="check"><input type="checkbox" name="ownerConfirm" required> I am an owner of this property, or otherwise entitled to file for it.</label>
+          <label class="check" id="owner-confirm"><input type="checkbox" name="ownerConfirm" required> <span id="owner-confirm-text">I am an owner of this property, or otherwise entitled to file for it.</span></label>
           ${plan.filesAsAgent ? `<label class="check"><input type="checkbox" name="agentAuth" required> I will sign an agent authorization so Sherwood can prepare and file for this parcel and tax year. I will sign the application's certification myself.</label>` : `<p class="small muted">DIY kit: you file. Sherwood does not become your agent on this plan.</p>`}
           <label class="check"><input type="checkbox" name="risks" required> I understand Sherwood is not a law firm, results are not guaranteed, the board can raise an assessment, and I must keep paying taxes on time.</label>
         </fieldset>
@@ -68,6 +89,18 @@ if (gate) {
     };
     exemptionSelect.addEventListener("change", paintExemption);
     paintExemption();
+    const roleSelect = root.querySelector("#role");
+    const advocateFields = root.querySelector("#advocate-fields");
+    const confirmText = root.querySelector("#owner-confirm-text");
+    const syncRole = () => {
+      const advocate = roleSelect.value === "advocate";
+      advocateFields.hidden = !advocate;
+      confirmText.textContent = advocate
+        ? "The owner will sign, or I uploaded a power of attorney or conservatorship for a person to review before filing."
+        : "I am an owner of this property, or otherwise entitled to file for it.";
+    };
+    roleSelect.addEventListener("change", syncRole);
+    syncRole();
 
     root.querySelector("#intake-form").addEventListener("submit", async e => {
       e.preventDefault();
@@ -101,8 +134,34 @@ if (gate) {
         agentAuth: Boolean(form.agentAuth && form.agentAuth.checked),
         risks: true
       };
+      const poaFile = form.poa && form.poa.files && form.poa.files[0];
+      let poa = null;
+      if (data.role === "advocate" && data.authority === "poa" && poaFile) {
+        if (poaFile.size > 700000) {
+          document.querySelector("#poa-note").textContent = `${poaFile.name} is over 700KB. This demo keeps files in local storage, so choose a smaller file.`;
+          return;
+        }
+        poa = { name: poaFile.name, type: poaFile.type, size: poaFile.size, dataUrl: await readFile(poaFile), status: "pending_review" };
+      }
+      if (data.role === "advocate" && data.authority === "poa" && !poa) {
+        document.querySelector("#poa-note").textContent = "Upload the power of attorney or conservatorship. A person reviews it before filing.";
+        return;
+      }
       matter.uploads = uploads;
       matter.address = data.address;
+      matter.email = data.email;
+      matter.role = data.role;
+      matter.authority = data.role === "advocate" ? data.authority : "owner";
+      matter.persona = matter.persona || currentPersona();
+      if (data.role === "advocate") {
+        matter.intake.ownerName = data.ownerName || "";
+        matter.intake.ownerEmail = data.ownerEmail || "";
+        matter.intake.advocateName = data.advocateName || "";
+        matter.intake.advocateEmail = data.advocateEmail || "";
+      }
+      matter.poa = poa;
+      matter.poaReviewed = false;
+      await sendCaseEmail("received", matter, county);
       saveMatter(matter);
       location.href = "kit.html";
     });

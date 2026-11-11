@@ -1,3 +1,4 @@
+import { DOOR_COPY, rememberPersona } from "./personas.js";
 import { STATIONS, actState, cameraFrames, stationIndex, worldMarkup } from "./world.js";
 
 const REDUCE = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -131,22 +132,15 @@ function bindCheckDock() {
   const go = dock && dock.querySelector("[data-dock-go]");
   if (!dock || !section || !go) return;
   const panel = section.querySelector(".check-hero-panel") || section;
-  const runway = document.querySelector(".house-runway");
-  const stage = runway && runway.querySelector(".stage");
   const narrow = window.matchMedia("(max-width: 900px)");
   const sync = () => {
     const check = document.querySelector("#check-form");
     const waiting = !!(check && check.hidden);
     go.textContent = waiting ? "Email me a reminder" : "Check my property";
     const view = window.innerHeight || 0;
-    let onStory = false;
-    if (stage) {
-      const box = stage.getBoundingClientRect();
-      onStory = box.top < 160 && box.bottom > view * 0.5;
-    }
     const panelBox = panel.getBoundingClientRect();
     const sectionVisible = panelBox.top < view - 64 && panelBox.bottom > 88;
-    dock.hidden = !narrow.matches || sectionVisible || onStory;
+    dock.hidden = !narrow.matches || sectionVisible;
   };
   const tick = () => { sync(); requestAnimationFrame(tick); };
   requestAnimationFrame(tick);
@@ -164,6 +158,26 @@ function bindCheckDock() {
   });
   sync();
 }
+
+function paintDoor() {
+  const id = rememberPersona(location.search);
+  const note = document.querySelector("#door-note");
+  const extra = document.querySelector("#portfolio-extra");
+  const waitlist = document.querySelector("#portfolio-waitlist");
+  if (note) {
+    if (id === "family") {
+      note.hidden = false;
+      note.innerHTML = `<ul class="checks"><li>The owner or their legal representative signs.</li><li>A power of attorney or conservatorship is reviewed by a person.</li><li>You both get every email.</li></ul>`;
+    } else {
+      note.hidden = id === "home";
+      note.textContent = (DOOR_COPY[id] && DOOR_COPY[id].note) || "";
+    }
+  }
+  if (extra) extra.hidden = id !== "portfolio";
+  if (waitlist) waitlist.hidden = id !== "portfolio";
+}
+
+paintDoor();
 
 const stories = document.querySelectorAll("[data-story]");
 stories.forEach(bindRunway);
