@@ -1,24 +1,30 @@
 import { backendEnabled, functionsUrl } from "./config.js";
 import { uid } from "./format.js";
+import { MONITOR } from "./pricing.js";
 import { retainUntil, shiftYears } from "./retention.js";
 import { DISCLOSURES_URL } from "./statutoryDisclosure.js";
 import { updateDb, loadDb } from "./store.js";
 
-export const MONITOR_TERMS = "The annual monitor costs $49 and renews automatically each year until you cancel. You can cancel online in one click before the renewal date. Sherwood emails a renewal notice 15 to 45 days before the renewal.";
+export const MONITOR_TERMS = `The annual monitor costs $${MONITOR.price} and renews automatically each year until you cancel. You can cancel online in one click before the renewal date. Sherwood emails a renewal notice 15 to 45 days before the renewal.`;
 
 export function confirmationBody(record) {
   const link = `cancel.html?token=${encodeURIComponent(record.cancelToken)}`;
+  const price = `$${MONITOR.price}`;
+  const renewalOn = record && record.renewal === true;
+  const terms = renewalOn
+    ? MONITOR_TERMS
+    : "Renewal is off. Your monitoring ends after the first year with no charge.";
   return [
     "Annual monitor confirmation",
     "",
     record.includedWithFiling && !record.yearStartedAt
       ? "The free monitor year starts when the filing charge is captured. A declined or never-filed case does not get that year."
-        + (record.renewal === true ? " After a captured charge, it renews at $49 a year." : " Renewal stays off unless you opt in.")
+        + (renewalOn ? ` After a captured charge, it renews at ${price} a year.` : " Renewal stays off unless you opt in.")
       : record.includedWithFiling
         ? "Your first year of monitoring is included."
-          + (record.renewal === true ? " It renews at $49 a year." : " Renewal is off.")
-        : "You agreed to the annual monitor at $49 a year.",
-    MONITOR_TERMS,
+          + (renewalOn ? ` It renews at ${price} a year.` : " Renewal is off.")
+        : `You agreed to the annual monitor at ${price} a year.`,
+    terms,
     "This confirmation is yours to keep.",
     `Cancel online: ${link}`,
     `Disclosures: ${DISCLOSURES_URL}`
@@ -33,7 +39,7 @@ export function monitorOfferHtml({ email, enrolled, cancelToken }) {
   return `
     <form id="monitor-form" class="wide">
       <p>${MONITOR_TERMS}</p>
-      <p>Nothing is charged today. The $49 renewal is charged only if the monitor is still on at the renewal date. Cancel before that date and the renewal is not charged.</p>
+      <p>Nothing is charged today. The $${MONITOR.price} renewal is charged only if the monitor is still on at the renewal date. Cancel before that date and the renewal is not charged.</p>
       <label class="check"><input type="checkbox" name="renewalConsent"> I agree to these automatic renewal terms.</label>
       <label>Email<input name="email" type="email" required value="${escapeAttr(email || "")}" autocomplete="email"></label>
       <button class="btn" type="submit">Start the annual monitor</button>
@@ -56,7 +62,7 @@ export function enrollMonitor({ email, matterId, userId, setupIntentId, included
     email: String(email || "").trim(),
     matterId: matterId || null,
     userId: userId || null,
-    price: 49,
+    price: MONITOR.price,
     dueToday: 0,
     includedWithFiling: included,
     renewal: renews,

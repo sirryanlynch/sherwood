@@ -57,9 +57,9 @@ if (gate) {
           ${plans.map(plan => cardHtml(plan, lines, savings, plans.length === 1)).join("")}
         </div>
         ${plans.some(plan => plan.id === "dfy") ? hearingAckHtml(onlyDfy ? "dfy" : "") : ""}
-        <p>Your first year of monitoring is included.</p>
-        <div class="check" id="monitor-included"><input id="monitor-renewal" type="checkbox" name="monitorRenewal"><label for="monitor-renewal">Renew monitoring at ${esc(monitorPrice)}/yr after that. Cancel anytime.</label></div>
-        <p class="small muted">${esc(MONITOR_TERMS)}</p>
+        <p>Your first year of monitoring is included. It starts when your filing is charged. A declined or never-filed case doesn't get it.</p>
+        <div class="check" id="monitor-included"><input id="monitor-renewal" type="checkbox" name="monitorRenewal"><label for="monitor-renewal">Renew monitoring at ${esc(monitorPrice)}/yr after that.</label></div>
+        <p class="small muted">If you turn on renewal: ${esc(MONITOR_TERMS)}</p>
         ${notes}
         <div class="card-save">
           <label>Card<input name="card" disabled placeholder="Simulated. No card number is accepted."></label>
