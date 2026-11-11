@@ -5,6 +5,7 @@ import { paymentsAdapter } from "../adapters/payments.js";
 import { nextWindowCopy } from "../engine.js";
 import { contactLine, esc, formatDay, money } from "../format.js";
 import { offerMessage, orderBadgeHtml, purchaseOffer, reminderButtonLabel, reminderOnly } from "../offer.js";
+import { VALUE_VS_RATE, WE_DO, YOU_DO, customerOutcome } from "../outcome.js";
 import { slugForCountyId } from "../place.js";
 import { reminderMessage } from "../place-ui.js";
 import { confirmationBody, createMonitorRemote, enrollMonitor, monitorOfferHtml } from "../monitor.js";
@@ -14,10 +15,8 @@ import { currentMatter, saveMatter } from "../store.js";
 
 function priceLine(county, offer) {
   const lines = planPriceLines(county);
-  const bits = [];
-  if (offer && offer.dfy) bits.push(`We file it ${lines.dfy.replace(/\.$/, "")}`);
-  if (!bits.length) return "";
-  return `<p>${esc(bits.join(". "))}</p>`;
+  if (offer && offer.dfy) return `<p>Our fee: <b>${esc(lines.dfy)}</b></p>`;
+  return "";
 }
 
 const root = document.querySelector("#results");
@@ -39,23 +38,59 @@ function remindForm(matter, privacy, label) {
     </form>`;
 }
 
-function emailForm(matter, privacy) {
+function emailForm(matter, privacy, label) {
   return `
     <form id="result-email" class="wide">
-      <label>Email this result<input name="email" type="email" required value="${esc(matter.email || "")}" placeholder="you@example.com"></label>
+      <label>Email<input name="email" type="email" required value="${esc(matter.email || "")}" placeholder="you@example.com"></label>
       ${privacy}
-      <button class="btn" type="submit">Email me this result</button>
+      <button class="btn ghost" type="submit">${esc(label)}</button>
       <p id="email-ok" class="small muted" hidden></p>
     </form>`;
 }
 
+function rangeHtml(savings) {
+  if (!savings || savings.low == null) {
+    return `<p>${esc((savings && savings.note) || "No dollar estimate on this check.")}</p>`;
+  }
+  return `
+    <p><span class="chip chip-estimate">Estimate</span></p>
+    <p>Estimated first-year savings: <b class="evidence">${esc(money(savings.low))}</b> – <b class="evidence">${esc(money(savings.high))}</b> (most likely ${esc(money(savings.mid))}).</p>
+    <div class="range" role="img" aria-label="Low, likely, and high savings estimates">
+      <div class="range-track"><i class="range-fill"></i><i class="range-mark"></i></div>
+      <div class="range-labels"><span>Low ${esc(money(savings.low))}</span><span>Likely ${esc(money(savings.mid))}</span><span>High ${esc(money(savings.high))}</span></div>
+    </div>
+    <p class="small muted">${esc(savings.bandNote || "")}</p>
+    <p class="small muted">${esc(savings.note || "")}</p>`;
+}
+
+function scopeHtml() {
+  return `<div class="scope">
+    <div><h3>We do</h3><ul>${WE_DO.map(line => `<li>${esc(line)}</li>`).join("")}</ul></div>
+    <div><h3>You do</h3><ul>${YOU_DO.map(line => `<li>${esc(line)}</li>`).join("")}</ul></div>
+  </div>`;
+}
+
+function valueRateHtml() {
+  return `<h2>A higher bill isn't always an appeal</h2>
+    <p>Tax rates and voter-approved charges can raise your bill without changing your assessed value. We separate the two and only file on value.</p>
+    <ul class="defs">${VALUE_VS_RATE.map(([name, text]) => `<li><b>${esc(name)}.</b> ${esc(text)}</li>`).join("")}</ul>
+    <p><a href="understand/">Explain my notice</a></p>`;
+}
+
+function evidenceHtml(matter) {
+  const rows = [
+    ["Assessed value you entered", money(matter.assessed)],
+    ["Your market-value estimate", matter.marketSkipped || matter.market == null ? "Skipped" : money(matter.market)],
+    ["Gap", matter.reduction == null ? "Not calculated" : money(matter.reduction)],
+    ["Tax bill you entered", matter.tax == null ? "Not entered" : money(matter.tax)]
+  ];
+  return `<h2>Your numbers</h2>
+    <p><span class="chip chip-estimate">Estimate</span> <span class="chip chip-record">From what you typed</span></p>
+    <table>${rows.map(([label, value]) => `<tr><td>${esc(label)}</td><td>${esc(value)}</td></tr>`).join("")}</table>`;
+}
+
 function render(matter, county) {
-  const labels = {
-    go: "Go",
-    borderline: "Borderline — human review",
-    no_go: "No-go",
-    off_season: "Filing opens later"
-  };
+  const face = customerOutcome(matter.outcome);
   const savings = matter.savings || {};
   const showFact = (text) => text && !/unverified template/i.test(text);
   const rules = (county.rules || []).filter(showFact).map(rule => `<li>${esc(rule)}</li>`).join("");
@@ -63,94 +98,110 @@ function render(matter, county) {
   const win = (county.filing && county.filing.regular_window) || {};
   const source = win.source_url ? `<a href="${esc(win.source_url)}">${esc(win.source_url)}</a>` : "not set on this adapter";
   const verified = win.verified_date ? formatDay(win.verified_date) : "not set on this adapter";
-  let savingsHtml = "";
-  if (matter.marketSkipped || matter.reduction == null) {
-    savingsHtml = `<p>Market value was skipped, so no reduction was calculated. ${esc(savings.note || "")}</p>`;
-  } else {
-    savingsHtml = `<p>Assessed value minus your market-value estimate: <b>${esc(money(matter.reduction))}</b>. Estimate, not a result.</p>`;
-    if (savings.amount == null) savingsHtml += `<p>${esc(savings.note || "")}</p>`;
-    else savingsHtml += `<p>Estimated first-year tax difference: <b>${esc(money(savings.amount))}</b>. Rate used: ${(savings.rate * 100).toFixed(2)}% from your tax bill ÷ assessed value. ${esc(savings.note)}</p>`;
-  }
-
   const offer = purchaseOffer(county, new Date(), matter.supplementalNoticeDate);
   const privacy = `<p class="privacy-note">We use your email and approximate location only to run your check and send what you ask for. <a href="privacy.html">Privacy policy</a>.</p>`;
   const canBuy = offer.diy || offer.dfy;
-  let next = "";
-  if (reminderOnly(offer)) {
+  const gapLine = matter.marketSkipped || matter.reduction == null
+    ? "Market value was skipped, so no reduction was calculated."
+    : `Your assessed value is ${money(matter.reduction)} above the market estimate you gave us.`;
+
+  let decision = "";
+  let dockHtml = "";
+  if (reminderOnly(offer) && matter.outcome !== "no_go") {
     const copy = offer.closed || matter.outcome === "off_season"
       ? nextWindowCopy(county, new Date())
       : (offerMessage(county, offer) || "Purchase is not available for this county.");
     const informal = (offer.closed || matter.outcome === "off_season") && county.informal_review
       ? `<h3>Free informal review</h3><p>${esc(county.informal_review)}</p>`
       : "";
-    next = `
-      <div class="card">
-        <h2>Reminder only</h2>
-        <p>${esc(copy)}</p>
-        ${informal}
-        <p class="small muted">Deadline source: ${source}. Verified: ${esc(verified)}.</p>
-        ${remindForm(matter, privacy, reminderButtonLabel(offer))}
-      </div>`;
+    decision = `
+      <h1>Filing is closed for this season in ${esc(county.county)}.</h1>
+      <p>${esc(copy)}</p>
+      ${informal}
+      <p class="small muted"><span class="chip chip-record">From your county record</span> Deadline source: ${source}. Verified: ${esc(verified)}.</p>
+      ${remindForm(matter, privacy, matter.outcome === "off_season" || offer.closed ? "Email me when it opens" : reminderButtonLabel(offer))}`;
   } else if (matter.outcome === "go" && canBuy) {
-    next = `${emailForm(matter, privacy)}
-      <div class="cta"><a class="btn" href="login.html?next=checkout.html">Create an account and choose a plan</a></div>`;
-  } else if (matter.outcome === "borderline" && canBuy) {
-    next = `<p>You can create an account. Sherwood will not treat this as ready to file until a person marks it reviewed. The ops queue on this browser lists it.</p>
-      <p>${esc(offerMessage(county, offer))}</p>
-      ${emailForm(matter, privacy)}
-      <div class="cta"><a class="btn" href="login.html?next=checkout.html">Create an account</a></div>`;
+    decision = `
+      <h1>You likely have a case.</h1>
+      <p>${esc(gapLine)} Our fee: <b>${esc(planPriceLines(county).dfy)}</b></p>
+      <div class="mobile-cta"><a class="btn" href="login.html?next=checkout.html">Have Sherwood file it, $249</a></div>
+      ${rangeHtml(savings)}
+      <p>Your card is saved, not charged, until the county confirms filing. If we decide not to file after intake, you pay nothing.</p>
+      <p class="small muted">Low-risk step: email yourself this result and read it on a computer before you hire us.</p>
+      ${emailForm(matter, privacy, "Email me this result to review on a computer")}
+      <p><a href="how-it-works.html">What happens next</a></p>`;
+    dockHtml = `<div class="check-dock" data-result-dock><a class="btn" href="login.html?next=checkout.html">Have Sherwood file it, $249</a></div>`;
+  } else if (matter.outcome === "borderline") {
+    decision = `
+      <h1>It's close. A person will review it.</h1>
+      <p>The low estimate is under our $249 fee, so we won't recommend filing until someone checks your numbers. You'll get an email within [X business days, PENDING Ops capacity].</p>
+      ${rangeHtml(savings)}
+      <p>${esc(offerMessage(county, offer) || "")}</p>
+      ${emailForm(matter, privacy, "Send it for review (free)")}
+      <p class="small muted">Filing stays off until a person marks this reviewed. There is no checkout on this result.</p>`;
   } else if (matter.outcome === "no_go") {
-    next = `<p>There is no checkout on a no-go.</p>
-      ${emailForm(matter, privacy)}
-      <div class="cta"><a class="btn ghost" href="how-it-works.html">See how a case moves when the numbers support it</a></div>`;
-  } else if (offer.closed || matter.outcome === "off_season") {
-    next = `
-      <div class="card">
-        <h2>Filing opens later</h2>
-        <p>${esc(nextWindowCopy(county, new Date()))}</p>
-        ${county.informal_review ? `<h3>Free informal review</h3><p>${esc(county.informal_review)}</p>` : ""}
-        <p class="small muted">Deadline source: ${source}. Verified: ${esc(verified)}.</p>
-        ${remindForm(matter, privacy, reminderButtonLabel(offer))}
-      </div>
+    decision = `
+      <h1>No action recommended.</h1>
+      <p>Based on your numbers, an appeal likely wouldn't save more than it costs. That's a real answer, not a sales step.</p>
+      <ul>${(matter.reasons || []).map(reason => `<li>${esc(reason)}</li>`).join("")}</ul>
+      ${rangeHtml(savings)}
+      <p>We are not offering a filing on this result.</p>
+      ${remindForm(matter, privacy, "Remind me next year")}
+      <p><a href="understand/">Explain my notice</a></p>
       <div class="card">
         <h3>Annual monitor</h3>
-        <p>${esc(money(MONITOR.price))} a year. ${esc(MONITOR.summary)}</p>
+        <p>${esc(money(MONITOR.price))} a year per property. ${esc(MONITOR.summary)} The first year is not included unless you file.</p>
+        ${monitorOfferHtml({ email: matter.email, enrolled: !!matter.monitor, cancelToken: matter.monitor && matter.monitor.cancelToken })}
+      </div>`;
+  } else if (offer.closed || matter.outcome === "off_season") {
+    decision = `
+      <h1>Filing is closed for this season in ${esc(county.county)}.</h1>
+      <p>${esc(nextWindowCopy(county, new Date()))} We'll email you before it opens.</p>
+      ${county.informal_review ? `<h3>Free informal review</h3><p>${esc(county.informal_review)}</p>` : ""}
+      <p class="small muted"><span class="chip chip-record">From your county record</span> Deadline source: ${source}. Verified: ${esc(verified)}.</p>
+      ${remindForm(matter, privacy, "Email me when it opens")}
+      <div class="card">
+        <h3>Annual monitor, $49/yr</h3>
+        <p>${esc(MONITOR.summary)}</p>
         ${monitorOfferHtml({ email: matter.email, enrolled: !!matter.monitor, cancelToken: matter.monitor && matter.monitor.cancelToken })}
       </div>
       <p class="small muted">Assessor contact from the adapter: ${esc(contactLine(county.assessor_office))}</p>`;
   } else {
-    next = `
-      <div class="card">
-        <h2>Reminder only</h2>
-        <p>${esc(offerMessage(county, offer) || "Purchase is not available for this county.")}</p>
-        <p class="small muted">Deadline source: ${source}. Verified: ${esc(verified)}.</p>
-        ${remindForm(matter, privacy, reminderButtonLabel(offer))}
-      </div>`;
+    decision = `
+      <h1>Reminder only</h1>
+      <p>${esc(offerMessage(county, offer) || "Purchase is not available for this county.")}</p>
+      <p class="small muted">Deadline source: ${source}. Verified: ${esc(verified)}.</p>
+      ${remindForm(matter, privacy, reminderButtonLabel(offer))}`;
   }
 
   const deadline = matter.window && matter.window.state === "open" ? orderBadgeHtml(county) : "";
   root.innerHTML = `
-    <p class="badge">${esc(labels[matter.outcome] || matter.outcome)}</p>
+    <p class="outcome-mark" data-outcome="${esc(face.id)}">${esc(face.label)}</p>
     ${deadline}
-    <h1>Your check</h1>
-    <p class="lead">For ${esc(matter.address)}. County adapter: ${esc(county.county)} (${esc(county.status_label)}).</p>
-    <div class="card">
-      ${savingsHtml}
-      <p class="small muted">${matter.outcome === "off_season" ? esc(nextWindowCopy(county, new Date())) : `Window: ${esc(matter.window && matter.window.label || "not set")}. Adapter deadline: ${esc(formatDay(county.filing.current_year_deadline))}.`}</p>
-      <p class="small muted">Deadline source: ${source}. Verified: ${esc(verified)}.</p>
-      ${priceLine(county, offer)}
-      <ul>${(matter.reasons || []).map(r => `<li>${esc(r)}</li>`).join("")}</ul>
+    <div class="split result-layout">
+      <div class="result-evidence">
+        <p class="lead">For ${esc(matter.address)}. ${esc(county.county)} (${esc(county.status_label)}).</p>
+        ${evidenceHtml(matter)}
+        ${priceLine(county, offer)}
+        <p class="small muted">${matter.outcome === "off_season" ? esc(nextWindowCopy(county, new Date())) : `Window: ${esc(matter.window && matter.window.label || "not set")}. Adapter deadline: ${esc(formatDay(county.filing.current_year_deadline))}.`}</p>
+        <p class="small muted"><span class="chip chip-record">From your county record</span> Deadline source: ${source}. Verified: ${esc(verified)}.</p>
+        ${valueRateHtml()}
+        ${scopeHtml()}
+        <h2>What this county adapter says</h2>
+        <ul>${rules}</ul>
+        <ul>${timelines}</ul>
+        <p>Clerk: ${esc(contactLine(county.filing.clerk))}</p>
+        <div class="card" aria-label="Comparable sales locked">
+          <p class="muted small" style="margin-top:0">Comparable sales <span class="chip chip-sample">Sample</span></p>
+          <p class="blur" aria-hidden="true">0000 Sample St · $0,000,000</p>
+          <p class="small muted" style="margin-bottom:0">Locked because this demo does not have comparable sales for your address. We do not invent them. The pilot method is on the case study page, and those sales belong to that pilot, not to this check.</p>
+        </div>
+      </div>
+      <div class="result-decision">
+        ${decision}
+      </div>
     </div>
-    ${next}
-    <h2>What this county adapter says</h2>
-    <ul>${rules}</ul>
-    <ul>${timelines}</ul>
-    <p>Clerk: ${esc(contactLine(county.filing.clerk))}</p>
-    <div class="card" aria-label="Comparable sales locked">
-      <p class="muted small" style="margin-top:0">Comparable sales</p>
-      <p class="blur" aria-hidden="true">0000 Sample St · $0,000,000</p>
-      <p class="small muted" style="margin-bottom:0">Locked because this demo does not have comparable sales for your address. We do not invent them. The pilot method is on the case study page, and those sales belong to that pilot, not to this check.</p>
-    </div>`;
+    ${dockHtml}`;
 
   const remind = document.querySelector("#remind-form");
   if (remind) {
@@ -164,7 +215,7 @@ function render(matter, county) {
         county_slug: slugForCountyId(matter.countyId),
         address: matter.address,
         marketing_consent: true,
-        consent_source: "results_off_season"
+        consent_source: matter.outcome === "no_go" ? "results_no_action" : "results_off_season"
       });
       matter.remindWhenOpen = { at: new Date().toISOString(), email, openDate: null, simulated: !!result.simulated };
       saveMatter(matter);
@@ -190,13 +241,14 @@ function render(matter, county) {
       if (!saveForm.reportValidity()) return;
       const email = String(new FormData(saveForm).get("email") || "").trim();
       matter.email = email;
+      if (matter.outcome === "borderline") matter.reviewRequested = true;
       saveMatter(matter);
       const result = await createLead({
         email,
         county_slug: slugForCountyId(matter.countyId),
         address: matter.address,
         outcome: matter.outcome,
-        consent_source: "results_save"
+        consent_source: matter.outcome === "borderline" ? "results_review" : "results_save"
       });
       const ok = document.querySelector("#email-ok");
       if (ok) {
@@ -208,6 +260,16 @@ function render(matter, county) {
     });
   }
   bindMonitor(matter);
+  const resultDock = document.querySelector("[data-result-dock]");
+  const primary = document.querySelector(".mobile-cta");
+  if (resultDock && primary && "IntersectionObserver" in window) {
+    const narrow = window.matchMedia("(max-width: 800px)");
+    const io = new IntersectionObserver(([entry]) => {
+      resultDock.hidden = !narrow.matches || !entry || entry.isIntersecting;
+    });
+    io.observe(primary);
+    narrow.addEventListener("change", () => { resultDock.hidden = !narrow.matches; });
+  }
 }
 
 function bindMonitor(matter) {

@@ -224,6 +224,10 @@ body.mkt .check-hero #county-reminder label{flex:none;width:100%;gap:6px}
   content:"";display:inline-block;width:6px;height:6px;margin-right:8px;
   border-radius:50%;background:#128f88;transform:translateY(-1px);
 }
+.deadline-chip{display:none}
+@media (max-width:800px){
+  .deadline-chip:not([hidden]){display:block;position:sticky;top:0;z-index:25;background:#17191c;color:#fff;text-align:center;font-size:13px;padding:8px 12px}
+}
 .check-dock{display:none}
 @media (min-width:720px){
   .trust-strip{flex-direction:row;flex-wrap:wrap;gap:8px 18px}

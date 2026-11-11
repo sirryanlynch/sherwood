@@ -7,6 +7,7 @@ import { getCounty } from "../counties.js";
 import { esc, formatShortDay } from "../format.js";
 import { HEARING_PACKET_LINE, planById } from "../pricing.js";
 import { AUTHORIZATION_RETENTION, retainUntil } from "../retention.js";
+import { sendCaseEmail } from "../caseMail.js";
 import { requireMatter, saveMatter } from "../store.js";
 
 const gate = requireMatter("sign.html");
@@ -106,7 +107,8 @@ function paintForm(root, matter, county, step, round, envelope) {
   root.innerHTML = `
     <p class="banner">Simulated embedded signing. Not a DocuSign session. Sherwood cannot sign as you.</p>
     <h1>${esc(step.title)}</h1>
-    <p class="lead">Round ${esc(String(round))} of the model. Signer: the homeowner. Adapter: ${esc(county.county)}.</p>
+    <p class="lead">Round ${esc(String(round))} of the model. Signer: ${matter.role === "advocate" ? "the owner, or the legal representative" : "the homeowner"}. Adapter: ${esc(county.county)}.</p>
+    ${matter.role === "advocate" ? `<p>The payer can be someone else. The owner signs this authorization, unless a power of attorney or conservatorship was uploaded for review.</p>` : ""}
     ${step.id === "agent_authorization" ? summaryHtml(matter, yearChoices[0], null) : ""}
     <div class="card">
       <p>${esc(step.text)}</p>
@@ -180,6 +182,7 @@ function paintForm(root, matter, county, step, round, envelope) {
       };
     }
     if (round === 3) matter.stipulationDecision = "Accepted in the demo. The signature is simulated and there is no stipulation form in the pilot kit.";
+    if (round === 2) await sendCaseEmail("signed", matter, county);
     saveMatter(matter);
     if (round === 1) location.href = "sign.html?round=2";
     else if (round === 2) location.href = "filed.html";

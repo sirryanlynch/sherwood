@@ -7,8 +7,13 @@ const SIM = "Simulated on this device. Payment, signatures, county filing, and e
 
 function paintOrderBadge(county) {
   const host = document.querySelector("[data-order-badge]");
-  if (!host) return;
-  host.innerHTML = orderBadgeHtml(county);
+  if (host) host.innerHTML = orderBadgeHtml(county);
+  const chip = document.querySelector("[data-deadline-chip]");
+  if (!chip) return;
+  const bits = host ? [...host.querySelectorAll("p")].map(el => el.textContent.trim()).filter(Boolean) : [];
+  const text = bits.join(" · ");
+  chip.textContent = text;
+  chip.hidden = !text;
 }
 
 async function fillLaunchFacts() {

@@ -5,6 +5,7 @@ import { decide } from "../engine.js";
 import { adapterFeeNotes, planPriceLines } from "../pricing.js";
 import { offerMessage, purchaseOffer } from "../offer.js";
 import { esc, moneyToNumber } from "../format.js";
+import { currentPersona } from "../personas.js";
 import { currentPlace } from "../place-ui.js";
 import { currentMatter, newMatter, saveMatter } from "../store.js";
 
@@ -96,7 +97,9 @@ form.addEventListener("submit", e => {
     fee: result.fee,
     window: result.window,
     decidedAt: new Date().toISOString(),
-    attribution: (existing && existing.attribution) || readAttribution()
+    attribution: (existing && existing.attribution) || readAttribution(),
+    persona: check.persona || currentPersona(),
+    portfolioAddresses: Array.isArray(check.portfolioAddresses) ? check.portfolioAddresses : []
   };
   if (existing) saveMatter(matter);
   else newMatter(matter);

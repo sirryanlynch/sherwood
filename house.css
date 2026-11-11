@@ -137,6 +137,14 @@
   .house-runway .prog{margin:0 8px;min-width:28px}
   .house-runway .beat{display:none}
 }
+@media (max-width:900px){
+  .house-runway{height:auto}
+  .house-runway .stage{position:relative;top:auto;height:auto;overflow:visible}
+  .house-runway .viewport,.house-runway .rail{display:none}
+  .house-runway .cards.hero{position:relative;left:auto;right:auto;top:auto;bottom:auto;width:auto;height:auto;padding:8px 24px 28px}
+  .house-runway .hero .card{position:relative;opacity:1 !important;transform:none !important}
+  .house-runway .hero .card:not(:first-child){display:none}
+}
 @media (prefers-reduced-motion:reduce){
   .house-runway{height:auto}
   .house-runway .stage{position:relative;top:auto;height:auto;overflow:visible}

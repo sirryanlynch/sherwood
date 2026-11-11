@@ -1,8 +1,10 @@
 import { captureFirstTouch } from "./js/attribution.js";
+import { currentPersona, rememberPersona } from "./js/personas.js";
 import { startPlace, rememberAddress } from "./js/place-ui.js";
 import { bindDisclosureDialog } from "./js/statutoryDisclosure.js";
 
 captureFirstTouch();
+rememberPersona(location.search);
 bindDisclosureDialog();
 mountCompactNav();
 
@@ -90,6 +92,8 @@ document.querySelectorAll("form[data-kind]").forEach(form => {
       data.countyLabel = place.label || "";
       data.placeStatus = place.status;
       data.placeSource = place.source;
+      data.persona = currentPersona();
+      data.portfolioAddresses = [data.address2, data.address3].map(value => String(value || "").trim()).filter(Boolean);
       sessionStorage.setItem("sherwood_check", JSON.stringify(data));
       const nested = /\/(santa-cruz|san-diego|san-mateo|santa-barbara)(\/|$)/.test(location.pathname);
       location.href = nested ? "../values.html" : "values.html";

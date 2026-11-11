@@ -1,23 +1,11 @@
 import "../boot.js";
-import { notify } from "../adapters/notify.js";
-import { paymentsAdapter } from "../adapters/payments.js";
-import { confirmationBody, createMonitorRemote, enrollMonitor, monitorOfferHtml } from "../monitor.js";
-import { authAdapter } from "../adapters/auth.js";
 import { getCounty } from "../counties.js";
-import { contactLine, esc, formatDay, isoDay, money } from "../format.js";
-import { parseNotice } from "../notices.js";
-import { HEARING_PACKET_LINE, MONITOR } from "../pricing.js";
-import { currentMatter, requireMatter, saveMatter, loadDb } from "../store.js";
-
-const STAGES = [
-  ["filed", "Filed"],
-  ["acknowledged", "County acknowledged"],
-  ["assessor_review", "Assessor review"],
-  ["hearing_scheduled", "Hearing scheduled"],
-  ["decision", "Decision"],
-  ["refund", "Corrected bill / refund"],
-  ["monitor", "Annual monitor"]
-];
+import { contactLine, esc, formatDay } from "../format.js";
+import { CASE_EMAIL_KINDS } from "../caseMail.js";
+import { authorizationScope, nextActionLine, taxYearLabel } from "../caseStatus.js";
+import { HEARING_PACKET_LINE } from "../pricing.js";
+import { downloadPdf } from "../recordPdf.js";
+import { requireMatter, saveMatter } from "../store.js";
 
 const gate = requireMatter("dashboard.html");
 if (!gate) {
@@ -29,226 +17,132 @@ if (!gate) {
 
 function paint(matter, user, county) {
   const root = document.querySelector("#dashboard");
-  const stage = matter.stage && STAGES.some(([id]) => id === matter.stage) ? matter.stage : null;
-  const expectations = (stage && county.stage_expectations && county.stage_expectations[stage]) || [
-    "Nothing has been filed from this browser yet.",
-    ...(county.filing.paper_steps || [])
-  ];
-  const timeline = STAGES.map(([id, label]) => {
-    const on = id === stage;
-    return `<li class="stage${on ? " now" : ""}"><b>${esc(label)}</b>${on ? " — now" : ""}</li>`;
+  const auth = matter.agentAuthorization;
+  const filing = matter.filing;
+  const years = taxYearLabel(matter);
+  const emails = Array.isArray(matter.caseEmails) ? matter.caseEmails : [];
+  const emailRows = CASE_EMAIL_KINDS.map(kind => {
+    const row = emails.find(item => item.kind === kind);
+    const label = kind.replace(/_/g, " ");
+    if (!row) return `<li><b>${esc(label)}</b> — Not sent yet.</li>`;
+    const who = (row.to || []).join(", ") || "no address on the appeal";
+    return `<li><b>${esc(row.subject || label)}</b><p class="small muted">To ${esc(who)} · ${esc(row.at || "")} · simulated, not delivered</p><pre class="card">${esc(row.body || "")}</pre></li>`;
   }).join("");
-  const stipulation = stage === "assessor_review" ? `
-    <h2>Stipulation decision</h2>
-    <p>A stipulation would be an agreement on value instead of a hearing. The pilot kit has no stipulation form. Sherwood does not tell you which way to choose. Accepting here only continues the demo.</p>
-    <div class="cta">
-      <a class="btn" href="sign.html?round=3">Accept and sign (simulated round 3)</a>
-      <button class="btn ghost" id="decline" type="button">Decline</button>
-    </div>
-    <p class="small muted">${matter.signatures && matter.signatures.stipulation ? "A simulated signature is on file." : ""} ${matter.stipulationDecision ? esc(matter.stipulationDecision) : ""}</p>` : "";
-  const hearing = stage === "hearing_scheduled" ? `
-    <h2>Hearing</h2>
-    <p>${esc(HEARING_PACKET_LINE)}</p>
-    <p>Format, from the adapter: ${esc(county.hearing.format)}</p>
-    <p>${esc(county.hearing.notice)}</p>
-    <p>Preview date: ${esc(matter.hearing && matter.hearing.date ? formatDay(matter.hearing.date) : "none")} ${matter.hearing && matter.hearing.simulated ? "(simulated preview, not a county notice)" : ""}</p>
-    <ul>${(county.hearing.prep || []).map(item => `<li>${esc(item)}</li>`).join("")}</ul>` : "";
-  const decision = stage === "decision" ? `
-    <h2>Decision preview</h2>
-    <p>No county decision is loaded. These buttons only restate your own numbers.</p>
-    <div class="cta">
-      <button class="btn ghost" type="button" data-decision="reduction">Preview using your opinion of value</button>
-      <button class="btn ghost" type="button" data-decision="unchanged">Preview no change</button>
-      <button class="btn ghost" type="button" data-decision="increase">Preview the increase risk</button>
-    </div>
-    <p id="decision-copy">${esc(matter.decisionNote || "")}</p>` : "";
-  const monitor = stage === "monitor" ? `
-    <h2>Annual monitor</h2>
-    <p>${esc(MONITOR.summary)} Price on this site: ${esc(money(MONITOR.price))}/yr.</p>
-    ${monitorOfferHtml({ email: user.email, enrolled: !!matter.monitor, cancelToken: matter.monitor && matter.monitor.cancelToken })}` : "";
+  const follow = emails.filter(item => item.kind === "hearing_followup").map(row =>
+    `<li><b>${esc(row.subject)}</b><p class="small muted">${esc(row.at || "")}</p><pre class="card">${esc(row.body || "")}</pre></li>`
+  ).join("");
+  const notices = (matter.notices || []).slice().reverse().map(row =>
+    `<article class="card"><p>${esc(row.body)}</p><p class="small muted">${esc(row.note || "")} ${row.suggestion ? `Suggested stage: ${esc(row.suggestion)}.` : ""}</p></article>`
+  ).join("");
+  const hearingReady = matter.stage === "hearing_scheduled" || (matter.hearingNotice && matter.hearingNotice.sentAt);
+  const confirmed = matter.hearingNotice && matter.hearingNotice.confirmedAt;
+  const confirm = hearingReady
+    ? (confirmed
+      ? `<p>You confirmed the hearing notice on ${esc(formatDay(matter.hearingNotice.confirmedAt))}.</p>`
+      : `<button class="btn" id="got-notice" type="button">I got my hearing notice</button>`)
+    : "";
+  const stipulation = matter.stage === "assessor_review" && !matter.stipulationDecision
+    ? `<p><a class="btn" href="sign.html?round=3">Accept and sign</a> <button class="btn ghost" id="decline" type="button">Decline</button></p>`
+    : (matter.stipulationDecision ? `<p class="small muted">${esc(matter.stipulationDecision)}</p>` : "");
+  const advocate = matter.role === "advocate"
+    ? `<p class="badge">Family advocate${matter.intake && matter.intake.ownerName ? ` · owner ${esc(matter.intake.ownerName)}` : ""}</p>`
+    : "";
+  const packetLines = matter.kit && matter.kit.statement
+    ? ["Hearing packet preview", "Not a county document.", HEARING_PACKET_LINE, "", matter.kit.statement]
+    : ["Hearing packet", "No statement is stored yet. The packet is prepared from the kit you approve.", HEARING_PACKET_LINE];
 
   root.innerHTML = `
-    <h1>Your appeal</h1>
-    <p class="lead">${esc(matter.address)}. ${esc(county.county)} (${esc(county.status_label)}).</p>
-    ${matter.outcome === "borderline" && !matter.reviewed ? `<p class="note">This check is in the human-review queue. Filing stays blocked until it is marked reviewed, unless you used the demo preview.</p>` : ""}
-    <div class="split">
-      <div>
-        <h2>Timeline</h2>
-        <ul class="tl">${timeline}</ul>
-        <p class="small muted">Expected timing from this adapter:</p>
-        <ul>${(county.timelines || []).map(row => `<li>${esc(row.text)}</li>`).join("")}</ul>
-        <h2>What to expect now</h2>
-        <ul>${expectations.map(line => `<li>${esc(line)}</li>`).join("")}</ul>
-        ${stipulation}${hearing}${decision}${monitor}
-        <h2>Demo control</h2>
-        <p class="small muted">Moves the preview one stage. It does not contact the county. Reminders in the build brief are 60, 30, and 7 days before a deadline; those emails are not sent.</p>
-        <button class="btn" id="advance" type="button">Advance one stage</button>
-        <p id="advance-note" class="small muted"></p>
-      </div>
-      <div>
-        <h2>Notices</h2>
-        <p class="small muted">Forward county mail by pasting it or choosing a text file. We only keyword-match. A person still reads it.</p>
-        <form id="notice-form">
-          <label>County mail<textarea name="body" rows="5" required></textarea></label>
-          <label>Or a text file<input name="file" type="file" accept=".txt,text/plain"></label>
-          <button class="btn" type="submit">Save notice</button>
-        </form>
-        <div id="notice-list"></div>
-        <h2>Notifications</h2>
-        <form id="prefs">
-          <label class="check"><input type="checkbox" name="email" ${user.prefs.email ? "checked" : ""}> Email</label>
-          <label class="check"><input type="checkbox" name="sms" ${user.prefs.sms ? "checked" : ""}> SMS</label>
-          <label>Mobile number<input name="phone" value="${esc(user.prefs.phone || "")}" placeholder="Only stored in this browser"></label>
-          <button class="btn ghost" type="submit">Save preferences</button>
-        </form>
-        <h2>Simulated outbox</h2>
-        <div data-outbox class="small muted"></div>
-        <p>Clerk: ${esc(contactLine(county.filing.clerk))}</p>
-        ${county.filing.portal_url ? `<p><a href="${esc(county.filing.portal_url)}">County portal</a></p>` : ""}
-      </div>
-    </div>`;
+    <h1>Your appeal: ${esc(matter.address)}, tax year ${esc(years)}</h1>
+    <p class="lead">${esc(county.county)} (${esc(county.status_label)}). This page is the record. It does not promise proactive status updates. You get an email when a step happens. Status changes when you act, or when ops records a step.</p>
+    ${advocate}
+    <p class="next-action">${esc(nextActionLine(matter))}</p>
+    ${confirm}
+    ${stipulation}
+    <div class="card">
+      <h2>Authorization</h2>
+      <p>${esc(authorizationScope(matter))}</p>
+      <p>${esc(HEARING_PACKET_LINE)}</p>
+      ${auth ? `<button class="btn ghost" type="button" id="dl-auth">Download the signed authorization</button>` : `<p class="small muted">The signed authorization PDF appears here after you sign.</p>`}
+    </div>
+    <div class="card">
+      <h2>Application and county receipt</h2>
+      ${filing
+        ? `<p>Application filed ${esc(formatDay(filing.filedAt))}. Filing id: <b>${esc(filing.id)}</b>.</p>
+           <p>County confirmation: ${esc(filing.countyConfirmedAt || "not recorded")}.</p>
+           <p>County reference: ${esc(filing.countyReference || "not recorded")}.</p>
+           <p>County receipt: ${esc(filing.countyFeeReceipt || "not recorded")}.</p>`
+        : `<p>No filing is stored on this appeal yet. The filing button stays off until the authorization is complete and the agent name, address, and phone are real details rather than [pending].</p>`}
+      <p><button class="btn ghost" type="button" id="dl-app">Download the application preview</button>
+      ${filing ? `<button class="btn ghost" type="button" id="dl-receipt">Download the county receipt</button>` : ""}</p>
+    </div>
+    <div class="card">
+      <h2>Key dates</h2>
+      <ul>
+        <li>Filing deadline on the adapter: ${esc(formatDay(county.filing && county.filing.current_year_deadline))}</li>
+        <li>Filed: ${filing ? esc(formatDay(filing.filedAt)) : "not filed"}</li>
+        <li>Hearing: ${matter.hearing && matter.hearing.date ? esc(formatDay(matter.hearing.date)) : "not on this record"}</li>
+      </ul>
+      <p class="small muted">${esc((county.filing && county.filing.regular_window && county.filing.regular_window.label) || "")}</p>
+    </div>
+    <div class="card">
+      <h2>Hearing packet</h2>
+      <p>${esc(HEARING_PACKET_LINE)}</p>
+      <button class="btn ghost" type="button" id="dl-packet">Download the hearing packet</button>
+    </div>
+    <h2>Notices</h2>
+    <p class="small muted">Notices you forward are logged by ops and shown here. Nothing on this page edits the appeal.</p>
+    ${notices || `<p class="small muted">No notices on this appeal.</p>`}
+    <h2>Emails</h2>
+    <ol class="email-list">${emailRows}${follow}</ol>
+    <p class="small muted">Clerk: ${esc(contactLine(county.filing.clerk))}. Signed in as ${esc(user.email)}.</p>`;
 
-  renderNotices(matter);
-  renderOutbox();
-
-  document.querySelector("#advance").addEventListener("click", async () => {
-    if (stage === "assessor_review" && !matter.stipulationDecision && !(matter.signatures && matter.signatures.stipulation)) {
-      document.querySelector("#advance-note").textContent = "Accept or decline the stipulation preview before advancing. This is the demo control, not the county.";
-      return;
-    }
-    const order = STAGES.map(([id]) => id);
-    const idx = stage ? order.indexOf(stage) : -1;
-    const next = order[Math.min(idx + 1, order.length - 1)];
-    if (stage === "monitor") return;
-    matter.stage = next;
-    matter.stageHistory.push({ stage: next, at: new Date().toISOString(), simulated: true });
-    if (next === "hearing_scheduled") {
-      const minDays = county.hearing.notice_minimum_days;
-      if (typeof minDays === "number") {
-        const date = new Date();
-        date.setDate(date.getDate() + minDays);
-        matter.hearing = { date: isoDay(date), simulated: true, minimumDays: minDays };
-      } else {
-        matter.hearing = { date: null, simulated: true, note: "This adapter has no minimum notice period, so no preview date was invented." };
-      }
-    }
-    saveMatter(matter);
-    await ping(user, `Demo stage is now ${next}. This message was not sent.`);
-    paint(matter, sessionUserFresh(user), county);
+  const authBtn = root.querySelector("#dl-auth");
+  if (authBtn) authBtn.addEventListener("click", () => {
+    downloadPdf("authorization.pdf", [
+      "Sherwood authorization record",
+      "Simulated. Not a county form.",
+      authorizationScope(matter),
+      `Document: ${auth.doc_title || ""}`,
+      `Agent: ${auth.agentName || ""}`,
+      `Address: ${auth.agentAddress || ""}`,
+      `Phone: ${auth.agentPhone || ""}`,
+      "You get a copy of everything filed."
+    ]);
   });
-
-  const decline = document.querySelector("#decline");
+  root.querySelector("#dl-app").addEventListener("click", () => {
+    downloadPdf("application-preview.pdf", [
+      "Application preview",
+      matter.address || "",
+      filing ? `Filing id: ${filing.id}` : "Not filed.",
+      "",
+      (matter.kit && matter.kit.statement) || "No statement of facts is stored yet."
+    ]);
+  });
+  const receiptBtn = root.querySelector("#dl-receipt");
+  if (receiptBtn) receiptBtn.addEventListener("click", () => {
+    downloadPdf("county-receipt.pdf", [
+      "County receipt record",
+      "Simulated. The county portal was not contacted.",
+      `Filing id: ${filing.id}`,
+      `Filed: ${filing.filedAt || ""}`,
+      `County reference: ${filing.countyReference || "not recorded"}`,
+      `County receipt: ${filing.countyFeeReceipt || "not recorded"}`,
+      `County confirmation: ${filing.countyConfirmedAt || "not recorded"}`,
+      filing.feeLabel || ""
+    ]);
+  });
+  root.querySelector("#dl-packet").addEventListener("click", () => downloadPdf("hearing-packet.pdf", packetLines));
+  const got = root.querySelector("#got-notice");
+  if (got) got.addEventListener("click", () => {
+    matter.hearingNotice = matter.hearingNotice || { sentAt: null, followUpSent: false };
+    matter.hearingNotice.confirmedAt = new Date().toISOString();
+    saveMatter(matter);
+    paint(matter, user, county);
+  });
+  const decline = root.querySelector("#decline");
   if (decline) decline.addEventListener("click", () => {
-    matter.stipulationDecision = "Declined in the demo. No document was signed.";
+    matter.stipulationDecision = "Declined. You decided not to accept a stipulation. No document was signed.";
     saveMatter(matter);
     paint(matter, user, county);
   });
-  document.querySelectorAll("[data-decision]").forEach(button => {
-    button.addEventListener("click", () => {
-      const kind = button.getAttribute("data-decision");
-      if (kind === "reduction") {
-        const savings = matter.savings && matter.savings.amount;
-        matter.decisionNote = savings == null
-          ? `If the board used your opinion of value, the assessed reduction would be ${money(matter.reduction)}. No tax bill was entered, so no refund dollars are shown.`
-          : `If the board used your opinion of value, the assessed reduction would be ${money(matter.reduction)}, about ${money(savings)} on the bill you entered. Estimate only.`;
-      } else if (kind === "unchanged") {
-        matter.decisionNote = "Preview: assessment unchanged. Estimated savings $0. The kit says the board can also leave the value as it is.";
-      } else {
-        matter.decisionNote = "The adapter says the board can increase the assessment. This demo does not invent a higher number.";
-      }
-      matter.decisionPreview = kind;
-      saveMatter(matter);
-      paint(matter, user, county);
-    });
-  });
-  const monitorForm = document.querySelector("#monitor-form");
-  if (monitorForm) monitorForm.addEventListener("submit", async e => {
-    e.preventDefault();
-    const data = new FormData(monitorForm);
-    const err = monitorForm.querySelector("#monitor-consent-err");
-    if (data.get("renewalConsent") !== "on") {
-      if (err) err.hidden = false;
-      return;
-    }
-    if (!monitorForm.reportValidity()) return;
-    const email = String(data.get("email") || "").trim();
-    const setup = await paymentsAdapter.saveCard({
-      userId: user.id,
-      matterId: matter.id,
-      plan: { id: "monitor" }
-    });
-    const record = enrollMonitor({
-      email,
-      matterId: matter.id,
-      userId: user.id,
-      setupIntentId: setup.id
-    });
-    matter.monitor = {
-      id: record.id,
-      at: record.consentedAt,
-      price: record.price,
-      cancelToken: record.cancelToken,
-      retainUntil: record.retainUntil,
-      renewsOn: record.renewsOn
-    };
-    saveMatter(matter);
-    await notify.outbox({
-      channel: "email",
-      to: email,
-      kind: "monitor_confirm",
-      simulated: true,
-      body: confirmationBody(record)
-    });
-    await createMonitorRemote(record);
-    paint(matter, user, county);
-  });
-  const noticeForm = document.querySelector("#notice-form");
-  if (noticeForm) noticeForm.addEventListener("submit", async e => {
-    e.preventDefault();
-    const form = e.target;
-    let body = form.querySelector("textarea").value.trim();
-    const fileInput = form.querySelector("input[type=file]");
-    const file = fileInput && fileInput.files && fileInput.files[0];
-    if (file) body = `${body}\n${await file.text()}`.trim();
-    const parsed = parseNotice(body);
-    matter.notices.push({ at: new Date().toISOString(), body, ...parsed });
-    saveMatter(matter);
-    form.reset();
-    paint(matter, user, county);
-  });
-  const prefsForm = document.querySelector("#prefs");
-  if (prefsForm) prefsForm.addEventListener("submit", async e => {
-    e.preventDefault();
-    const data = new FormData(e.target);
-    await authAdapter.updatePrefs(user.id, {
-      email: data.get("email") === "on",
-      sms: data.get("sms") === "on",
-      phone: String(data.get("phone") || "")
-    });
-    paint(currentMatter(), sessionUserFresh(user), county);
-  });
-}
-
-function sessionUserFresh(fallback) {
-  const db = loadDb();
-  return db.users.find(u => u.id === fallback.id) || fallback;
-}
-
-function renderNotices(matter) {
-  const list = document.querySelector("#notice-list");
-  if (!list) return;
-  const rows = (matter.notices || []).slice().reverse();
-  list.innerHTML = rows.length ? rows.map(row => `<div class="card"><p>${esc(row.body)}</p><p class="small muted">${esc(row.note)} ${row.suggestion ? `Suggested stage: ${esc(row.suggestion)}.` : ""}</p></div>`).join("") : `<p class="small muted">No notices saved.</p>`;
-}
-
-function renderOutbox() {
-  const box = document.querySelector("#dashboard").querySelector("[data-outbox]");
-  if (!box) return;
-  const rows = notify.list().slice(0, 6);
-  box.innerHTML = rows.length ? rows.map(row => `<p>${esc(row.channel)} · ${esc(row.kind || "note")} · ${esc(row.body)}</p>`).join("") : "<p>No simulated messages yet.</p>";
-}
-
-async function ping(user, body) {
-  if (user.prefs.email) await notify.outbox({ channel: "email", to: user.email, kind: "status", simulated: true, body });
-  if (user.prefs.sms && user.prefs.phone) await notify.outbox({ channel: "sms", to: user.prefs.phone, kind: "status", simulated: true, body });
 }

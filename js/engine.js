@@ -1,7 +1,13 @@
 import { asDate, formatShortDay, parseISODate, money } from "./format.js";
+import { dfyServiceAmount } from "./pricing.js";
 
 /* Product review rule, not a legal standard and not a county rule. */
 export const MATERIALITY_RATIO = 0.05;
+
+/* Planning band, not a county rule and not a promise. The low figure is half the bill math because the county may grant only part of a reduction. */
+export const SAVINGS_LOW_SHARE = 0.5;
+
+export const SAVINGS_BAND_NOTE = "The middle figure is (assessed value − your market-value estimate) × (your tax bill ÷ assessed value). The low figure is half of that, because the county may grant only part of a reduction. The high figure is the full math. This band is Sherwood's planning assumption, not a county rule and not a promise. This check does not pull comparable sales.";
 
 export function feeAmount(county) {
   const filing = county && county.filing;
@@ -19,15 +25,31 @@ export function savingsOf(assessed, reduction, tax) {
     return {
       amount: null,
       rate: null,
+      low: null,
+      mid: null,
+      high: null,
+      bandNote: SAVINGS_BAND_NOTE,
       note: "No dollar savings yet. Your tax bill was not entered, and this check does not apply the pilot property's 1.23% rate to anyone else."
     };
   }
   const rate = tax / assessed;
+  const amount = reduction * rate;
   return {
-    amount: reduction * rate,
+    amount,
     rate,
+    low: amount * SAVINGS_LOW_SHARE,
+    mid: amount,
+    high: amount,
+    bandNote: SAVINGS_BAND_NOTE,
     note: "Estimate only: (assessed value − your market-value estimate) × (tax bill ÷ assessed value). This is your bill, not a countywide rate."
   };
+}
+
+/* Recommend We file it only when the low first-year estimate clears the service fee. */
+export function recommendsFiling(decision) {
+  if (!decision || decision.outcome !== "go") return false;
+  const low = decision.savings && decision.savings.low;
+  return typeof low === "number" && low >= dfyServiceAmount();
 }
 
 export function filingWindow(county, today, supplementalNoticeDate) {
@@ -124,6 +146,10 @@ export function decide(input) {
     const savings = {
       amount: null,
       rate: null,
+      low: null,
+      mid: null,
+      high: null,
+      bandNote: SAVINGS_BAND_NOTE,
       note: "No dollar estimate. Market value was skipped, so nothing was calculated."
     };
     if (window.state === "off_season") {
@@ -192,9 +218,24 @@ export function decide(input) {
       ...base
     };
   }
+  if (savings.amount == null) {
+    return {
+      outcome: "borderline",
+      reasons: ["No tax bill was entered, so there is no dollar savings estimate to compare with the We file it fee. A person reviews this before Sherwood recommends filing.", ...window.reasons],
+      ...base
+    };
+  }
+  const serviceFee = dfyServiceAmount();
+  if (typeof savings.low === "number" && savings.low < serviceFee) {
+    return {
+      outcome: "no_go",
+      reasons: [`The low savings estimate is under the We file it fee (${money(serviceFee)}), so Sherwood does not recommend filing.`],
+      ...base
+    };
+  }
   return {
     outcome: "go",
-    reasons: ["The market value you entered is below the assessed value, and the filing window on this adapter is open."],
+    reasons: ["The market value you entered is below the assessed value, the low savings estimate covers the We file it fee, and the filing window on this adapter is open."],
     ...base
   };
 }

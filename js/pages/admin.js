@@ -5,6 +5,9 @@ import { planById } from "../pricing.js";
 import { loadCounties } from "../counties.js";
 import { formatDay, esc, parseISODate } from "../format.js";
 import { AUTHORIZATION_RETENTION, retainUntil } from "../retention.js";
+import { advanceMatter, logHearingFollowUp } from "../caseStatus.js";
+import { sendCaseEmail } from "../caseMail.js";
+import { parseNotice } from "../notices.js";
 import { loadDb, saveDb } from "../store.js";
 
 const STAGES = ["filed", "acknowledged", "assessor_review", "hearing_scheduled", "decision", "refund", "monitor", "kit_ready"];
@@ -46,6 +49,18 @@ function paint() {
     ${authorizationRows(db.matters)}
     <h2>Paid cases by src</h2>
     ${paidBySrc(db.matters)}
+    <h2>Authority review</h2>
+    <p class="small muted">A power of attorney or conservatorship stays here until a person marks it reviewed. Filing stays off until then.</p>
+    ${poaQueue(db.matters)}
+    <h2>Demo stage</h2>
+    <p class="small muted">Advance one stage is an ops preview. It does not contact the county, and it does not set the county confirmation the charge gate requires.</p>
+    ${stageControls(db.matters)}
+    <h2>Log a forwarded notice</h2>
+    <form id="ops-notice">
+      <label>Appeal<select name="matter">${db.matters.map(m => `<option value="${esc(m.id)}">${esc(m.address || m.id)}</option>`).join("")}</select></label>
+      <label>Notice<textarea name="body" rows="4" required></textarea></label>
+      <button class="btn" type="submit">Save notice</button>
+    </form>
     <h2>Review queue</h2>
     ${queue.length ? queue.map(m => `<div class="card"><p><b>${esc(m.address)}</b> · ${esc(m.outcome)} · ${esc(m.countyId)}</p><ul>${(m.reasons || []).map(r => `<li>${esc(r)}</li>`).join("")}</ul><button class="btn" type="button" data-review="${esc(m.id)}">Mark reviewed</button></div>`).join("") : `<p>No borderline checks waiting.</p>`}
     <h2>Pipeline</h2>
@@ -117,6 +132,75 @@ function paint() {
       paint();
     });
   });
+  root.querySelectorAll("[data-poa]").forEach(button => {
+    button.addEventListener("click", () => {
+      const next = loadDb();
+      const matter = next.matters.find(m => m.id === button.getAttribute("data-poa"));
+      if (!matter) return;
+      matter.poaReviewed = true;
+      if (matter.poa) matter.poa.status = "reviewed";
+      saveDb(next);
+      paint();
+    });
+  });
+  root.querySelectorAll("[data-advance]").forEach(button => {
+    button.addEventListener("click", async () => {
+      const next = loadDb();
+      const matter = next.matters.find(m => m.id === button.getAttribute("data-advance"));
+      if (!matter) return;
+      const county = counties.find(c => c.id === matter.countyId);
+      const result = advanceMatter(matter, county);
+      const note = root.querySelector("#advance-note");
+      if (!result.advanced) {
+        if (note) note.textContent = result.blocked || "This preview did not move.";
+        return;
+      }
+      if (result.emailKind) await sendCaseEmail(result.emailKind, matter, county);
+      saveDb(next);
+      paint();
+    });
+  });
+  root.querySelectorAll("[data-followup]").forEach(button => {
+    button.addEventListener("click", async () => {
+      const next = loadDb();
+      const matter = next.matters.find(m => m.id === button.getAttribute("data-followup"));
+      if (!matter) return;
+      const county = counties.find(c => c.id === matter.countyId);
+      await logHearingFollowUp(matter, county);
+      saveDb(next);
+      paint();
+    });
+  });
+  const noticeForm = root.querySelector("#ops-notice");
+  if (noticeForm) noticeForm.addEventListener("submit", e => {
+    e.preventDefault();
+    if (!noticeForm.reportValidity()) return;
+    const data = new FormData(noticeForm);
+    const next = loadDb();
+    const matter = next.matters.find(m => m.id === data.get("matter"));
+    if (!matter) return;
+    const body = String(data.get("body") || "").trim();
+    const parsed = parseNotice(body);
+    matter.notices = Array.isArray(matter.notices) ? matter.notices : [];
+    matter.notices.push({ at: new Date().toISOString(), body, ...parsed });
+    saveDb(next);
+    paint();
+  });
+}
+
+function poaQueue(matters) {
+  const rows = matters.filter(m => m.authority === "poa" && m.poa && !m.poaReviewed);
+  if (!rows.length) return `<p>No authority documents waiting.</p>`;
+  return rows.map(m => `<div class="card"><p><b>${esc(m.address)}</b> · ${esc(m.poa.name || "upload")} · pending review</p><button class="btn" type="button" data-poa="${esc(m.id)}">Mark authority reviewed</button></div>`).join("");
+}
+
+function stageControls(matters) {
+  if (!matters.length) return `<p class="small muted">No appeals in this browser.</p>`;
+  return `<p id="advance-note" class="small muted"></p>` + matters.map(m => `<div class="card"><p><b>${esc(m.address || m.id)}</b> · stage ${esc(m.stage || "none")}</p>
+    <button class="btn" type="button" data-advance="${esc(m.id)}">Advance one stage</button>
+    ${m.hearingNotice && m.hearingNotice.sentAt && !m.hearingNotice.confirmedAt && !m.hearingNotice.followUpSent ? `<button class="btn ghost" type="button" data-followup="${esc(m.id)}">Send the one hearing follow-up</button>` : ""}
+    ${m.hearingNotice && m.hearingNotice.log ? `<p class="small muted">${esc(m.hearingNotice.log)}</p>` : ""}
+  </div>`).join("");
 }
 
 function sourceLabel(matter) {

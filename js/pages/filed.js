@@ -1,12 +1,12 @@
 import "../boot.js";
 import { efileAdapter } from "../adapters/efile.js";
-import { notify } from "../adapters/notify.js";
 import { getCounty } from "../counties.js";
 import { AGENT_CONTACT, OWNER_COPY_LINE, authorizationReady, pendingAgentContact, signedBeforeFiling, signedDateText } from "../authorization.js";
 import { AUTHORIZATION_RETENTION } from "../retention.js";
 import { contactLine, esc } from "../format.js";
 import { filingWindow } from "../engine.js";
 import { planById, planPriceLines } from "../pricing.js";
+import { sendCaseEmail } from "../caseMail.js";
 import { requireMatter, saveMatter } from "../store.js";
 
 const gate = requireMatter("filed.html");
@@ -49,6 +49,7 @@ function paintGate(root, matter, user, county) {
   }
   if (!certOk) blocks.push("The homeowner certification is not signed yet.");
   if (matter.outcome === "borderline" && !matter.reviewed) blocks.push("A person has to mark this review complete before filing.");
+  if (matter.authority === "poa" && !matter.poaReviewed) blocks.push("A power of attorney or conservatorship was uploaded. A person has to review it before filing.");
   if (county.status !== "verified") blocks.push(county.template_warning || county.status_label || "This adapter is not verified.");
   if (season.state !== "open") blocks.push("The filing window on this adapter is not open, so filing stays off.");
   const canFile = blocks.length === 0;
@@ -99,15 +100,8 @@ async function submitFiling(root, matter, user, county) {
   matter.stage = "filed";
   matter.stageHistory = [{ stage: "filed", at: filing.filedAt, simulated: true }];
   saveMatter(matter);
-  if (user.prefs && user.prefs.email) {
-    await notify.outbox({
-      channel: "email",
-      to: user.email,
-      kind: "filed",
-      simulated: true,
-      body: `Simulated filing ${filing.id} recorded in this browser. Not sent to the county.`
-    });
-  }
+  await sendCaseEmail("filed", matter, county);
+  saveMatter(matter);
   paintFiled(root, matter, county);
 }
 

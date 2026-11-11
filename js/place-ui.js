@@ -2,6 +2,7 @@ import {
   CHOICE_KEY, addressKey, choiceFromCounty, classifyIp, countyBySlug, displayLabel,
   headlinePlace, otherChoice, parseAddressPlace, resolvePlace
 } from "./place.js";
+import { DOOR_COPY, currentPersona } from "./personas.js";
 import { createReminder } from "./reminders.js";
 
 const GEO_KEY = "sherwood_geo";
@@ -148,6 +149,18 @@ function paint(place) {
   if (under && check) under.hidden = check.hidden;
   const showCheck = document.querySelector("#show-check");
   if (showCheck) showCheck.hidden = remindOnlyLanding;
+  const persona = currentPersona();
+  const copy = DOOR_COPY[persona] || DOOR_COPY.home;
+  const eyebrow = document.getElementById("home-eyebrow");
+  if (eyebrow) {
+    eyebrow.textContent = place.status === "launch" || persona !== "home" ? copy.eyebrowLaunch : copy.eyebrowOther;
+  }
+  const sub = document.getElementById("home-sub");
+  if (sub && persona === "home") {
+    sub.textContent = place.status === "launch"
+      ? "Check for free. If you have a case, we prepare and file it for $249, county fee included. You sign. We file. If it's not worth it, we'll tell you."
+      : "Check for free. You sign. We file. If it's not worth it, we'll tell you.";
+  }
   syncEscape(check);
 }
 
