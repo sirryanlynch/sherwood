@@ -166,8 +166,13 @@ function paintDoor() {
   const waitlist = document.querySelector("#portfolio-waitlist");
   if (note) {
     if (id === "family") {
-      note.hidden = false;
-      note.innerHTML = `<ul class="checks"><li>The owner or their legal representative signs.</li><li>A power of attorney or conservatorship is reviewed by a person.</li><li>You both get every email.</li></ul>`;
+      if (document.querySelector("#parent-lead")) {
+        note.hidden = true;
+        note.replaceChildren();
+      } else {
+        note.hidden = false;
+        note.innerHTML = `<ul class="checks"><li>The owner or their legal representative signs.</li><li>A power of attorney or conservatorship is reviewed by a person.</li><li>You both get every email.</li></ul>`;
+      }
     } else {
       note.hidden = id === "home";
       note.textContent = (DOOR_COPY[id] && DOOR_COPY[id].note) || "";

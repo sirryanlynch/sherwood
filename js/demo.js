@@ -37,10 +37,10 @@ export function loadDemoCase() {
       amount,
       rate,
       low: amount * 0.5,
-      mid: amount,
+      mid: amount * 0.75,
       high: amount,
       note: "Estimate only. Simulated demo.",
-      bandNote: "Simulated demo band."
+      bandNote: "Simulated demo band. Likely sits between the low and high figures."
     },
     fee: 50,
     window: { state: "open", kind: "regular", reasons: [], label: "July 2 through November 30, 2026" },
@@ -98,6 +98,13 @@ export function loadDemoCase() {
   saveDb(db);
   setSessionUser(user.id);
   setCurrentMatter(matter.id);
+  try {
+    sessionStorage.setItem("sherwood_check", JSON.stringify({
+      address: matter.address,
+      email: matter.email,
+      persona: "home"
+    }));
+  } catch (e) { /* ignore */ }
   try { sessionStorage.setItem("sherwood_demo", "1"); } catch (e) { /* ignore */ }
   return matter;
 }

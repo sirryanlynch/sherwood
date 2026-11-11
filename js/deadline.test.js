@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { decide } from "./engine.js";
 import { caseEmailDraft } from "./caseMail.js";
 import { deadlineReminderPlan, cutoffSubject, borderlineReviewLine } from "./deadlineReminders.js";
 import { paymentsAdapter } from "./adapters/payments.js";
@@ -67,6 +68,36 @@ test("the free monitor year starts at capture, not at card save", () => {
   assert.equal(record.yearStartedAt, "2026-11-20T00:00:00.000Z");
   assert.equal(record.renewsOn, "2027-11-20");
   assert.equal(record.status, "active");
+});
+
+test("likely savings sit strictly between low and high", () => {
+  const decision = decide({
+    county,
+    today: new Date(2026, 9, 13),
+    assessed: 1233915,
+    market: 1075000,
+    tax: 15000,
+    confidence: "sure"
+  });
+  assert.ok(decision.savings.low < decision.savings.mid);
+  assert.ok(decision.savings.mid < decision.savings.high);
+  assert.notEqual(decision.savings.mid, decision.savings.high);
+});
+
+test("a no-action result does not show negative savings", () => {
+  const decision = decide({
+    county,
+    today: new Date(2026, 9, 13),
+    assessed: 800000,
+    market: 850000,
+    tax: 9000,
+    confidence: "sure"
+  });
+  assert.equal(decision.outcome, "no_go");
+  assert.equal(decision.savings.low, 0);
+  assert.equal(decision.savings.mid, 0);
+  assert.equal(decision.savings.high, 0);
+  assert.equal(decision.savings.note, "No savings expected.");
 });
 
 test("a reviewer demo seeds a Santa Cruz case", () => {

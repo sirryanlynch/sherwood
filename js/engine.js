@@ -4,10 +4,13 @@ import { dfyServiceAmount } from "./pricing.js";
 /* Product review rule, not a legal standard and not a county rule. */
 export const MATERIALITY_RATIO = 0.05;
 
-/* Planning band, not a county rule and not a promise. The low figure is half the bill math because the county may grant only part of a reduction. */
+/* Planning band, not a county rule and not a promise.
+   High is the full bill math. Likely is three quarters of that. Low is half.
+   Likely sits strictly between low and high when the bill math is positive. */
 export const SAVINGS_LOW_SHARE = 0.5;
+export const SAVINGS_MID_SHARE = 0.75;
 
-export const SAVINGS_BAND_NOTE = "The middle figure is (assessed value − your market-value estimate) × (your tax bill ÷ assessed value). The low figure is half of that, because the county may grant only part of a reduction. The high figure is the full math. This band is Sherwood's planning assumption, not a county rule and not a promise. This check does not pull comparable sales.";
+export const SAVINGS_BAND_NOTE = "The high figure is the full bill math: (assessed value − your market-value estimate) × (your tax bill ÷ assessed value). The likely figure is three quarters of that, and the low figure is half, because the county may grant only part of a reduction. This band is Sherwood's planning assumption, not a county rule and not a promise. This check does not pull comparable sales.";
 
 export function feeAmount(county) {
   const filing = county && county.filing;
@@ -33,13 +36,24 @@ export function savingsOf(assessed, reduction, tax) {
     };
   }
   const rate = tax / assessed;
-  const amount = reduction * rate;
+  const raw = reduction * rate;
+  if (!(raw > 0)) {
+    return {
+      amount: 0,
+      rate,
+      low: 0,
+      mid: 0,
+      high: 0,
+      bandNote: SAVINGS_BAND_NOTE,
+      note: "No savings expected."
+    };
+  }
   return {
-    amount,
+    amount: raw,
     rate,
-    low: amount * SAVINGS_LOW_SHARE,
-    mid: amount,
-    high: amount,
+    low: raw * SAVINGS_LOW_SHARE,
+    mid: raw * SAVINGS_MID_SHARE,
+    high: raw,
     bandNote: SAVINGS_BAND_NOTE,
     note: "Estimate only: (assessed value − your market-value estimate) × (tax bill ÷ assessed value). This is your bill, not a countywide rate."
   };

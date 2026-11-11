@@ -55,11 +55,14 @@ function rangeHtml(savings) {
   if (!savings || savings.low == null) {
     return `<p>${esc((savings && savings.note) || "No dollar estimate on this check.")}</p>`;
   }
+  if (savings.note === "No savings expected." || (savings.low === 0 && savings.mid === 0 && savings.high === 0)) {
+    return `<p>No savings expected.</p>`;
+  }
   return `
     <p><span class="chip chip-estimate">Estimate</span></p>
     <p>Estimated first-year savings: <b class="evidence">${esc(money(savings.low))}</b> – <b class="evidence">${esc(money(savings.high))}</b> (most likely ${esc(money(savings.mid))}).</p>
     <div class="range" role="img" aria-label="Low, likely, and high savings estimates">
-      <div class="range-track"><i class="range-fill"></i><i class="range-mark"></i></div>
+      <div class="range-track"><i class="range-fill"></i><i class="range-mark" style="left:75%"></i></div>
       <div class="range-labels"><span>Low ${esc(money(savings.low))}</span><span>Likely ${esc(money(savings.mid))}</span><span>High ${esc(money(savings.high))}</span></div>
     </div>
     <p class="small muted">${esc(savings.bandNote || "")}</p>

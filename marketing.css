@@ -53,6 +53,7 @@ body.mkt h1{
   letter-spacing:-.02em;
   margin:12px 0 16px;
 }
+body.mkt .hero h1 + .subhead{margin-top:0}
 body.mkt h2{
   font-size:clamp(26px,2.5vw,32px);
   font-weight:600;
