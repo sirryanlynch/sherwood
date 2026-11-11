@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { chargeReady, countyFeeUncaptured, recordCountyConfirmation } from "./chargeGate.js";
 import { CONFIG } from "./config.js";
 import { offerMessage, purchaseOffer, reminderButtonLabel, reminderOnly } from "./offer.js";
-import { CHECKOUT_PLANS, HEARING_STATEMENT, planById } from "./pricing.js";
+import { CHECKOUT_PLANS, HEARING_STATEMENT, dfyServiceAmount, heroFeeBullet, plainDollars, planById } from "./pricing.js";
 
 const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
 const readCounty = (name) => JSON.parse(readFileSync(new URL(`../data/counties/${name}.json`, import.meta.url), "utf8"));
@@ -74,7 +74,8 @@ test("the marketing pages keep the check, the flat fee, and the pilot estimates"
   assert.match(home, /id="show-check"/);
   assert.match(home, /id="home-under"/);
   assert.match(home, /data-order-badge/);
-  assert.match(home, /Flat \$249 when we file/);
+  assert.match(home, /data-hero-fee/);
+  assert.match(home, /Free check · no account/);
   assert.match(home, /We don't take a percentage\. Flat \$249\./);
   assert.equal(home.includes('id="pilot"'), false);
   assert.equal(home.includes("case-study.html"), false);
@@ -95,6 +96,26 @@ test("the marketing pages keep the check, the flat fee, and the pilot estimates"
   assert.match(pricing, /id="filing-fee-note"/);
   assert.match(pricing, /\[DRAFT – pending attorney review\]/);
   assert.match(pricing, /\$49\/yr/);
+});
+
+test("the hero card states the filing price only once", () => {
+  const bullet = heroFeeBullet();
+  assert.equal(bullet, `Flat ${plainDollars(dfyServiceAmount())} when we file. No percentage.`);
+  assert.equal((bullet.match(/\$\d+/g) || []).length, 1);
+  const boot = read("js/boot.js");
+  assert.match(boot, /heroFeeBullet\(\)/);
+  assert.match(boot, /\[data-hero-fee\]/);
+  for (const page of ["index.html", "santa-cruz/index.html"]) {
+    const html = read(page);
+    const list = html.match(/<ul class="(?:trust-strip|chips)">[\s\S]*?<\/ul>/);
+    assert.ok(list, page);
+    const rendered = list[0].replace(/<li data-hero-fee>[^<]*<\/li>/, `<li>${bullet}</li>`);
+    assert.equal((rendered.match(/\$\d+/g) || []).length, 1, page);
+    assert.equal((list[0].match(/data-hero-fee/g) || []).length, 1, page);
+    assert.match(rendered, /Free check · no account/);
+    assert.equal(list[0].includes("We don't take a percentage"), false, page);
+  }
+  assert.equal(read("index.html").includes("Flat $249 when we file</li>\n<li>We don't take a percentage"), false);
 });
 
 test("ops records a county confirmation, and a simulated filing still cannot be charged", () => {

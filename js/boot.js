@@ -4,7 +4,7 @@ import { countyDetailsLabel, customerCountyLine, getCounty, loadCounties } from 
 maybeLoadDemo();
 import { contactLine, customerLine, esc, formatDay, money } from "./format.js";
 import { landingDfyEnabled, orderBadgeHtml } from "./offer.js";
-import { dfyServiceAmount, filingFeeNote, landingHomeLine, plainDollars, planPriceLines } from "./pricing.js";
+import { dfyServiceAmount, filingFeeNote, heroFeeBullet, landingHomeLine, plainDollars, planPriceLines } from "./pricing.js";
 
 const demoNote = (() => {
   try { return sessionStorage.getItem("sherwood_demo") === "1"; }
@@ -24,7 +24,15 @@ function paintOrderBadge(county) {
   chip.hidden = !text;
 }
 
+function paintHeroFee() {
+  const text = heroFeeBullet();
+  document.querySelectorAll("[data-hero-fee]").forEach(el => {
+    el.textContent = text;
+  });
+}
+
 async function fillLaunchFacts() {
+  paintHeroFee();
   const landingId = document.body && document.body.getAttribute("data-landing");
   if (landingId) {
     const landing = await getCounty(landingId);
