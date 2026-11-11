@@ -181,7 +181,7 @@ function customerPages() {
       if (name.isDirectory()) {
         if (name.name === "docs" || name.name === "node_modules" || name.name === "backend") continue;
         walk(new URL(`${name.name}/`, dirUrl), `${prefix}${name.name}/`);
-      } else if (name.name.endsWith(".html") && name.name !== "case-study.html" && name.name !== "admin.html") {
+      } else if (name.name.endsWith(".html") && name.name !== "case-study.html" && name.name !== "admin.html" && name.name !== "ops.html") {
         pages.push(`${prefix}${name.name}`);
       }
     }
@@ -297,21 +297,24 @@ function renderedStrings(source) {
   return chunks.join("\n");
 }
 
-test("customer pages do not show adapter, model, pilot, or round N of", () => {
+test("customer pages do not show adapter, model, pilot, round N of, or ops", () => {
   const read = path => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
-  const banned = /\badapter\b|\bmodel\b|\bpilot\b|round\s+\S+\s+of\b/i;
+  const banned = /\badapter\b|\bmodel\b|\bpilot\b|round\s+\S+\s+of\b|\bops\b/i;
   const pages = customerPages();
   assert.ok(pages.includes("index.html"));
   assert.ok(pages.includes("pricing.html"));
   assert.ok(pages.includes("faq.html"));
   assert.ok(pages.includes("how-it-works.html"));
   assert.ok(pages.includes("dashboard.html"));
+  assert.equal(pages.includes("admin.html"), false);
+  assert.equal(pages.includes("ops.html"), false);
   for (const page of pages) {
     assert.equal(banned.test(visibleCopy(read(page))), false, page);
   }
   const scripts = readdirSync(new URL("../js/pages/", import.meta.url))
-    .filter(name => name.endsWith(".js") && name !== "admin.js");
+    .filter(name => name.endsWith(".js") && name !== "admin.js" && name !== "ops.js");
   assert.ok(scripts.includes("sign.js"));
+  assert.equal(scripts.includes("admin.js"), false);
   for (const name of scripts) {
     assert.equal(banned.test(renderedStrings(read(`js/pages/${name}`))), false, name);
   }

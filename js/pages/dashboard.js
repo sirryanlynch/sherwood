@@ -86,7 +86,7 @@ function paint(matter, user, county) {
     : "No filing is stored yet. The filing button stays off until the authorization is complete and the agent name, address, and phone are real details rather than [pending].";
   root.innerHTML = `
     <h1>${heading}</h1>
-    <p class="lead">${esc(countyLine || county.county + " County")}. This page is the record. It does not promise proactive status updates. You get an email when a step happens. Status changes when you act, or when ops records a step.</p>
+    <p class="lead">${esc(countyLine || county.county + " County")}. This page is the record. It does not promise proactive status updates. You get an email when a step happens. Status changes when you act, or when our team records a step.</p>
     ${advocate}
     ${next}
     ${confirm}
@@ -115,7 +115,7 @@ function paint(matter, user, county) {
           <p class="small muted">${esc((county.filing && county.filing.regular_window && county.filing.regular_window.label) || "")}</p>
         </div>
         <h2>Notices</h2>
-        <p class="small muted">Notices you forward are logged by ops and shown here. Nothing on this page edits the appeal.</p>
+        <p class="small muted">Notices you forward are logged by our team and shown here. Nothing on this page edits the appeal.</p>
         ${notices || `<p class="small muted">No notices on this appeal.</p>`}
       </div>
       <aside class="messages">
