@@ -92,6 +92,10 @@ export function plainDollars(amount) {
   return `$${amount.toFixed(2)}`;
 }
 
+export function heroFeeBullet() {
+  return `Flat ${plainDollars(dfyServiceAmount())} when we file. No percentage.`;
+}
+
 export function adapterFeeNotes(county) {
   const filing = county && county.filing;
   if (!filing) return [];
