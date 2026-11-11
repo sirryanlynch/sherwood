@@ -283,8 +283,23 @@ test("site root pages do not link to product notes", () => {
   assert.equal(/\.pay-decision\{[^}]*position:\s*sticky/.test(read("style.css")), false);
 });
 
-test("customer pages do not show the word adapter", () => {
+function renderedStrings(source) {
+  const withoutComments = source
+    .replace(/\/\*[\s\S]*?\*\//g, " ")
+    .replace(/(^|[^:\\])\/\/.*$/gm, "$1");
+  const chunks = [];
+  const re = /`(?:\\[\s\S]|[^`\\])*`|"(?:\\[\s\S]|[^"\\])*"|'(?:\\[\s\S]|[^'\\])*'/g;
+  for (const match of withoutComments.matchAll(re)) {
+    let text = match[0].slice(1, -1);
+    if (match[0].startsWith("`")) text = text.replace(/\$\{(?:[^{}]|\{[^}]*\})*\}/g, " ");
+    chunks.push(text);
+  }
+  return chunks.join("\n");
+}
+
+test("customer pages do not show adapter, model, pilot, or round N of", () => {
   const read = path => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
+  const banned = /\badapter\b|\bmodel\b|\bpilot\b|round\s+\S+\s+of\b/i;
   const pages = customerPages();
   assert.ok(pages.includes("index.html"));
   assert.ok(pages.includes("pricing.html"));
@@ -292,6 +307,18 @@ test("customer pages do not show the word adapter", () => {
   assert.ok(pages.includes("how-it-works.html"));
   assert.ok(pages.includes("dashboard.html"));
   for (const page of pages) {
-    assert.equal(/\badapter\b/i.test(visibleCopy(read(page))), false, page);
+    assert.equal(banned.test(visibleCopy(read(page))), false, page);
   }
+  const scripts = readdirSync(new URL("../js/pages/", import.meta.url))
+    .filter(name => name.endsWith(".js") && name !== "admin.js");
+  assert.ok(scripts.includes("sign.js"));
+  for (const name of scripts) {
+    assert.equal(banned.test(renderedStrings(read(`js/pages/${name}`))), false, name);
+  }
+  const sign = read("js/pages/sign.js");
+  assert.match(sign, /Step \$\{esc\(String\(round\)\)\} of 2\. Signer:/);
+  assert.match(sign, /County: \$\{esc\(county\.county\)\}\./);
+  assert.equal(sign.includes("of the model"), false);
+  assert.equal(sign.includes("Adapter:"), false);
+  assert.equal(/County: Santa Cruz/.test(sign), false);
 });

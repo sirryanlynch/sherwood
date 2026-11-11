@@ -120,7 +120,7 @@ function paintForm(root, matter, county, step, round, envelope) {
   root.innerHTML = `
     <p class="banner">Simulated embedded signing. Not a DocuSign session. Sherwood cannot sign as you.</p>
     <h1>${esc(step.title)}</h1>
-    <p class="lead">Round ${esc(String(round))} of the model. Signer: ${matter.role === "advocate" ? "the owner, or the legal representative" : "the homeowner"}. Adapter: ${esc(county.county)}.</p>
+    <p class="lead">Step ${esc(String(round))} of 2. Signer: ${matter.role === "advocate" ? "the owner, or the legal representative" : "the homeowner"}. County: ${esc(county.county)}.</p>
     ${matter.role === "advocate" ? `<p>The payer can be someone else. The owner signs this authorization, unless a power of attorney or conservatorship was uploaded for review.</p>` : ""}
     ${step.id === "agent_authorization" ? summaryHtml(matter, [yearChoices[0]].filter(Boolean), null) : ""}
     <div class="card">
