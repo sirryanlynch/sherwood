@@ -74,10 +74,11 @@ export function preorderCutoffLabel(county) {
 export function orderBadgeHtml(county) {
   const deadline = preorderDeadlineLabel(county);
   const close = preorderCutoffLabel(county);
-  return [
+  const badges = [
     deadline ? `<p class="badge">${esc(deadline)}</p>` : "",
     close ? `<p class="badge">${esc(close)}</p>` : ""
-  ].join("");
+  ].filter(Boolean);
+  return badges.length ? `<div class="result-pills">${badges.join("")}</div>` : "";
 }
 
 export function landingDfyEnabled(county) {

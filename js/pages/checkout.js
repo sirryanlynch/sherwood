@@ -243,7 +243,7 @@ function cardHtml(plan, lines, savings, onlyPlan) {
       ${flag}
       ${waiver}
       <p>${esc(estimate)}</p>
-      ${plan.chargeNote ? `<p>${esc(plan.chargeNote)}</p>` : ""}
+      ${plan.chargeNote && !onlyPlan ? `<p>${esc(plan.chargeNote)}</p>` : ""}
       <p class="small muted">${esc(plan.summary)}</p>
     </label>`;
 }

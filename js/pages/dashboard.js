@@ -40,7 +40,11 @@ function paint(matter, user, county) {
       html: `<li><b>${esc(row.subject || label)}</b><p class="small muted">To ${esc(who)} · ${esc(row.at || "")} · simulated, not delivered</p><pre class="card">${esc(row.body || "")}</pre></li>`
     };
   });
-  const latestSent = emailItems.filter(item => item.sent).sort((a, b) => String(b.at).localeCompare(String(a.at)))[0];
+  const sentEmails = emailItems.filter(item => item.sent);
+  const latestSent = sentEmails.sort((a, b) => String(b.at).localeCompare(String(a.at)))[0];
+  const emailSummary = sentEmails.length
+    ? `Show all ${emailItems.length} emails`
+    : `Upcoming emails (${emailItems.length})`;
   const otherEmails = emailItems.filter(item => item !== latestSent).map(item => item.html).join("");
   const reminders = (matter.deadlineReminders || []).map(row =>
     `<li><b>${esc(row.subject)}</b><p class="small muted">Scheduled ${esc(row.sendOn)} · ${esc(String(row.days))} days before ${row.anchor === "order_cutoff" ? "our order cutoff" : "the county filing deadline"} · ${esc(row.status || "scheduled")} · simulated, not delivered</p><pre class="card">${esc(row.body || "")}</pre></li>`
@@ -116,8 +120,8 @@ function paint(matter, user, county) {
       </div>
       <aside class="messages">
         <h2>Emails</h2>
-        ${latestSent ? `<ol class="email-list">${latestSent.html}</ol>` : `<p class="small muted">None sent yet.</p>`}
-        <details><summary>Show all ${emailItems.length} emails</summary><ol class="email-list">${otherEmails}${follow}</ol></details>
+        ${latestSent ? `<ol class="email-list">${latestSent.html}</ol>` : ""}
+        <details><summary>${emailSummary}</summary><ol class="email-list">${otherEmails}${follow}</ol></details>
         <h2>Deadline reminders</h2>
         ${reminders ? `<ol class="email-list">${reminders}</ol>` : `<p class="small muted">No deadline reminders. They are stored only after you check Email me reminders. Nothing is sent without that opt-in.</p>`}
         <p class="small muted">Clerk: ${esc(contactLine(county.filing.clerk))}. Signed in as ${esc(user.email)}.</p>
