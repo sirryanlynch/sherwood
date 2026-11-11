@@ -21,6 +21,8 @@ test("the hearing statement replaces the hearing-support add-on", () => {
   const html = hearingAckHtml("dfy");
   assert.equal(/\schecked(?:=|\s|>)/.test(html), false);
   assert.match(html, /name="hearingAck"/);
+  assert.match(html, /id="hearing-ack-box"/);
+  assert.match(html, /for="hearing-ack-box"/);
   assert.match(html, /\srequired(?:\s|>)/);
   assert.ok(html.includes(STATEMENT));
   assert.equal(html.includes("$149"), false);
@@ -70,4 +72,8 @@ test("the hearing statement replaces the hearing-support add-on", () => {
   const checkout = read("js/pages/checkout.js");
   assert.match(checkout, /formData\.get\("hearingAck"\) !== "on"/);
   assert.match(checkout, /hearingAcknowledgment/);
+  assert.match(checkout, /id="monitor-renewal"/);
+  assert.match(checkout, /for="monitor-renewal"/);
+  assert.match(checkout, /id="card-consent"/);
+  assert.match(checkout, /for="card-consent"/);
 });
