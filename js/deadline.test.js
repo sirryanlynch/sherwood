@@ -1,12 +1,15 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
+import { customerLine } from "./format.js";
 import { decide } from "./engine.js";
 import { caseEmailDraft } from "./caseMail.js";
 import { deadlineReminderPlan, cutoffSubject, borderlineReviewLine } from "./deadlineReminders.js";
 import { paymentsAdapter } from "./adapters/payments.js";
 import { loadDemoCase } from "./demo.js";
-import { enrollMonitor, startIncludedYear } from "./monitor.js";
+import { MONITOR_TERMS, confirmationBody, enrollMonitor, startIncludedYear } from "./monitor.js";
+import { MONITOR } from "./pricing.js";
+import { countyDetailsLabel } from "./counties.js";
 
 const memory = new Map();
 const sessionMemory = new Map();
@@ -60,7 +63,7 @@ test("a $0 card check can pass or fail without charging", async () => {
 });
 
 test("the free monitor year starts at capture, not at card save", () => {
-  const record = enrollMonitor({ email: "a@b.co", matterId: "m", includedWithFiling: true });
+  const record = enrollMonitor({ email: "a@b.co", matterId: "m", includedWithFiling: true, renewal: true });
   assert.equal(record.status, "pending_capture");
   assert.equal(record.renewsOn, null);
   assert.equal(record.yearStartedAt, null);
@@ -68,6 +71,42 @@ test("the free monitor year starts at capture, not at card save", () => {
   assert.equal(record.yearStartedAt, "2026-11-20T00:00:00.000Z");
   assert.equal(record.renewsOn, "2027-11-20");
   assert.equal(record.status, "active");
+});
+
+test("a filing includes the first monitor year when renewal is unchecked", () => {
+  const record = enrollMonitor({ email: "a@b.co", matterId: "m", includedWithFiling: true, renewal: false });
+  assert.equal(record.includedWithFiling, true);
+  assert.equal(record.renewal, false);
+  assert.equal(record.status, "pending_capture");
+  startIncludedYear(record, "2026-11-20T00:00:00.000Z");
+  assert.equal(record.yearStartedAt, "2026-11-20T00:00:00.000Z");
+  assert.equal(record.renewsOn, null);
+  assert.equal(record.status, "active");
+  const checkout = readFileSync(new URL("./pages/checkout.js", import.meta.url), "utf8");
+  assert.match(checkout, /Your first year of monitoring is included\. It starts when your filing is charged\. A declined or never-filed case doesn't get it\./);
+  assert.match(checkout, /Renew monitoring at \$\{esc\(monitorPrice\)\}\/yr after that\.<\/label>/);
+  assert.equal(/Renew monitoring at[^<]*Cancel anytime/.test(checkout), false);
+  assert.match(checkout, /If you turn on renewal: \$\{esc\(MONITOR_TERMS\)\}/);
+  const labelAt = checkout.indexOf("Renew monitoring at");
+  const termsAt = checkout.indexOf("If you turn on renewal:");
+  assert.ok(labelAt > 0 && termsAt > labelAt);
+  assert.match(MONITOR_TERMS, new RegExp(`\\$${MONITOR.price}\\b`));
+  assert.match(MONITOR_TERMS, /renews automatically each year until you cancel/);
+  assert.match(MONITOR_TERMS, /cancel online in one click before the renewal date/);
+  assert.match(MONITOR_TERMS, /15 to 45 days before the renewal/);
+  const off = confirmationBody({ cancelToken: "t", includedWithFiling: true, renewal: false });
+  assert.match(off, /Renewal is off\. Your monitoring ends after the first year with no charge\./);
+  assert.equal(off.includes(MONITOR_TERMS), false);
+  const on = confirmationBody({ cancelToken: "t", includedWithFiling: true, renewal: true });
+  assert.ok(on.includes(MONITOR_TERMS));
+  assert.match(on, new RegExp(`renews at \\$${MONITOR.price} a year`));
+  const monitorSrc = readFileSync(new URL("./monitor.js", import.meta.url), "utf8");
+  assert.equal(monitorSrc.includes("$49"), false);
+  assert.match(checkout, /plainDollars\(MONITOR\.price\)/);
+  assert.equal(checkout.includes('name="monitorRenewal" required'), false);
+  assert.equal(checkout.includes('get("monitorRenewal") !== "on"'), false);
+  assert.match(checkout, /We verify the card with a \$0 check and charge /);
+  assert.match(checkout, /plainDollars\(dfyServiceAmount\(\)\)/);
 });
 
 test("likely savings sit strictly between low and high", () => {
@@ -126,4 +165,163 @@ test("customer copy drops the decline-after-intake refund and splits the two dat
   assert.match(filed.body, /\[postal address pending\]/);
   assert.match(filed.body, /Disclosures: https:\/\/sirryanlynch\.github\.io\/sherwood\/disclosures\//);
   assert.match(read("js/pages/results.js"), /Email me reminders/);
+});
+
+function visibleCopy(html) {
+  return html
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<[^>]+>/g, " ");
+}
+
+function customerPages() {
+  const pages = [];
+  const walk = (dirUrl, prefix) => {
+    for (const name of readdirSync(dirUrl, { withFileTypes: true })) {
+      if (name.isDirectory()) {
+        if (name.name === "docs" || name.name === "node_modules" || name.name === "backend") continue;
+        walk(new URL(`${name.name}/`, dirUrl), `${prefix}${name.name}/`);
+      } else if (name.name.endsWith(".html") && name.name !== "case-study.html" && name.name !== "admin.html" && name.name !== "ops.html") {
+        pages.push(`${prefix}${name.name}`);
+      }
+    }
+  };
+  walk(new URL("../", import.meta.url), "");
+  return pages;
+}
+
+test("customer pages do not mention the pilot filing or October 12", () => {
+  const read = path => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
+  const banned = /\bpilot\b|pilot result|october 12|oct\.?\s*12/i;
+  const pages = customerPages();
+  assert.ok(pages.includes("faq.html"));
+  assert.ok(pages.includes("index.html"));
+  for (const page of pages) {
+    const html = read(page);
+    assert.equal(banned.test(html), false, page);
+    assert.equal(banned.test(visibleCopy(html)), false, `${page} visible`);
+  }
+  for (const sheet of ["style.css", "marketing.css"]) {
+    assert.equal(/pilot result/i.test(read(sheet)), false, sheet);
+  }
+  assert.equal(read("index.html").includes("pilot result"), false);
+  assert.equal(read("index.html").includes("not the pilot"), false);
+  assert.match(read("js/boot.js"), /We file through the county's e-file portal\./);
+  assert.match(read("js/boot.js"), /County e-file fee: included in the We file it price/);
+  assert.match(read("js/boot.js"), /not yet confirmed for this county/);
+  assert.match(read("js/boot.js"), /dfyServiceAmount\(\)/);
+  assert.equal(banned.test(read("js/boot.js")), false);
+  assert.equal(banned.test(read("js/engine.js")), false);
+  assert.equal(banned.test(read("js/pages/sign.js")), false);
+  const santaCruz = JSON.parse(read("data/counties/santa_cruz.json"));
+  const apn = santaCruz.filing.portal_notes.find(note => /APN/.test(note));
+  assert.match(apn, /Retry before treating it as a rejection/);
+  assert.equal(banned.test(apn), false);
+  assert.equal(customerLine(apn), apn.trim());
+  assert.equal(banned.test(read("data/counties/santa_cruz.json")), false);
+  assert.equal(banned.test(read("backend/functions/counties/santa_cruz.json")), false);
+});
+
+test("customer pages do not say your county's rules, unless your county, or launch-county rules", () => {
+  const read = path => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
+  const banned = /county's rules|unless your county|launch-county rules/i;
+  for (const page of customerPages()) {
+    assert.equal(banned.test(visibleCopy(read(page))), false, page);
+  }
+  for (const file of [
+    "js/engine.js", "js/pricing.js", "js/outcome.js", "js/caseStatus.js", "js/boot.js", "js/kitdoc.js",
+    "js/pages/filed.js", "js/pages/results.js", "js/pages/checkout.js", "js/pages/intake.js",
+    "js/pages/kit.js", "js/pages/dashboard.js", "js/pages/sign.js", "js/pages/values.js"
+  ]) {
+    assert.equal(banned.test(read(file)), false, file);
+  }
+  assert.match(read("dashboard.html"), /Keep paying your property taxes on time\. An appeal does not pause your bill\./);
+  assert.equal(/launch-county/i.test(read("faq.html")), false);
+  assert.equal(/launch-county/i.test(read("index.html")), false);
+  assert.equal(read("faq.html").includes("Santa Cruz County's details"), false);
+  const santaCruz = JSON.parse(read("data/counties/santa_cruz.json"));
+  assert.equal(countyDetailsLabel(santaCruz), "Santa Cruz County's details");
+  assert.equal(countyDetailsLabel({ county: "Yolo County" }), "Yolo County's details");
+  assert.match(read("js/boot.js"), /countyDetailsLabel\(county\)/);
+  assert.match(read("faq.html"), /data-county-details[\s\S]*proportionate refund/);
+});
+
+test("customer pages do not link to the ops page", () => {
+  const read = path => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
+  const pages = customerPages();
+  for (const page of ["index.html", "results.html", "values.html", "contact.html", "how-it-works.html"]) {
+    assert.ok(pages.includes(page), page);
+  }
+  for (const page of pages) {
+    assert.equal(read(page).includes("admin.html"), false, page);
+  }
+  const admin = read("admin.html");
+  assert.match(admin, /<meta name="robots" content="noindex">/);
+  assert.match(admin, /Staff demo only\. Not access-controlled in this prototype\./);
+});
+
+test("site root pages do not link to product notes", () => {
+  const read = path => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
+  const root = new URL("../", import.meta.url);
+  const pages = readdirSync(root).filter(name => name.endsWith(".html"));
+  assert.ok(pages.includes("case-study.html"));
+  assert.ok(pages.includes("index.html"));
+  assert.ok(pages.includes("faq.html"));
+  assert.ok(pages.includes("pricing.html"));
+  assert.ok(pages.includes("trust.html"));
+  for (const page of pages) {
+    const html = read(page);
+    assert.equal(/docs\//i.test(html), false, page);
+    assert.equal(/PRODUCT_FLOW/i.test(html), false, page);
+    assert.equal(/product notes/i.test(html), false, page);
+  }
+  const checkout = read("js/pages/checkout.js");
+  const renewal = checkout.indexOf("If you turn on renewal:");
+  const cardCheck = checkout.indexOf("We verify the card with a $0 check");
+  const button = checkout.indexOf('type="submit">Continue');
+  assert.ok(renewal > -1 && cardCheck > renewal && button > cardCheck);
+  assert.equal(/\.pay-decision\{[^}]*position:\s*sticky/.test(read("style.css")), false);
+});
+
+function renderedStrings(source) {
+  const withoutComments = source
+    .replace(/\/\*[\s\S]*?\*\//g, " ")
+    .replace(/(^|[^:\\])\/\/.*$/gm, "$1");
+  const chunks = [];
+  const re = /`(?:\\[\s\S]|[^`\\])*`|"(?:\\[\s\S]|[^"\\])*"|'(?:\\[\s\S]|[^'\\])*'/g;
+  for (const match of withoutComments.matchAll(re)) {
+    let text = match[0].slice(1, -1);
+    if (match[0].startsWith("`")) text = text.replace(/\$\{(?:[^{}]|\{[^}]*\})*\}/g, " ");
+    chunks.push(text);
+  }
+  return chunks.join("\n");
+}
+
+test("customer pages do not show adapter, model, pilot, round N of, or ops", () => {
+  const read = path => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
+  const banned = /\badapter\b|\bmodel\b|\bpilot\b|round\s+\S+\s+of\b|\bops\b/i;
+  const pages = customerPages();
+  assert.ok(pages.includes("index.html"));
+  assert.ok(pages.includes("pricing.html"));
+  assert.ok(pages.includes("faq.html"));
+  assert.ok(pages.includes("how-it-works.html"));
+  assert.ok(pages.includes("dashboard.html"));
+  assert.equal(pages.includes("admin.html"), false);
+  assert.equal(pages.includes("ops.html"), false);
+  for (const page of pages) {
+    assert.equal(banned.test(visibleCopy(read(page))), false, page);
+  }
+  const scripts = readdirSync(new URL("../js/pages/", import.meta.url))
+    .filter(name => name.endsWith(".js") && name !== "admin.js" && name !== "ops.js");
+  assert.ok(scripts.includes("sign.js"));
+  assert.equal(scripts.includes("admin.js"), false);
+  for (const name of scripts) {
+    assert.equal(banned.test(renderedStrings(read(`js/pages/${name}`))), false, name);
+  }
+  const sign = read("js/pages/sign.js");
+  assert.match(sign, /Step \$\{esc\(String\(round\)\)\} of 2\. Signer:/);
+  assert.match(sign, /County: \$\{esc\(county\.county\)\}\./);
+  assert.equal(sign.includes("of the model"), false);
+  assert.equal(sign.includes("Adapter:"), false);
+  assert.equal(/County: Santa Cruz/.test(sign), false);
 });

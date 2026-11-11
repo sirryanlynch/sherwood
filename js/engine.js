@@ -32,7 +32,7 @@ export function savingsOf(assessed, reduction, tax) {
       mid: null,
       high: null,
       bandNote: SAVINGS_BAND_NOTE,
-      note: "No dollar savings yet. Your tax bill was not entered, and this check does not apply the pilot property's 1.23% rate to anyone else."
+      note: "No dollar savings yet. Your tax bill was not entered, and this check does not apply another home's tax rate."
     };
   }
   const rate = tax / assessed;
@@ -84,7 +84,7 @@ export function filingWindow(county, today, supplementalNoticeDate) {
   let supplemental = "n/a";
   if (supplementalNoticeDate && days == null) {
     supplemental = "unverified";
-    reasons.push("A supplemental notice date was entered, but this adapter does not state the number of days. A person has to check it.");
+    reasons.push("A supplemental notice date was entered, but your county's details do not state the number of days. A person has to check it.");
   } else if (supplementalNoticeDate && typeof days === "number") {
     const notice = parseISODate(supplementalNoticeDate);
     if (!notice) {
@@ -97,7 +97,7 @@ export function filingWindow(county, today, supplementalNoticeDate) {
       const last = new Date(notice.getFullYear(), notice.getMonth(), notice.getDate() + days);
       supplemental = day <= last ? "open" : "closed";
       if (supplemental === "closed") {
-        reasons.push(`The supplemental window in this adapter is ${days} days from the notice, and that date has passed.`);
+        reasons.push(`The supplemental window in your county's details is ${days} days from the notice, and that date has passed.`);
       }
     }
   }
@@ -109,14 +109,14 @@ export function filingWindow(county, today, supplementalNoticeDate) {
     return { state: "open", kind: "regular", reasons, label: win.label };
   }
   if (regular === "before") {
-    reasons.unshift("The filing window on this adapter has not opened.");
+    reasons.unshift("Your county's filing window has not opened.");
     return { state: "off_season", kind: regular, reasons, label: win && win.label };
   }
   if (regular === "closed" || supplemental === "closed") {
-    reasons.unshift("The filing window on this adapter is closed.");
+    reasons.unshift("Your county's filing window is closed.");
     return { state: "off_season", kind: regular === "closed" ? "closed" : regular, reasons, label: "" };
   }
-  reasons.unshift("This adapter does not say when the filing window opens, so Sherwood will not treat it as open.");
+  reasons.unshift("Your county's details do not say when the filing window opens, so Sherwood will not treat it as open.");
   return { state: "unknown", kind: "regular", reasons, label: win && win.label };
 }
 
@@ -150,7 +150,7 @@ export function decide(input) {
   const assessed = input.assessed;
   const market = input.market;
   if (!county) {
-    return { outcome: "no_go", reasons: ["Choose a county that has an adapter."], window: null };
+    return { outcome: "no_go", reasons: ["Choose a county we have details for."], window: null };
   }
   if (assessed == null || assessed <= 0) {
     return { outcome: "no_go", reasons: ["Enter the assessed value."], window: null };
@@ -211,8 +211,8 @@ export function decide(input) {
   }
   if (county.status !== "verified") {
     const why = county.status === "unconfirmed"
-      ? "This county file is unconfirmed. Sherwood will not file from it until a person verifies the adapter."
-      : "This county file is not verified. Sherwood will not file from it until a person verifies the adapter.";
+      ? "This county file is unconfirmed. Sherwood will not file from it until a person verifies your county's details."
+      : "This county file is not verified. Sherwood will not file from it until a person verifies your county's details.";
     return {
       outcome: "borderline",
       reasons: [why, ...window.reasons],
@@ -232,7 +232,7 @@ export function decide(input) {
   if (savings.amount != null && base.fee != null && savings.amount <= base.fee) {
     return {
       outcome: "borderline",
-      reasons: [`Estimated first-year savings are not above the county filing fee on this adapter (${money(base.fee)}). A person should look before you pay a filing fee.`],
+      reasons: [`Estimated first-year savings are not above the county filing fee in your county's details (${money(base.fee)}). A person should look before you pay a filing fee.`],
       ...base
     };
   }
@@ -260,7 +260,7 @@ export function decide(input) {
   }
   return {
     outcome: "go",
-    reasons: ["The market value you entered is below the assessed value, the low savings estimate covers the We file it fee, and the filing window on this adapter is open."],
+    reasons: ["The market value you entered is below the assessed value, the low savings estimate covers the We file it fee, and your county's filing window is open."],
     ...base
   };
 }

@@ -23,7 +23,7 @@ const DIY_PLAN = {
   filesAsAgent: false,
   timingFlag: "[DRAFT – payment timing pending attorney review]",
   chargeNote: DIY_HOLD_NOTE,
-  summary: "Comparable-sales method, value opinion from your numbers, Statement of Facts preview, and the filing checklist from your county adapter. You file."
+  summary: "Comparable-sales method, value opinion from your numbers, Statement of Facts preview, and the filing checklist from your county's details. You file."
 };
 
 const DFY_PLAN = {
@@ -55,7 +55,7 @@ export function hearingAckHtml(planId) {
   const state = hearingAckState(planId);
   const hidden = state.visible ? "" : " hidden";
   const required = state.required ? " required" : "";
-  return `<div class="check" id="hearing-ack"${hidden}><input id="hearing-ack-box" type="checkbox" name="hearingAck" data-hearing-ack${required}><label for="hearing-ack-box">${HEARING_STATEMENT}</label></div>`;
+  return `<div id="hearing-ack"${hidden}><p class="small muted">${HEARING_STATEMENT}</p><div class="check"><input id="hearing-ack-box" type="checkbox" name="hearingAck" data-hearing-ack${required}><label for="hearing-ack-box">I understand I attend the hearing.</label></div></div>`;
 }
 
 export const MONITOR = {
@@ -98,10 +98,10 @@ export function adapterFeeNotes(county) {
   const notes = [];
   const surcharge = filing.efile_fee && filing.efile_fee.surcharge;
   if (typeof surcharge === "number" && surcharge > 0) {
-    notes.push(`Online payment surcharge on this adapter: ${plainDollars(surcharge)}.`);
+    notes.push(`Online payment surcharge in your county's details: ${plainDollars(surcharge)}.`);
   }
-  if (filing.cutoff_time) notes.push(`Filing cutoff on this adapter: ${filing.cutoff_time}.`);
-  if (filing.postmark_ok === true) notes.push("This adapter says a postmark can count.");
+  if (filing.cutoff_time) notes.push(`Filing cutoff in your county's details: ${filing.cutoff_time}.`);
+  if (filing.postmark_ok === true) notes.push("Your county's details say a postmark can count.");
   return notes;
 }
 

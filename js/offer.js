@@ -74,10 +74,11 @@ export function preorderCutoffLabel(county) {
 export function orderBadgeHtml(county) {
   const deadline = preorderDeadlineLabel(county);
   const close = preorderCutoffLabel(county);
-  return [
+  const badges = [
     deadline ? `<p class="badge">${esc(deadline)}</p>` : "",
     close ? `<p class="badge">${esc(close)}</p>` : ""
-  ].join("");
+  ].filter(Boolean);
+  return badges.length ? `<div class="result-pills">${badges.join("")}</div>` : "";
 }
 
 export function landingDfyEnabled(county) {
@@ -148,7 +149,7 @@ export function offerMessage(county, offer) {
   if (!offer) return "";
   if (offer.closed) return "";
   if (offer.paper) {
-    return "We file it is not available in this county yet. A typed signature is not valid on a paper filing. Leave your email for a reminder.";
+    return "Filing is not available in this county yet. A typed signature is not valid on a paper filing. Leave your email for a reminder.";
   }
   if (offer.registration) {
     return "We file it stays off until agent registration for this county is active. Leave your email for a reminder.";

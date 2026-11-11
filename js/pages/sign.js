@@ -4,7 +4,7 @@ import {
   AGENT_CONTACT, OWNER_COPY_LINE, normalizeTaxYears, parcelLabel, signedDateText, taxYearChoices
 } from "../authorization.js";
 import { getCounty } from "../counties.js";
-import { esc, formatShortDay } from "../format.js";
+import { customerLine, esc, formatShortDay } from "../format.js";
 import { HEARING_PACKET_LINE, planById } from "../pricing.js";
 import { AUTHORIZATION_RETENTION, retainUntil } from "../retention.js";
 import { sendCaseEmail } from "../caseMail.js";
@@ -39,11 +39,20 @@ if (gate) {
   }
 }
 
+function sourceLink(doc, county) {
+  const source = doc.source || "";
+  const match = source.match(/https?:\/\/\S+/);
+  if (!match) return esc(source || "This county file does not state a source.");
+  const url = match[0].replace(/[).,]+$/, "");
+  const label = county && county.id === "santa_cruz"
+    ? "Santa Cruz County filing instructions (PDF)"
+    : "County filing instructions";
+  return `<a href="${esc(url)}">${label}</a>`;
+}
+
 function paintExplainer(root, matter, county, onContinue) {
   const doc = county.agent_authorization || {};
-  const why = doc.verified
-    ? esc(doc.source || "This adapter does not state a source.")
-    : `${esc(doc.source || "This adapter does not state a source.")} This adapter has not verified that an agent may file.`;
+  const extra = doc.verified ? "" : " This county file has not verified that an agent may file.";
   const years = taxYearChoices(county, new Date());
   root.innerHTML = `
     <h1>Before you sign</h1>
@@ -51,8 +60,7 @@ function paintExplainer(root, matter, county, onContinue) {
     <div class="card">
       <p><b>What you're signing.</b> You authorize the named agent to sign filings only, for this parcel and the tax years you select, up to 4. You still sign the perjury certification yourself. The agent does not attend a hearing for you.</p>
       <p>${esc(HEARING_PACKET_LINE)}</p>
-      <p><b>Why the county needs it.</b> ${why}</p>
-      ${rule6Explainer(doc)}
+      <details><summary>Why the county needs it</summary><p>${sourceLink(doc, county)}${esc(extra)}</p>${rule6Explainer(doc)}</details>
       <p>How to revoke: ${esc(doc.revocation || "[pending verification]")}</p>
     </div>
     ${summaryHtml(matter, years[0], null)}
@@ -112,13 +120,13 @@ function paintForm(root, matter, county, step, round, envelope) {
   root.innerHTML = `
     <p class="banner">Simulated embedded signing. Not a DocuSign session. Sherwood cannot sign as you.</p>
     <h1>${esc(step.title)}</h1>
-    <p class="lead">Round ${esc(String(round))} of the model. Signer: ${matter.role === "advocate" ? "the owner, or the legal representative" : "the homeowner"}. Adapter: ${esc(county.county)}.</p>
+    <p class="lead">Step ${esc(String(round))} of 2. Signer: ${matter.role === "advocate" ? "the owner, or the legal representative" : "the homeowner"}. County: ${esc(county.county)}.</p>
     ${matter.role === "advocate" ? `<p>The payer can be someone else. The owner signs this authorization, unless a power of attorney or conservatorship was uploaded for review.</p>` : ""}
     ${step.id === "agent_authorization" ? summaryHtml(matter, [yearChoices[0]].filter(Boolean), null) : ""}
     <div class="card">
-      <p>${esc(step.text)}</p>
+      <p>${esc(customerLine(step.text))}</p>
       ${round === 2 ? `<h3>Statement you are attaching</h3><pre style="white-space:pre-wrap;font:inherit">${esc(matter.kit.statement)}</pre>` : ""}
-      ${round === 3 ? `<p>There is no stipulation document in the pilot kit. Signing here only records that you chose to accept in this demo.</p>` : ""}
+      ${round === 3 ? `<p>There is no stipulation document in this demo. Signing here only records that you chose to accept in this demo.</p>` : ""}
       <p class="small muted">Envelope ${esc(envelope.id)} · ${esc(envelope.status)} · simulated</p>
     </div>
     <form id="sign-form" class="wide">
@@ -186,7 +194,7 @@ function paintForm(root, matter, county, step, round, envelope) {
         retention: AUTHORIZATION_RETENTION
       };
     }
-    if (round === 3) matter.stipulationDecision = "Accepted in the demo. The signature is simulated and there is no stipulation form in the pilot kit.";
+    if (round === 3) matter.stipulationDecision = "Accepted in the demo. The signature is simulated and there is no stipulation form in this demo.";
     if (round === 2) await sendCaseEmail("signed", matter, county);
     saveMatter(matter);
     if (round === 1) location.href = "sign.html?round=2";

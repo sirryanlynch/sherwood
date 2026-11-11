@@ -1,22 +1,30 @@
 import { backendEnabled, functionsUrl } from "./config.js";
 import { uid } from "./format.js";
+import { MONITOR } from "./pricing.js";
 import { retainUntil, shiftYears } from "./retention.js";
 import { DISCLOSURES_URL } from "./statutoryDisclosure.js";
 import { updateDb, loadDb } from "./store.js";
 
-export const MONITOR_TERMS = "The annual monitor costs $49 and renews automatically each year until you cancel. You can cancel online in one click before the renewal date. Sherwood emails a renewal notice 15 to 45 days before the renewal.";
+export const MONITOR_TERMS = `The annual monitor costs $${MONITOR.price} and renews automatically each year until you cancel. You can cancel online in one click before the renewal date. Sherwood emails a renewal notice 15 to 45 days before the renewal.`;
 
 export function confirmationBody(record) {
   const link = `cancel.html?token=${encodeURIComponent(record.cancelToken)}`;
+  const price = `$${MONITOR.price}`;
+  const renewalOn = record && record.renewal === true;
+  const terms = renewalOn
+    ? MONITOR_TERMS
+    : "Renewal is off. Your monitoring ends after the first year with no charge.";
   return [
     "Annual monitor confirmation",
     "",
     record.includedWithFiling && !record.yearStartedAt
-      ? "The free monitor year starts when the filing charge is captured. A declined or never-filed case does not get that year. After a captured charge, it renews at $49 a year."
+      ? "The free monitor year starts when the filing charge is captured. A declined or never-filed case does not get that year."
+        + (renewalOn ? ` After a captured charge, it renews at ${price} a year.` : " Renewal stays off unless you opt in.")
       : record.includedWithFiling
-        ? "The first year is included with your filing. It renews at $49 a year."
-        : "You agreed to the annual monitor at $49 a year.",
-    MONITOR_TERMS,
+        ? "Your first year of monitoring is included."
+          + (renewalOn ? ` It renews at ${price} a year.` : " Renewal is off.")
+        : `You agreed to the annual monitor at ${price} a year.`,
+    terms,
     "This confirmation is yours to keep.",
     `Cancel online: ${link}`,
     `Disclosures: ${DISCLOSURES_URL}`
@@ -31,7 +39,7 @@ export function monitorOfferHtml({ email, enrolled, cancelToken }) {
   return `
     <form id="monitor-form" class="wide">
       <p>${MONITOR_TERMS}</p>
-      <p>Nothing is charged today. The $49 renewal is charged only if the monitor is still on at the renewal date. Cancel before that date and the renewal is not charged.</p>
+      <p>Nothing is charged today. The $${MONITOR.price} renewal is charged only if the monitor is still on at the renewal date. Cancel before that date and the renewal is not charged.</p>
       <label class="check"><input type="checkbox" name="renewalConsent"> I agree to these automatic renewal terms.</label>
       <label>Email<input name="email" type="email" required value="${escapeAttr(email || "")}" autocomplete="email"></label>
       <button class="btn" type="submit">Start the annual monitor</button>
@@ -45,24 +53,27 @@ function escapeAttr(value) {
   }[ch]));
 }
 
-export function enrollMonitor({ email, matterId, userId, setupIntentId, includedWithFiling }) {
+export function enrollMonitor({ email, matterId, userId, setupIntentId, includedWithFiling, renewal }) {
   const now = new Date().toISOString();
+  const renews = renewal === true;
+  const included = includedWithFiling === true;
   const record = {
     id: uid("mon"),
     email: String(email || "").trim(),
     matterId: matterId || null,
     userId: userId || null,
-    price: 49,
+    price: MONITOR.price,
     dueToday: 0,
-    includedWithFiling: includedWithFiling === true,
+    includedWithFiling: included,
+    renewal: renews,
     interval: "year",
     terms: MONITOR_TERMS,
     consented: true,
     consentedAt: now,
     retainUntil: retainUntil(now),
     yearStartedAt: null,
-    renewsOn: includedWithFiling === true ? null : shiftYears(now, 1).slice(0, 10),
-    status: includedWithFiling === true ? "pending_capture" : "active",
+    renewsOn: included || !renews ? null : shiftYears(now, 1).slice(0, 10),
+    status: included ? "pending_capture" : "active",
     cancelToken: uid("cancel"),
     setupIntentId: setupIntentId || null,
     chargeStatus: "card_saved",
@@ -82,7 +93,7 @@ export function startIncludedYear(record, capturedAt) {
   if (!record || record.includedWithFiling !== true || record.status === "canceled") return record;
   if (!capturedAt) return record;
   record.yearStartedAt = capturedAt;
-  record.renewsOn = shiftYears(capturedAt, 1).slice(0, 10);
+  record.renewsOn = record.renewal === true ? shiftYears(capturedAt, 1).slice(0, 10) : null;
   record.status = "active";
   return record;
 }
@@ -112,7 +123,7 @@ export async function createMonitorRemote(record) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         email: record.email,
-        renewal_consent: true
+        renewal_consent: record.renewal === true
       })
     });
     const data = await res.json().catch(() => ({}));

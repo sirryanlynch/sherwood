@@ -41,6 +41,6 @@ export const DOOR_COPY = {
   portfolio: {
     eyebrowLaunch: "More than one property",
     eyebrowOther: "More than one property",
-    note: "Run a free check on each parcel. We file it is $249 per parcel in Santa Cruz County, and the monitor is $49/yr per parcel. There is no bulk price, and this page does not take a portfolio payment."
+    note: "Run a free check on each parcel. Filing is $249 per parcel in Santa Cruz County, and the monitor is $49/yr per parcel. There is no bulk price, and this page does not take a portfolio payment."
   }
 };

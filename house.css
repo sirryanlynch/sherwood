@@ -106,7 +106,7 @@
 @media (min-width:901px){
   .house-runway .stage::before{
     content:"";position:absolute;inset:0;z-index:5;pointer-events:none;
-    background:linear-gradient(90deg,#f4efe6 0,rgba(244,239,230,.88) 32%,rgba(244,239,230,0) 54%);
+    background:linear-gradient(90deg,var(--paper) 0,rgba(255,255,255,.88) 32%,rgba(255,255,255,0) 54%);
   }
 }
 @media (max-width:900px){

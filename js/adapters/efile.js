@@ -11,7 +11,7 @@ export const efileAdapter = {
         ok: false,
         simulated: true,
         method: "paper",
-        reason: "This adapter has no e-file portal.",
+        reason: "Your county's details have no e-file portal.",
         steps: filing.paper_steps || []
       };
     }
@@ -20,7 +20,7 @@ export const efileAdapter = {
         ok: false,
         simulated: true,
         method: "efile",
-        reason: "This adapter is marked e-file but has no portal URL.",
+        reason: "Your county's details are marked for e-file but have no portal URL.",
         steps: []
       };
     }

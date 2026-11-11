@@ -33,5 +33,5 @@ export const YOU_DO = [
   "You review and sign.",
   "You attend the hearing, or the appeal is denied.",
   "You decide whether to accept a settlement.",
-  "You keep paying the tax bill. Filing does not pause it."
+  "Keep paying your property taxes on time. An appeal does not pause your bill."
 ];

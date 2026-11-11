@@ -22,13 +22,30 @@ function paint(matter, user, county) {
   const filing = matter.filing;
   const years = taxYearLabel(matter);
   const emails = Array.isArray(matter.caseEmails) ? matter.caseEmails : [];
-  const emailRows = CASE_EMAIL_KINDS.map(kind => {
+  const emailLabels = {
+    received: "Received",
+    signed: "Signed",
+    filed: "Filed",
+    hearing_scheduled: "Hearing scheduled",
+    decision: "Decision"
+  };
+  const emailItems = CASE_EMAIL_KINDS.map(kind => {
     const row = emails.find(item => item.kind === kind);
-    const label = kind.replace(/_/g, " ");
-    if (!row) return `<li><b>${esc(label)}</b> — Not sent yet.</li>`;
+    const label = emailLabels[kind] || kind;
+    if (!row) return { sent: false, at: "", html: `<li><b>${esc(label)}</b> — Not sent yet.</li>` };
     const who = (row.to || []).join(", ") || "no address on the appeal";
-    return `<li><b>${esc(row.subject || label)}</b><p class="small muted">To ${esc(who)} · ${esc(row.at || "")} · simulated, not delivered</p><pre class="card">${esc(row.body || "")}</pre></li>`;
-  }).join("");
+    return {
+      sent: true,
+      at: row.at || "",
+      html: `<li><b>${esc(row.subject || label)}</b><p class="small muted">To ${esc(who)} · ${esc(row.at || "")} · simulated, not delivered</p><pre class="card">${esc(row.body || "")}</pre></li>`
+    };
+  });
+  const sentEmails = emailItems.filter(item => item.sent);
+  const latestSent = sentEmails.sort((a, b) => String(b.at).localeCompare(String(a.at)))[0];
+  const emailSummary = sentEmails.length
+    ? `Show all ${emailItems.length} emails`
+    : `Upcoming emails (${emailItems.length})`;
+  const otherEmails = emailItems.filter(item => item !== latestSent).map(item => item.html).join("");
   const reminders = (matter.deadlineReminders || []).map(row =>
     `<li><b>${esc(row.subject)}</b><p class="small muted">Scheduled ${esc(row.sendOn)} · ${esc(String(row.days))} days before ${row.anchor === "order_cutoff" ? "our order cutoff" : "the county filing deadline"} · ${esc(row.status || "scheduled")} · simulated, not delivered</p><pre class="card">${esc(row.body || "")}</pre></li>`
   ).join("");
@@ -59,52 +76,57 @@ function paint(matter, user, county) {
     ? "Your appeal: waiting for your signature."
     : `Your appeal: ${esc(matter.address)}, tax year ${esc(years)}`;
   const countyLine = customerCountyLine(county);
+  const unsigned = years === "not signed yet";
+  const next = unsigned
+    ? `<div class="card next-card"><p class="eyebrow">Your move</p><p class="next-title">${esc(nextActionLine(matter))}</p><p><a class="btn" href="sign.html">Sign the authorization</a></p></div>`
+    : `<p class="next-action">${esc(nextActionLine(matter))}</p>`;
+  const authStatus = auth ? "Signed" : "The signed authorization PDF appears here after you sign.";
+  const appStatus = filing
+    ? `Filed ${formatDay(filing.filedAt)}. Filing id ${filing.id}.`
+    : "No filing is stored yet. The filing button stays off until the authorization is complete and the agent name, address, and phone are real details rather than [pending].";
   root.innerHTML = `
     <h1>${heading}</h1>
-    <p class="lead">${esc(county.county)}${countyLine ? ` (${esc(countyLine)})` : ""}. This page is the record. It does not promise proactive status updates. You get an email when a step happens. Status changes when you act, or when ops records a step.</p>
+    <p class="lead">${esc(countyLine || county.county + " County")}. This page is the record. It does not promise proactive status updates. You get an email when a step happens. Status changes when you act, or when our team records a step.</p>
     ${advocate}
-    <p class="next-action">${esc(nextActionLine(matter))}</p>
+    ${next}
     ${confirm}
     ${stipulation}
-    <div class="card">
-      <h2>Authorization</h2>
-      <p>${esc(authorizationScope(matter))}</p>
-      <p>${esc(HEARING_PACKET_LINE)}</p>
-      ${auth ? `<button class="btn ghost" type="button" id="dl-auth">Download the signed authorization</button>` : `<p class="small muted">The signed authorization PDF appears here after you sign.</p>`}
-    </div>
-    <div class="card">
-      <h2>Application and county receipt</h2>
-      ${filing
-        ? `<p>Application filed ${esc(formatDay(filing.filedAt))}. Filing id: <b>${esc(filing.id)}</b>.</p>
-           <p>County confirmation: ${esc(filing.countyConfirmedAt || "not recorded")}.</p>
-           <p>County reference: ${esc(filing.countyReference || "not recorded")}.</p>
-           <p>County receipt: ${esc(filing.countyFeeReceipt || "not recorded")}.</p>`
-        : `<p>No filing is stored on this appeal yet. The filing button stays off until the authorization is complete and the agent name, address, and phone are real details rather than [pending].</p>`}
-      <p><button class="btn ghost" type="button" id="dl-app">Download the application preview</button>
-      ${filing ? `<button class="btn ghost" type="button" id="dl-receipt">Download the county receipt</button>` : ""}</p>
-    </div>
-    <div class="card">
-      <h2>Key dates</h2>
-      <ul>
-        <li>${esc(preorderDeadlineLabel(county) || "County filing deadline: not set")}</li>
-        <li>Filed: ${filing ? esc(formatDay(filing.filedAt)) : "not filed"}</li>
-        <li>Hearing: ${matter.hearing && matter.hearing.date ? esc(formatDay(matter.hearing.date)) : "not on this record"}</li>
-      </ul>
-      <p class="small muted">${esc((county.filing && county.filing.regular_window && county.filing.regular_window.label) || "")}</p>
-    </div>
-    <div class="card">
-      <h2>Hearing packet</h2>
-      <p>${esc(HEARING_PACKET_LINE)}</p>
-      <button class="btn ghost" type="button" id="dl-packet">Download the hearing packet</button>
-    </div>
-    <h2>Notices</h2>
-    <p class="small muted">Notices you forward are logged by ops and shown here. Nothing on this page edits the appeal.</p>
-    ${notices || `<p class="small muted">No notices on this appeal.</p>`}
-    <h2>Emails</h2>
-    <ol class="email-list">${emailRows}${follow}</ol>
-    <h2>Deadline reminders</h2>
-    ${reminders ? `<ol class="email-list">${reminders}</ol>` : `<p class="small muted">No deadline reminders. They are stored only after you check Email me reminders. Nothing is sent without that opt-in.</p>`}
-    <p class="small muted">Clerk: ${esc(contactLine(county.filing.clerk))}. Signed in as ${esc(user.email)}.</p>`;
+    <div class="split">
+      <div class="record">
+        <div class="card">
+          <h2>Documents</h2>
+          <ul class="doc-list">
+            <li class="doc-row"><b>Authorization</b><span class="small muted">${esc(authStatus)}</span>${auth ? `<button class="link" type="button" id="dl-auth">Download</button>` : ""}</li>
+            <li class="doc-row"><b>Application and county receipt</b><span class="small muted">${esc(appStatus)}</span><button class="link" type="button" id="dl-app">Download</button>${filing ? `<button class="link" type="button" id="dl-receipt">Download the receipt</button>` : ""}</li>
+            <li class="doc-row"><b>Hearing packet</b><span class="small muted">${esc(HEARING_PACKET_LINE)}</span><button class="link" type="button" id="dl-packet">Download</button></li>
+          </ul>
+          <p>${esc(authorizationScope(matter))}</p>
+          ${filing
+            ? `<p>County confirmation: ${esc(filing.countyConfirmedAt || "not recorded")}. County reference: ${esc(filing.countyReference || "not recorded")}. County receipt: ${esc(filing.countyFeeReceipt || "not recorded")}.</p>`
+            : ""}
+        </div>
+        <div class="card">
+          <h2>Key dates</h2>
+          <ul>
+            <li>${esc(preorderDeadlineLabel(county) || "County filing deadline: not set")}</li>
+            <li>Filed: ${filing ? esc(formatDay(filing.filedAt)) : "not filed"}</li>
+            <li>Hearing: ${matter.hearing && matter.hearing.date ? esc(formatDay(matter.hearing.date)) : "not on this record"}</li>
+          </ul>
+          <p class="small muted">${esc((county.filing && county.filing.regular_window && county.filing.regular_window.label) || "")}</p>
+        </div>
+        <h2>Notices</h2>
+        <p class="small muted">Notices you forward are logged by our team and shown here. Nothing on this page edits the appeal.</p>
+        ${notices || `<p class="small muted">No notices on this appeal.</p>`}
+      </div>
+      <aside class="messages">
+        <h2>Emails</h2>
+        ${latestSent ? `<ol class="email-list">${latestSent.html}</ol>` : ""}
+        <details><summary>${emailSummary}</summary><ol class="email-list">${otherEmails}${follow}</ol></details>
+        <h2>Deadline reminders</h2>
+        ${reminders ? `<ol class="email-list">${reminders}</ol>` : `<p class="small muted">No deadline reminders. They are stored only after you check Email me reminders. Nothing is sent without that opt-in.</p>`}
+        <p class="small muted">Clerk: ${esc(contactLine(county.filing.clerk))}. Signed in as ${esc(user.email)}.</p>
+      </aside>
+    </div>`;
 
   const authBtn = root.querySelector("#dl-auth");
   if (authBtn) authBtn.addEventListener("click", () => {

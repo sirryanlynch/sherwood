@@ -5,7 +5,7 @@ import { money, esc, formatDay } from "../format.js";
 import { notify } from "../adapters/notify.js";
 import { confirmationBody, createMonitorRemote, enrollMonitor, MONITOR_TERMS } from "../monitor.js";
 import { WE_DO, YOU_DO } from "../outcome.js";
-import { CARD_SAVE_NOTE, CHECKOUT_PLANS, HEARING_STATEMENT, adapterFeeNotes, hearingAckHtml, hearingAckState, planPriceLines } from "../pricing.js";
+import { CARD_SAVE_NOTE, CHECKOUT_PLANS, HEARING_STATEMENT, MONITOR, adapterFeeNotes, dfyServiceAmount, hearingAckHtml, hearingAckState, plainDollars, planPriceLines } from "../pricing.js";
 import { getCounty } from "../counties.js";
 import { filingWindow, nextWindowCopy } from "../engine.js";
 import { offerMessage, orderBadgeHtml, purchaseOffer, reminderButtonLabel, reminderOnly } from "../offer.js";
@@ -36,32 +36,43 @@ if (gate) {
     const notes = adapterFeeNotes(county).map(line => `<p class="small muted">${esc(line)}</p>`).join("");
     const limit = offerMessage(county, offer);
     const onlyDfy = plans.length === 1 && plans[0].id === "dfy";
+    const servicePrice = plainDollars(dfyServiceAmount());
+    const monitorPrice = plainDollars(MONITOR.price);
     root.innerHTML = `
       <h1>We file it</h1>
       ${orderBadgeHtml(county)}
       <p class="lead">${esc(matter.address)}</p>
       <p>We only recommend filing when your low estimate covers the fee.</p>
-      <div class="scope">
-        <div><h3>We do</h3><ul>${WE_DO.map(line => `<li>${esc(line)}</li>`).join("")}</ul></div>
-        <div><h3>You do</h3><ul>${YOU_DO.map(line => `<li>${esc(line)}</li>`).join("")}</ul></div>
-      </div>
       ${limit ? `<p>${esc(limit)}</p>` : ""}
+      <div class="split pay-split">
+        <div class="pay-scope">
+          <div class="scope">
+            <div><h3>We do</h3><ul>${WE_DO.map(line => `<li>${esc(line)}</li>`).join("")}</ul></div>
+            <div><h3>You do</h3><ul>${YOU_DO.map(line => `<li>${esc(line)}</li>`).join("")}</ul></div>
+          </div>
+        </div>
+        <aside class="pay-decision">
       <form id="pay" class="wide">
         <div class="plans">
-          ${plans.map(plan => cardHtml(plan, lines, savings)).join("")}
+          ${plans.map(plan => cardHtml(plan, lines, savings, plans.length === 1)).join("")}
         </div>
         ${plans.some(plan => plan.id === "dfy") ? hearingAckHtml(onlyDfy ? "dfy" : "") : ""}
-        <div class="check" id="monitor-included"><input id="monitor-renewal" type="checkbox" name="monitorRenewal" required><label for="monitor-renewal">The free monitor year starts when the filing charge is captured, not when the card is saved. A declined or never-filed case does not get that year. After a captured charge it renews at $49/yr. ${esc(MONITOR_TERMS)} Cancel before the renewal date and the renewal is not charged.</label></div>
+        <p>Your first year of monitoring is included. It starts when your filing is charged. A declined or never-filed case doesn't get it.</p>
+        <div class="check" id="monitor-included"><input id="monitor-renewal" type="checkbox" name="monitorRenewal"><label for="monitor-renewal">Renew monitoring at ${esc(monitorPrice)}/yr after that.</label></div>
+        <p class="small muted">If you turn on renewal: ${esc(MONITOR_TERMS)}</p>
         ${notes}
         <div class="card-save">
           <label>Card<input name="card" disabled placeholder="Simulated. No card number is accepted."></label>
           <div>
             <p>${esc(CARD_SAVE_NOTE)}</p>
+            <p>We verify the card with a $0 check and charge ${esc(servicePrice)} only after the county confirms the filing.</p>
             <div class="check"><input id="card-consent" type="checkbox" name="cardConsent" required><label for="card-consent">I agree to save my card on those terms.</label></div>
           </div>
         </div>
         <button class="btn" type="submit">Continue</button>
-      </form>`;
+      </form>
+        </aside>
+      </div>`;
     const payForm = document.querySelector("#pay");
     payForm.addEventListener("change", () => syncHearingAck(payForm));
     document.querySelector("#pay").addEventListener("submit", async e => {
@@ -72,8 +83,8 @@ if (gate) {
       const plan = plans.find(p => p.id === formData.get("plan"));
       if (!plan) return;
       if (plan.id === "dfy" && formData.get("hearingAck") !== "on") return;
-      if (plan.id === "dfy" && formData.get("monitorRenewal") !== "on") return;
       if (formData.get("cardConsent") !== "on") return;
+      const renewMonitor = formData.get("monitorRenewal") === "on";
       const liveOffer = purchaseOffer(county, new Date(), matter.supplementalNoticeDate);
       const stillOpen = plan.id === "dfy" ? liveOffer.dfy : liveOffer.diy;
       if (!stillOpen) {
@@ -108,7 +119,8 @@ if (gate) {
           matterId: matter.id,
           userId: user.id,
           setupIntentId: setup.id,
-          includedWithFiling: true
+          includedWithFiling: true,
+          renewal: renewMonitor
         });
         matter.monitor = {
           id: record.id,
@@ -117,7 +129,8 @@ if (gate) {
           cancelToken: record.cancelToken,
           retainUntil: record.retainUntil,
           renewsOn: record.renewsOn,
-          includedWithFiling: true
+          includedWithFiling: true,
+          renewal: record.renewal === true
         };
         await notify.outbox({
           channel: "email",
@@ -140,16 +153,16 @@ if (gate) {
 
 function closedHtml(county, window, offer) {
   const win = (county.filing && county.filing.regular_window) || {};
-  const source = win.source_url ? `<a href="${esc(win.source_url)}">${esc(win.source_url)}</a>` : "not set on this adapter";
-  const verified = win.verified_date ? formatDay(win.verified_date) : "not set on this adapter";
+  const source = win.source_url ? `<a href="${esc(win.source_url)}">${esc(win.source_url)}</a>` : "not set in your county's details";
+  const verified = win.verified_date ? formatDay(win.verified_date) : "not set in your county's details";
   const closed = !offer || offer.closed || window.state !== "open";
   const title = closed ? "The filing window is closed" : "Checkout is not open for this county";
   const lead = closed
-    ? "Checkout cannot proceed. This county's filing window is not open on the adapter."
-    : (offerMessage(county, offer) || "We file it is not for sale in this county.");
+    ? "Checkout cannot proceed. Your county's filing window is not open."
+    : (offerMessage(county, offer) || "Filing is not for sale in this county.");
   const windowLine = closed
     ? `<p>${esc(nextWindowCopy(county, new Date()))}</p>`
-    : (orderBadgeHtml(county) || "<p>The filing window on this adapter is open. Purchase is not available.</p>");
+    : (orderBadgeHtml(county) || "<p>Your county's filing window is open. Purchase is not available.</p>");
   const informal = closed && county.informal_review
     ? `<h2>Free informal review</h2><p>${esc(county.informal_review)}</p>`
     : "";
@@ -211,7 +224,7 @@ function syncHearingAck(form) {
   if (!state.visible) box.checked = false;
 }
 
-function cardHtml(plan, lines, savings) {
+function cardHtml(plan, lines, savings, onlyPlan) {
   const price = plan.id === "dfy" ? lines.dfy : "";
   const waiver = plan.id === "diy" && lines.feeNote ? `<p class="small muted">${esc(lines.feeNote)}</p>` : "";
   const band = savings && typeof savings === "object" ? savings : null;
@@ -224,13 +237,13 @@ function cardHtml(plan, lines, savings) {
   const flag = plan.timingFlag ? `<p><b>${esc(plan.timingFlag)}</b></p>` : "";
   return `
     <label class="card">
-      <input type="radio" name="plan" value="${plan.id}" required>
+      <input type="radio" name="plan" value="${plan.id}" required${onlyPlan ? " checked hidden" : ""}>
       <h3>${esc(plan.name)}</h3>
       ${price ? `<p><b>${esc(price)}</b></p>` : ""}
       ${flag}
       ${waiver}
       <p>${esc(estimate)}</p>
-      ${plan.chargeNote ? `<p>${esc(plan.chargeNote)}</p>` : ""}
+      ${plan.chargeNote && !onlyPlan ? `<p>${esc(plan.chargeNote)}</p>` : ""}
       <p class="small muted">${esc(plan.summary)}</p>
     </label>`;
 }

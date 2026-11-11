@@ -1,12 +1,17 @@
 import { maybeLoadDemo } from "./demo.js";
-import { customerCountyLine, getCounty, loadCounties } from "./counties.js";
+import { countyDetailsLabel, customerCountyLine, getCounty, loadCounties } from "./counties.js";
 
 maybeLoadDemo();
-import { contactLine, esc, formatDay, money } from "./format.js";
+import { contactLine, customerLine, esc, formatDay, money } from "./format.js";
 import { landingDfyEnabled, orderBadgeHtml } from "./offer.js";
-import { filingFeeNote, landingHomeLine, planPriceLines } from "./pricing.js";
+import { dfyServiceAmount, filingFeeNote, landingHomeLine, plainDollars, planPriceLines } from "./pricing.js";
 
-const SIM = "Simulated on this device. Payment, signatures, county filing, and email or SMS do not leave this browser.";
+const demoNote = (() => {
+  try { return sessionStorage.getItem("sherwood_demo") === "1"; }
+  catch (e) { return false; }
+})();
+const SIM = "Simulated on this device. Payment, signatures, county filing, and email or SMS do not leave this browser."
+  + (demoNote ? " Reviewer demo. Simulated case, not a county filing." : "");
 
 function paintOrderBadge(county) {
   const host = document.querySelector("[data-order-badge]");
@@ -34,9 +39,15 @@ async function fillLaunchFacts() {
   }
   const slots = document.querySelectorAll("[data-fact]");
   const needsPlans = document.getElementById("home-price") || document.getElementById("faq-prices") || document.getElementById("how-plans");
-  if (!slots.length && !document.getElementById("launch-facts") && !document.getElementById("launch-filing") && !document.getElementById("launch-fee") && !needsPlans && !document.querySelector("[data-order-badge]")) return;
+  if (!slots.length && !document.getElementById("launch-facts") && !document.getElementById("launch-filing") && !document.getElementById("launch-fee") && !needsPlans && !document.querySelector("[data-order-badge]") && !document.querySelector("[data-county-details]")) return;
   const county = await getCounty("santa_cruz");
   if (!county) return;
+  const detailsLabel = countyDetailsLabel(county);
+  if (detailsLabel) {
+    document.querySelectorAll("[data-county-details]").forEach(el => {
+      el.textContent = detailsLabel;
+    });
+  }
   slots.forEach(el => {
     if (el.getAttribute("data-fact") === "santa_cruz.clerk") {
       el.textContent = contactLine(county.filing.clerk);
@@ -47,28 +58,32 @@ async function fillLaunchFacts() {
   if (facts) {
     const fee = county.filing.efile_fee;
     const paper = county.filing.paper_fee;
+    const efileListed = fee && typeof fee.amount === "number" && fee.amount > 0;
+    const paperListed = paper && typeof paper.amount === "number" && paper.amount > 0;
     const prices = `We file it ${lines.dfy}`;
+    const servicePrice = plainDollars(dfyServiceAmount());
+    const hearingFormat = customerLine(county.hearing && county.hearing.format);
+    const exemptionNote = customerLine(county.homeowner_exemption && county.homeowner_exemption.note);
     facts.innerHTML = `
       <p class="small muted">These lines are rendered from the ${esc(customerCountyLine(county) || county.county + " County")}.</p>
       <ul>
-        <li>Regular window: ${esc(county.filing.regular_window.label)}. Deadline on the adapter: ${esc(formatDay(county.filing.current_year_deadline))}. Source: ${county.filing.regular_window.source_url ? `<a href="${esc(county.filing.regular_window.source_url)}">${esc(county.filing.regular_window.source_url)}</a>` : "not set"}. Verified: ${esc(formatDay(county.filing.regular_window.verified_date))}.</li>
+        <li>Regular window: ${esc(county.filing.regular_window.label)}. County deadline: ${esc(formatDay(county.filing.current_year_deadline))}. Source: ${county.filing.regular_window.source_url ? `<a href="${esc(county.filing.regular_window.source_url)}">${esc(county.filing.regular_window.source_url)}</a>` : "not set"}.</li>
         <li>Sherwood prices: ${esc(prices)}</li>
-        <li>E-file fee recorded in the kit: ${esc(fee.label)}</li>
-        <li>Paper fee recorded in the kit: ${esc(paper.label)}</li>
-        <li>${esc(county.filing.fee_conflict)}</li>
+        <li>County e-file fee: included in the We file it price (${esc(servicePrice)}).</li>
+        <li>Paper filing fee: ${paperListed ? "included in the We file it price." : "not yet confirmed for this county."}</li>
         <li>Portal: <a href="${esc(county.filing.portal_url)}">${esc(county.filing.portal_url)}</a></li>
         <li>Clerk: ${esc(contactLine(county.filing.clerk))}</li>
         <li>Assessor: ${esc(contactLine(county.assessor_office))}</li>
         <li>Supplemental: ${esc(county.filing.supplemental_window)}</li>
-        <li>Hearing: ${esc(county.hearing.notice)} ${esc(county.hearing.format)}</li>
-        <li>Homeowner's Exemption, from this adapter: $${county.homeowner_exemption.assessed_reduction.toLocaleString("en-US")} off assessed value, about $${county.homeowner_exemption.approx_annual_dollars}/yr. ${esc(county.homeowner_exemption.note)}</li>
+        <li>Hearing: ${esc(county.hearing.notice)}${hearingFormat ? ` ${esc(hearingFormat)}` : ""}</li>
+        <li>Homeowner's Exemption: $${county.homeowner_exemption.assessed_reduction.toLocaleString("en-US")} off assessed value, about $${county.homeowner_exemption.approx_annual_dollars}/yr.${exemptionNote ? ` ${esc(exemptionNote)}` : ""}</li>
       </ul>`;
   }
   const filing = document.getElementById("launch-filing");
   if (filing) {
     const prices = `We file it ${lines.dfy}`;
     filing.innerHTML = `
-      <p>Launch county, from the adapter: ${esc(county.county)} County. ${esc(county.filing.efile ? "E-file is the path used in the pilot." : "Paper.")}</p>
+      <p>Launch county: ${esc(county.county)} County. ${esc(county.filing.efile ? "We file through the county's e-file portal." : "Paper.")}</p>
       <p>Portal: <a href="${esc(county.filing.portal_url)}">${esc(county.filing.portal_url)}</a></p>
       <p>${esc(prices)}</p>
       <p>${esc(county.agent.source)} ${esc(county.agent.perjury)}</p>`;
@@ -85,7 +100,7 @@ async function fillLaunchFacts() {
 
 function mountChrome() {
   document.querySelectorAll("[data-sim]").forEach(el => {
-    if (!el.textContent.trim()) el.textContent = SIM;
+    if (!el.textContent.trim()) el.innerHTML = `<span class="chip chip-simulated">Simulated</span> ${esc(SIM)}`;
   });
   const bar = document.querySelector("[data-progress]");
   if (bar) {
@@ -101,7 +116,7 @@ function mountChrome() {
 mountChrome();
 fillLaunchFacts().catch(err => {
   document.querySelectorAll("[data-fact]").forEach(el => {
-    el.textContent = "County adapter failed to load.";
+    el.textContent = "County details failed to load.";
   });
   console.error(err);
 });

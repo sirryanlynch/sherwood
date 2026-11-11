@@ -35,6 +35,14 @@ export async function loadCounties() {
   return list;
 }
 
+/* "Santa Cruz" in the county file becomes "Santa Cruz County's details". The name is not typed into the page. */
+export function countyDetailsLabel(county) {
+  const place = county && typeof county.county === "string" ? county.county.trim() : "";
+  if (!place) return "";
+  const name = /county$/i.test(place) ? place : `${place} County`;
+  return `${name}'s details`;
+}
+
 /* Customer copy cites the board named on the adapter. The pilot-kit status label stays internal. */
 export function customerCountyLine(county) {
   if (!county) return "";
