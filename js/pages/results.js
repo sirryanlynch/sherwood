@@ -2,8 +2,9 @@ import "../boot.js";
 import { notify } from "../adapters/notify.js";
 import { getCounty } from "../counties.js";
 import { paymentsAdapter } from "../adapters/payments.js";
+import { borderlineReviewLine, deadlineReminderPlan, withUnsubscribe } from "../deadlineReminders.js";
 import { nextWindowCopy } from "../engine.js";
-import { contactLine, esc, formatDay, money } from "../format.js";
+import { contactLine, esc, formatDay, money, uid } from "../format.js";
 import { offerMessage, orderBadgeHtml, purchaseOffer, reminderButtonLabel, reminderOnly } from "../offer.js";
 import { VALUE_VS_RATE, WE_DO, YOU_DO, customerOutcome } from "../outcome.js";
 import { slugForCountyId } from "../place.js";
@@ -33,6 +34,7 @@ function remindForm(matter, privacy, label) {
     <form id="remind-form" class="wide">
       <label>Email<input name="email" type="email" required value="${esc(matter.email || "")}" placeholder="you@example.com"></label>
       ${privacy}
+      <label class="check"><input type="checkbox" name="deadlineReminders"> Email me reminders</label>
       <button class="btn" type="submit" ${matter.remindWhenOpen ? "disabled" : ""}>${esc(label)}</button>
       <p id="remind-ok" class="small muted" ${matter.remindWhenOpen ? "" : "hidden"}>${matter.remindWhenOpen ? "Saved for " + esc(matter.email) + "." : ""}</p>
     </form>`;
@@ -43,6 +45,7 @@ function emailForm(matter, privacy, label) {
     <form id="result-email" class="wide">
       <label>Email<input name="email" type="email" required value="${esc(matter.email || "")}" placeholder="you@example.com"></label>
       ${privacy}
+      <label class="check"><input type="checkbox" name="deadlineReminders"> Email me reminders</label>
       <button class="btn ghost" type="submit">${esc(label)}</button>
       <p id="email-ok" class="small muted" hidden></p>
     </form>`;
@@ -126,7 +129,7 @@ function render(matter, county) {
       <p>${esc(gapLine)} Our fee: <b>${esc(planPriceLines(county).dfy)}</b></p>
       <div class="mobile-cta"><a class="btn" href="login.html?next=checkout.html">Have Sherwood file it, $249</a></div>
       ${rangeHtml(savings)}
-      <p>Your card is saved, not charged, until the county confirms filing. If we decide not to file after intake, you pay nothing.</p>
+      <p>Your card is saved, not charged, until the county confirms filing.</p>
       <p class="small muted">Low-risk step: email yourself this result and read it on a computer before you hire us.</p>
       ${emailForm(matter, privacy, "Email me this result to review on a computer")}
       <p><a href="how-it-works.html">What happens next</a></p>`;
@@ -134,7 +137,7 @@ function render(matter, county) {
   } else if (matter.outcome === "borderline") {
     decision = `
       <h1>It's close. A person will review it.</h1>
-      <p>The low estimate is under our $249 fee, so we won't recommend filing until someone checks your numbers. You'll get an email within [X business days, PENDING Ops capacity].</p>
+      <p>The low estimate is under our $249 fee, so we won't recommend filing until someone checks your numbers. ${esc(borderlineReviewLine(new Date()))}</p>
       ${rangeHtml(savings)}
       <p>${esc(offerMessage(county, offer) || "")}</p>
       ${emailForm(matter, privacy, "Send it for review (free)")}
@@ -218,6 +221,7 @@ function render(matter, county) {
         consent_source: matter.outcome === "no_go" ? "results_no_action" : "results_off_season"
       });
       matter.remindWhenOpen = { at: new Date().toISOString(), email, openDate: null, simulated: !!result.simulated };
+      await queueDeadlineReminders(matter, county, new FormData(remind).get("deadlineReminders") === "on");
       saveMatter(matter);
       await notify.outbox({
         channel: "email",
@@ -242,6 +246,7 @@ function render(matter, county) {
       const email = String(new FormData(saveForm).get("email") || "").trim();
       matter.email = email;
       if (matter.outcome === "borderline") matter.reviewRequested = true;
+      await queueDeadlineReminders(matter, county, new FormData(saveForm).get("deadlineReminders") === "on");
       saveMatter(matter);
       const result = await createLead({
         email,
@@ -269,6 +274,34 @@ function render(matter, county) {
     });
     io.observe(primary);
     narrow.addEventListener("change", () => { resultDock.hidden = !narrow.matches; });
+  }
+}
+
+async function queueDeadlineReminders(matter, county, optIn) {
+  if (optIn !== true || matter.deadlineReminders) return;
+  matter.reminderOptIn = true;
+  matter.reminderUnsubscribeToken = matter.reminderUnsubscribeToken || uid("unsub");
+  const rows = withUnsubscribe(deadlineReminderPlan(county), matter.reminderUnsubscribeToken).map(row => ({
+    ...row,
+    status: "scheduled",
+    simulated: true
+  }));
+  matter.deadlineReminders = rows;
+  matter.caseEmails = Array.isArray(matter.caseEmails) ? matter.caseEmails : [];
+  const to = matter.email ? [matter.email] : [];
+  for (const row of rows) {
+    for (const email of to) {
+      await notify.outbox({
+        channel: "email",
+        to: email,
+        kind: row.kind,
+        subject: row.subject,
+        scheduledFor: row.sendOn,
+        simulated: true,
+        body: `${row.subject}\n\n${row.body}`
+      });
+    }
+    matter.caseEmails.push({ ...row, to, at: row.sendOn, simulated: true });
   }
 }
 

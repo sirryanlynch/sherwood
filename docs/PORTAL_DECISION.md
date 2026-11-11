@@ -12,6 +12,7 @@ The case page shows:
 - One next-action line. When a hearing is on the record it includes “You attend the hearing.”
 - The notices inbox, read-only. Ops logs a forwarded notice. The customer does not edit it here.
 - The five emails as a preview list: received, signed, filed (PDF names attached), hearing scheduled, decision. They are written to the existing simulated outbox. Nothing is delivered.
+- Deadline reminders at 14, 7, and 2 days before Sherwood’s order cutoff and before `regular_window.end`. They are stored only after an unchecked “Email me reminders” box is checked. Each one includes an unsubscribe link. The cutoff subject is “Our filing cutoff is Nov 25.” The county subject uses the Nov 30 deadline. Nov 25 is never called the county deadline.
 - One customer action: “I got my hearing notice.” Ops can send the single follow-up, then the log stops.
 
 Login is still the simulated magic link. Nothing else on the case page is a form. Stage changes, notice logging, POA review, and county confirmation stay on the ops page. The charge gate is unchanged: “Mark filed, then charge” still requires a filing time, a filing id, and `countyConfirmedAt`, and a simulated filing still cannot be charged.
@@ -31,23 +32,31 @@ The hearing acknowledgment is unchanged: “We prepare your evidence, file your 
 
 Email-only can carry the five events. It does not leave the customer a place to open the signed PDF, the filing number, and the hearing line six months later without searching their mail. The case page is that place. It is not a status feed and it does not promise that Sherwood will write with news the customer did not trigger.
 
-## Owner decisions (not resolved)
+## Resolved by Ops, subject to Ryan's veto
 
-1. **Negotiation wording.** Ops and the GTM case-page footer say the page should state “We don't negotiate or accept offers for you.” The We file it acknowledgment, which is still the checkbox at checkout, says we “work toward an informal reduction or settlement with the Assessor.” This build keeps the acknowledgment. The case page does not use the ops sentence. The FAQ says we work toward an informal reduction or settlement, and that the owner decides whether to accept one. The owner has to choose which sentence is the public one.
+4. **Payment if we decline after intake.** Ops removed the “full refund if we decline after intake” line. The live rule stays: the card is saved and is not charged until the county confirms the filing. Declining before that confirmation means you pay nothing, because nothing was captured. Checkout shows that saved-card sentence next to a simulated card field, with an unchecked consent box. The older draft for a charge that already happened (refund minus the county fee, or a full refund if the county rejects because of our error) is still on the pricing page inside `[DRAFT – pending attorney review]`.
 
-2. **Tax years on the authorization.** Ops and the GTM case-page row say the authorization covers one tax year. Signing still offers the filing year and earlier years, four at most, and the signed record stores whichever of those the customer checks. This build keeps that behavior. The case page prints the years that were signed. It does not say “one tax year.”
+7. **Mobile disclosure.** Ops says the statutory disclaimer may collapse on mobile: a tap expands it, and the full sentence stays in the page. Desktop stays the footer dialog. The control is a button, not a `<details>` element.
 
-3. **Price display.** Finance’s statewide formula is $199 plus the county fee. `SHOW_199_PLUS_COUNTY_FEE` is still false, so Santa Cruz stays “$249, county fee included.” That flag was not turned on.
+## Owner decisions still open
 
-4. **“Full refund” if we decline after intake.** The pricing draft now includes that sentence, inside the existing `[DRAFT – pending attorney review]` block. The charge gate is unchanged: the card is saved and not charged until the county confirms filing. Declining before that confirmation means nothing was captured, so “you pay nothing” is the same event as a refund of a charge that never happened. A refund after a captured charge is still the older draft (refund minus the county fee, or a full refund if the county rejects because of our error). Those are not the same case. The owner should say which one counsel is reviewing.
+1. **Negotiation wording.** Held for Ryan. The live We file it acknowledgment still says we “work toward an informal reduction or settlement with the Assessor.” The FAQ keeps that sentence and “If the assessor offers a settlement, you decide.” Ops and the GTM case-page footer would say “We don't negotiate or accept offers for you.” That sentence is not on the case page.
 
-5. **Borderline review time.** The result says “You'll get an email within [X business days, PENDING Ops capacity].” No number was invented.
+2. **Tax years on the authorization.** Ops and the GTM case-page row say the authorization covers one tax year. Signing still offers the filing year and earlier years, four at most. The case page prints the years that were signed. It does not say “one tax year.”
 
-6. **Retention.** The privacy page says appeal-record retention is `[pending attorney review]`. Ops suggested 4 years. That number was not adopted. The existing rule that signed agent authorizations are kept 3 years is still on the appeal.
+3. **Price display.** Finance’s statewide formula is $199 plus the county fee. `SHOW_199_PLUS_COUNTY_FEE` is still false, so Santa Cruz stays “$249, county fee included.”
 
-7. **Mobile disclosure.** GTM asked to collapse the statutory disclaimer below the fold on mobile, pending an ops confirmation that this is compliant. The footer dialog is unchanged. It was not collapsed.
+5. **Borderline review time.** Ops recommends “You'll get an email within 2 business days.” From Nov 21 the line is “You'll hear from us before Nov 25, or we'll tell you we can't take it this season.” Nov 25 in that sentence is our order cutoff. This is an Ops recommendation for Ryan to confirm. It is not a final promise.
 
-8. **Portfolio price.** GTM said the 5+ parcel form should show no price. Finance said the price stays $249 and $49 per parcel, with no bulk discount, and no payment. The steward page shows the per-parcel prices and a waitlist that does not charge.
+6. **Retention.** The privacy page says appeal-record retention is `[pending attorney review]`. Ops suggested 4 years. That number was not adopted. Signed agent authorizations are still kept 3 years.
+
+8. **Portfolio price.** The steward page shows $249 per filing and $49/yr per parcel, and the waitlist does not take payment.
+
+9. **Hero.** The homepage H1 stays “Your property tax appeal, handled.” Ryan’s sign-off on that line is still open.
+
+## Finance note for Ryan
+
+Filing is recorded before the card is charged. That is a file-first, charge-second collection risk: the county fee and the work can be spent before Stripe captures $249, and a failed capture is not recovered by the filing itself. The free monitor year starts only when that charge is captured. A declined or never-filed case does not get the free year. Before filing, the payment adapter runs a simulated $0 authorization. If it fails, filing stays off until the customer updates the card. Ops can force the next check to fail. None of this charges a real card.
 
 ## Not in this prototype
 
@@ -55,5 +64,5 @@ Email-only can carry the five events. It does not leave the customer a place to 
 - Proactive status updates between those events.
 - Bulk filing, or taking payment for a portfolio.
 - Real DocuSign, Stripe, or county e-file.
-- The deadline emails at 14, 7, and 2 days before Nov 25. The Firebase job already has its own reminder windows. Those were not retimed.
+- A live sender for the 14/7/2 deadline reminders. The dates are stored in this browser’s outbox only. The Firebase job was not retimed.
 - Agent name, address, and phone. They are still `[pending]`, so Record the filing stays disabled until those are real. That gate was not relaxed.

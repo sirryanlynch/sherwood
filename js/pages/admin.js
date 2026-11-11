@@ -1,6 +1,8 @@
 import "../boot.js";
 import { paymentsAdapter } from "../adapters/payments.js";
 import { chargeReady, chargeSavedCardIfReady, countyFeeUncaptured, recordCountyConfirmation } from "../chargeGate.js";
+import { startIncludedYear } from "../monitor.js";
+import { deadlineReminderPlan } from "../deadlineReminders.js";
 import { planById } from "../pricing.js";
 import { loadCounties } from "../counties.js";
 import { formatDay, esc, parseISODate } from "../format.js";
@@ -35,7 +37,8 @@ function paint() {
     }
     const source = win.source_url ? `<a href="${esc(win.source_url)}">${esc(win.source_url)}</a>` : "source not set";
     const verified = win.verified_date ? formatDay(win.verified_date) : "verified date not set";
-    return `<li><b>${esc(county.county)}</b> — ${esc(county.status_label)}. ${esc(win.label || "no window")}. ${esc(distance)}. Deadline field: ${esc(formatDay(county.filing.current_year_deadline))}. ${source}. Verified ${esc(verified)}.</li>`;
+    const reminders = deadlineReminderPlan(county).map(row => `<li>${esc(row.sendOn)} · ${esc(row.days)} days before ${esc(row.anchor === "order_cutoff" ? "our order cutoff" : "the county filing deadline")} · ${esc(row.subject)}</li>`).join("");
+    return `<li><b>${esc(county.county)}</b> — ${esc(county.status_label)}. ${esc(win.label || "no window")}. ${esc(distance)}. Deadline field: ${esc(formatDay(county.filing.current_year_deadline))}. ${source}. Verified ${esc(verified)}.${reminders ? `<ul>${reminders}</ul>` : ""}</li>`;
   }).join("");
   root.innerHTML = `
     <h1>Ops</h1>
@@ -97,6 +100,15 @@ function paint() {
       if (charge.status === "succeeded") {
         matter.paymentId = charge.id;
         matter.paidAt = charge.createdAt;
+        const mon = (next.monitors || []).find(item => matter.monitor && item.id === matter.monitor.id);
+        if (mon) {
+          startIncludedYear(mon, charge.createdAt);
+          matter.monitor.yearStartedAt = mon.yearStartedAt;
+          matter.monitor.renewsOn = mon.renewsOn;
+          matter.monitor.status = mon.status;
+        }
+      } else if (matter.monitor && matter.monitor.includedWithFiling) {
+        matter.monitor.freeYear = "not_started";
       }
       saveDb(next);
       paint();
@@ -118,6 +130,28 @@ function paint() {
         countyFeeReceipt: data.get("countyFeeReceipt")
       });
       if (!result.ok) return;
+      saveDb(next);
+      paint();
+    });
+  });
+  root.querySelectorAll("[data-card-fail]").forEach(button => {
+    button.addEventListener("click", () => {
+      const next = loadDb();
+      const matter = next.matters.find(m => m.id === button.getAttribute("data-card-fail"));
+      if (!matter) return;
+      matter.forceCardFail = true;
+      matter.cardCheck = null;
+      saveDb(next);
+      paint();
+    });
+  });
+  root.querySelectorAll("[data-card-pass]").forEach(button => {
+    button.addEventListener("click", () => {
+      const next = loadDb();
+      const matter = next.matters.find(m => m.id === button.getAttribute("data-card-pass"));
+      if (!matter) return;
+      matter.forceCardFail = false;
+      matter.cardCheck = null;
       saveDb(next);
       paint();
     });
@@ -227,7 +261,14 @@ function chargeQueue(matters) {
       <button class="btn ghost" type="button" data-charge="${esc(matter.id)}" data-fail="1" ${done ? "disabled" : ""}>Record a failed charge</button>`
       : `<p class="small muted">The charge stays off until this appeal has a filing time, a filing ID, and a county confirmation, and the filing is not simulated.</p>`;
     const flag = countyFeeUncaptured(matter) ? `<p class="badge">${esc(feeFlagText(matter))}</p>` : "";
+    const check = matter.cardCheck;
+    const checkLine = check
+      ? `<p>Card check: ${esc(check.status)}${check.reason ? ` · ${esc(check.reason)}` : ""}. Amount $0.</p>`
+      : `<p class="small muted">No card check stored yet. The filing page runs a $0 authorization.</p>`;
     return `<div class="card"><p><b>${esc(matter.address)}</b></p><p>Charge: ${esc(status)}.${esc(detail)}</p>
+      ${checkLine}
+      <p><button class="btn ghost" type="button" data-card-fail="${esc(matter.id)}">Fail the next card check</button>
+      <button class="btn ghost" type="button" data-card-pass="${esc(matter.id)}">Clear a failed card check</button></p>
       ${flag}
       ${confirmationForm(matter)}
       ${buttons}</div>`;

@@ -28,6 +28,9 @@ function paint(matter, user, county) {
     const who = (row.to || []).join(", ") || "no address on the appeal";
     return `<li><b>${esc(row.subject || label)}</b><p class="small muted">To ${esc(who)} · ${esc(row.at || "")} · simulated, not delivered</p><pre class="card">${esc(row.body || "")}</pre></li>`;
   }).join("");
+  const reminders = (matter.deadlineReminders || []).map(row =>
+    `<li><b>${esc(row.subject)}</b><p class="small muted">Scheduled ${esc(row.sendOn)} · ${esc(String(row.days))} days before ${row.anchor === "order_cutoff" ? "our order cutoff" : "the county filing deadline"} · ${esc(row.status || "scheduled")} · simulated, not delivered</p><pre class="card">${esc(row.body || "")}</pre></li>`
+  ).join("");
   const follow = emails.filter(item => item.kind === "hearing_followup").map(row =>
     `<li><b>${esc(row.subject)}</b><p class="small muted">${esc(row.at || "")}</p><pre class="card">${esc(row.body || "")}</pre></li>`
   ).join("");
@@ -94,6 +97,8 @@ function paint(matter, user, county) {
     ${notices || `<p class="small muted">No notices on this appeal.</p>`}
     <h2>Emails</h2>
     <ol class="email-list">${emailRows}${follow}</ol>
+    <h2>Deadline reminders</h2>
+    ${reminders ? `<ol class="email-list">${reminders}</ol>` : `<p class="small muted">No deadline reminders. They are stored only after you check Email me reminders. Nothing is sent without that opt-in.</p>`}
     <p class="small muted">Clerk: ${esc(contactLine(county.filing.clerk))}. Signed in as ${esc(user.email)}.</p>`;
 
   const authBtn = root.querySelector("#dl-auth");

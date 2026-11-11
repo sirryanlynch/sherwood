@@ -41,7 +41,7 @@ Portfolio (`?for=portfolio`): up to three addresses on the check. The first addr
 | Engine | Customer heading | Next step |
 |---|---|---|
 | `go` and low estimate ≥ $249 | You likely have a case. | Have Sherwood file it, $249 |
-| `borderline` | It's close. A person will review it. | Send it for review (free). The review-time promise is `[X business days, PENDING Ops capacity]`. |
+| `borderline` | It's close. A person will review it. | Send it for review (free). Before Nov 21 the line is “within 2 business days.” From Nov 21 it is “before Nov 25, or we'll tell you we can't take it this season.” Ops recommended that wording. Ryan has not confirmed it. |
 | `no_go` | No action recommended. | Remind me next year |
 | `off_season` | Filing is closed for this season in [county]. | Email me when it opens |
 

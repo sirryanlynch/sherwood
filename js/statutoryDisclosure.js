@@ -92,6 +92,25 @@ export function bindDisclosureDialog() {
 
   const row = readAttribution();
   mountCampaignDisclosure(row && row.src);
+  mountMobileDisclosure();
+}
+
+function mountMobileDisclosure() {
+  if (document.querySelector("[data-disclosure-mobile]")) return;
+  const footer = document.querySelector("footer .wrap") || document.querySelector("footer");
+  if (!footer) return;
+  const block = document.createElement("div");
+  block.className = "disclosure-mobile";
+  block.setAttribute("data-disclosure-mobile", "");
+  block.innerHTML = `<button type="button" class="disclosure-link" aria-expanded="false" data-disclosure-mobile-toggle>Statutory disclosure</button>${statutoryDisclosureHtml()}`;
+  const panel = block.querySelector(".statutory-disclosure");
+  panel.hidden = true;
+  footer.insertBefore(block, footer.firstChild);
+  const button = block.querySelector("[data-disclosure-mobile-toggle]");
+  button.addEventListener("click", () => {
+    panel.hidden = !panel.hidden;
+    button.setAttribute("aria-expanded", panel.hidden ? "false" : "true");
+  });
 }
 
 export function mountCampaignDisclosure(src) {

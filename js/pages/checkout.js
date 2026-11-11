@@ -5,7 +5,7 @@ import { money, esc, formatDay } from "../format.js";
 import { notify } from "../adapters/notify.js";
 import { confirmationBody, createMonitorRemote, enrollMonitor, MONITOR_TERMS } from "../monitor.js";
 import { WE_DO, YOU_DO } from "../outcome.js";
-import { CHECKOUT_PLANS, HEARING_STATEMENT, adapterFeeNotes, hearingAckHtml, hearingAckState, planPriceLines } from "../pricing.js";
+import { CARD_SAVE_NOTE, CHECKOUT_PLANS, HEARING_STATEMENT, adapterFeeNotes, hearingAckHtml, hearingAckState, planPriceLines } from "../pricing.js";
 import { getCounty } from "../counties.js";
 import { filingWindow, nextWindowCopy } from "../engine.js";
 import { offerMessage, orderBadgeHtml, purchaseOffer, reminderButtonLabel, reminderOnly } from "../offer.js";
@@ -51,9 +51,15 @@ if (gate) {
           ${plans.map(plan => cardHtml(plan, lines, savings)).join("")}
         </div>
         ${plans.some(plan => plan.id === "dfy") ? hearingAckHtml(onlyDfy ? "dfy" : "") : ""}
-        <label class="check" id="monitor-included"><input type="checkbox" name="monitorRenewal" required> First year of monitoring is included with this filing. It renews at $49/yr. ${esc(MONITOR_TERMS)} Nothing is charged for the monitor today. Cancel before the renewal date and the renewal is not charged.</label>
+        <label class="check" id="monitor-included"><input type="checkbox" name="monitorRenewal" required> The free monitor year starts when the filing charge is captured, not when the card is saved. A declined or never-filed case does not get that year. After a captured charge it renews at $49/yr. ${esc(MONITOR_TERMS)} Cancel before the renewal date and the renewal is not charged.</label>
         ${notes}
-        <p class="small muted">Simulated Stripe. The card is saved and not charged. There is no card field.</p>
+        <div class="card-save">
+          <label>Card<input name="card" disabled placeholder="Simulated. No card number is accepted."></label>
+          <div>
+            <p>${esc(CARD_SAVE_NOTE)}</p>
+            <label class="check"><input type="checkbox" name="cardConsent" required> I agree to save my card on those terms.</label>
+          </div>
+        </div>
         <button class="btn" type="submit">Continue</button>
       </form>`;
     const payForm = document.querySelector("#pay");
@@ -67,6 +73,7 @@ if (gate) {
       if (!plan) return;
       if (plan.id === "dfy" && formData.get("hearingAck") !== "on") return;
       if (plan.id === "dfy" && formData.get("monitorRenewal") !== "on") return;
+      if (formData.get("cardConsent") !== "on") return;
       const liveOffer = purchaseOffer(county, new Date(), matter.supplementalNoticeDate);
       const stillOpen = plan.id === "dfy" ? liveOffer.dfy : liveOffer.diy;
       if (!stillOpen) {

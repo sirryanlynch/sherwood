@@ -43,7 +43,6 @@ export function caseEmailDraft(kind, matter, county) {
       `We received your request to file an appeal for ${address} in ${countyName}.`,
       "You review and sign. We do the paperwork and the deadline.",
       "Your card is saved and is not charged until the county confirms the filing.",
-      "If we decide not to file after intake, you pay nothing.",
       "This message was stored in this browser. It was not sent to an email provider."
     ].join("\n"),
     signed: [
