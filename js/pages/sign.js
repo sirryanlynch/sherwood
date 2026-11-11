@@ -4,7 +4,7 @@ import {
   AGENT_CONTACT, OWNER_COPY_LINE, normalizeTaxYears, parcelLabel, signedDateText, taxYearChoices
 } from "../authorization.js";
 import { getCounty } from "../counties.js";
-import { esc, formatShortDay } from "../format.js";
+import { customerLine, esc, formatShortDay } from "../format.js";
 import { HEARING_PACKET_LINE, planById } from "../pricing.js";
 import { AUTHORIZATION_RETENTION, retainUntil } from "../retention.js";
 import { sendCaseEmail } from "../caseMail.js";
@@ -116,9 +116,9 @@ function paintForm(root, matter, county, step, round, envelope) {
     ${matter.role === "advocate" ? `<p>The payer can be someone else. The owner signs this authorization, unless a power of attorney or conservatorship was uploaded for review.</p>` : ""}
     ${step.id === "agent_authorization" ? summaryHtml(matter, [yearChoices[0]].filter(Boolean), null) : ""}
     <div class="card">
-      <p>${esc(step.text)}</p>
+      <p>${esc(customerLine(step.text))}</p>
       ${round === 2 ? `<h3>Statement you are attaching</h3><pre style="white-space:pre-wrap;font:inherit">${esc(matter.kit.statement)}</pre>` : ""}
-      ${round === 3 ? `<p>There is no stipulation document in the pilot kit. Signing here only records that you chose to accept in this demo.</p>` : ""}
+      ${round === 3 ? `<p>There is no stipulation document in this demo. Signing here only records that you chose to accept in this demo.</p>` : ""}
       <p class="small muted">Envelope ${esc(envelope.id)} · ${esc(envelope.status)} · simulated</p>
     </div>
     <form id="sign-form" class="wide">
@@ -186,7 +186,7 @@ function paintForm(root, matter, county, step, round, envelope) {
         retention: AUTHORIZATION_RETENTION
       };
     }
-    if (round === 3) matter.stipulationDecision = "Accepted in the demo. The signature is simulated and there is no stipulation form in the pilot kit.";
+    if (round === 3) matter.stipulationDecision = "Accepted in the demo. The signature is simulated and there is no stipulation form in this demo.";
     if (round === 2) await sendCaseEmail("signed", matter, county);
     saveMatter(matter);
     if (round === 1) location.href = "sign.html?round=2";

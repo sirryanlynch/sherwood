@@ -4,7 +4,7 @@ import { paymentsAdapter } from "../adapters/payments.js";
 import { getCounty } from "../counties.js";
 import { AGENT_CONTACT, OWNER_COPY_LINE, authorizationReady, pendingAgentContact, signedBeforeFiling, signedDateText } from "../authorization.js";
 import { AUTHORIZATION_RETENTION } from "../retention.js";
-import { contactLine, esc } from "../format.js";
+import { contactLine, customerLine, esc } from "../format.js";
 import { filingWindow } from "../engine.js";
 import { planById, planPriceLines } from "../pricing.js";
 import { sendCaseEmail } from "../caseMail.js";
@@ -185,6 +185,6 @@ function paintFiled(root, matter, county) {
       <p>Clerk: ${esc(contactLine(county.filing.clerk))}</p>
       ${authLine}
     </div>
-    ${(county.filing.portal_notes || []).map(note => `<p class="small muted">${esc(note)}</p>`).join("")}
+    ${(county.filing.portal_notes || []).map(note => customerLine(note)).filter(Boolean).map(note => `<p class="small muted">${esc(note)}</p>`).join("")}
     <div class="cta"><a class="btn" href="dashboard.html">Track the appeal</a></div>`;
 }

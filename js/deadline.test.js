@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
+import { customerLine } from "./format.js";
 import { decide } from "./engine.js";
 import { caseEmailDraft } from "./caseMail.js";
 import { deadlineReminderPlan, cutoffSubject, borderlineReviewLine } from "./deadlineReminders.js";
@@ -126,4 +127,32 @@ test("customer copy drops the decline-after-intake refund and splits the two dat
   assert.match(filed.body, /\[postal address pending\]/);
   assert.match(filed.body, /Disclosures: https:\/\/sirryanlynch\.github\.io\/sherwood\/disclosures\//);
   assert.match(read("js/pages/results.js"), /Email me reminders/);
+});
+
+test("customer pages do not mention the pilot filing or October 12", () => {
+  const read = path => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
+  const banned = /\bpilot\b|october 12|oct\.?\s*12/i;
+  const pages = [];
+  const walk = (dirUrl, prefix) => {
+    for (const name of readdirSync(dirUrl, { withFileTypes: true })) {
+      if (name.isDirectory()) {
+        if (name.name === "docs" || name.name === "node_modules" || name.name === "backend") continue;
+        walk(new URL(`${name.name}/`, dirUrl), `${prefix}${name.name}/`);
+      } else if (name.name.endsWith(".html") && name.name !== "case-study.html") {
+        pages.push(`${prefix}${name.name}`);
+      }
+    }
+  };
+  walk(new URL("../", import.meta.url), "");
+  assert.ok(pages.includes("faq.html"));
+  assert.ok(pages.includes("index.html"));
+  for (const page of pages) {
+    assert.equal(banned.test(read(page)), false, page);
+  }
+  assert.match(read("js/boot.js"), /We file through the county's e-file portal\./);
+  assert.equal(banned.test(read("js/boot.js")), false);
+  assert.equal(banned.test(read("js/engine.js")), false);
+  assert.equal(banned.test(read("js/pages/sign.js")), false);
+  assert.match(customerLine("The e-file portal charged $50 on October 12, 2026. A paper amount is not confirmed for 2026."), /not confirmed/);
+  assert.equal(/\bpilot\b|october 12/i.test(customerLine("Register, then file online. The pilot filing used a 9-section application.")), false);
 });

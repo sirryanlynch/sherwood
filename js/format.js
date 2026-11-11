@@ -60,3 +60,13 @@ export function contactLine(contact) {
   const parts = [contact.phone, contact.email, contact.address].filter(Boolean);
   return parts.length ? parts.join(" · ") : "Not in this adapter.";
 }
+
+/* Drop sentences that name the founder's filing. County facts stay in the adapter. */
+export function customerLine(text) {
+  if (text == null) return "";
+  return String(text)
+    .split(/(?<=\.)\s+/)
+    .filter(sentence => !/\bpilot\b|october 12|oct\.?\s*12/i.test(sentence))
+    .join(" ")
+    .trim();
+}

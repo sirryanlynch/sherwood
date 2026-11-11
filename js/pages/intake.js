@@ -1,7 +1,6 @@
 import "../boot.js";
 import { customerCountyLine, getCounty } from "../counties.js";
-import { esc } from "../format.js";
-import { contactLine } from "../format.js";
+import { contactLine, customerLine, esc } from "../format.js";
 import { sendCaseEmail } from "../caseMail.js";
 import { currentPersona } from "../personas.js";
 import { planById } from "../pricing.js";
@@ -85,7 +84,7 @@ if (gate) {
         note.textContent = "You marked the exemption as already on file. We will not suggest claiming it again.";
         return;
       }
-      note.textContent = `${exemption.note} Assessor: ${contactLine({ phone: exemption.phone, email: county.assessor_office.email })}`;
+      note.textContent = `${customerLine(exemption.note)} Assessor: ${contactLine({ phone: exemption.phone, email: county.assessor_office.email })}`.trim();
     };
     exemptionSelect.addEventListener("change", paintExemption);
     paintExemption();

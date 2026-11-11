@@ -32,7 +32,7 @@ export function savingsOf(assessed, reduction, tax) {
       mid: null,
       high: null,
       bandNote: SAVINGS_BAND_NOTE,
-      note: "No dollar savings yet. Your tax bill was not entered, and this check does not apply the pilot property's 1.23% rate to anyone else."
+      note: "No dollar savings yet. Your tax bill was not entered, and this check does not apply another home's tax rate."
     };
   }
   const rate = tax / assessed;
