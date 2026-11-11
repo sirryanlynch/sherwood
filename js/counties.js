@@ -34,3 +34,18 @@ export async function loadCounties() {
   cache = list;
   return list;
 }
+
+/* Customer copy cites the board named on the adapter. The pilot-kit status label stays internal. */
+export function customerCountyLine(county) {
+  if (!county) return "";
+  const board = county.appeals_board && county.appeals_board.name;
+  const usable = board && !/unverified template/i.test(board) ? board : "";
+  if (usable) {
+    const place = county.county || "";
+    if (place && !usable.toLowerCase().includes(place.toLowerCase())) return `${place} County ${usable}`;
+    return usable;
+  }
+  const label = county.status_label || "";
+  if (/pilot kit/i.test(label)) return "";
+  return label;
+}

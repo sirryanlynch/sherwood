@@ -82,6 +82,9 @@ test("the marketing pages keep the check, the flat fee, and the pilot estimates"
   assert.equal(home.includes("60 seconds"), false);
   assert.match(home, /id="parent-lead"/);
   assert.match(home, /The owner or their legal representative signs/);
+  assert.match(home, /Check for a parent/);
+  assert.match(read("js/pages/dashboard.js"), /Your appeal: waiting for your signature\./);
+  assert.match(read("js/engine.js"), /The middle figure is halfway between low and high/);
   assert.equal(home.includes("Savings Guarantee"), false);
   assert.equal(/Trustpilot|success rate/i.test(home), false);
   const how = read("how-it-works.html");

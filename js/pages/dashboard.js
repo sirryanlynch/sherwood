@@ -1,5 +1,5 @@
 import "../boot.js";
-import { getCounty } from "../counties.js";
+import { customerCountyLine, getCounty } from "../counties.js";
 import { contactLine, esc, formatDay } from "../format.js";
 import { CASE_EMAIL_KINDS } from "../caseMail.js";
 import { authorizationScope, nextActionLine, taxYearLabel } from "../caseStatus.js";
@@ -55,9 +55,13 @@ function paint(matter, user, county) {
     ? ["Hearing packet preview", "Not a county document.", HEARING_PACKET_LINE, "", matter.kit.statement]
     : ["Hearing packet", "No statement is stored yet. The packet is prepared from the kit you approve.", HEARING_PACKET_LINE];
 
+  const heading = years === "not signed yet"
+    ? "Your appeal: waiting for your signature."
+    : `Your appeal: ${esc(matter.address)}, tax year ${esc(years)}`;
+  const countyLine = customerCountyLine(county);
   root.innerHTML = `
-    <h1>Your appeal: ${esc(matter.address)}, tax year ${esc(years)}</h1>
-    <p class="lead">${esc(county.county)} (${esc(county.status_label)}). This page is the record. It does not promise proactive status updates. You get an email when a step happens. Status changes when you act, or when ops records a step.</p>
+    <h1>${heading}</h1>
+    <p class="lead">${esc(county.county)}${countyLine ? ` (${esc(countyLine)})` : ""}. This page is the record. It does not promise proactive status updates. You get an email when a step happens. Status changes when you act, or when ops records a step.</p>
     ${advocate}
     <p class="next-action">${esc(nextActionLine(matter))}</p>
     ${confirm}

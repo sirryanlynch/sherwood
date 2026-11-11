@@ -1,6 +1,6 @@
 import "../boot.js";
 import { notify } from "../adapters/notify.js";
-import { getCounty } from "../counties.js";
+import { customerCountyLine, getCounty } from "../counties.js";
 import { paymentsAdapter } from "../adapters/payments.js";
 import { borderlineReviewLine, deadlineReminderPlan, withUnsubscribe } from "../deadlineReminders.js";
 import { nextWindowCopy } from "../engine.js";
@@ -52,11 +52,8 @@ function emailForm(matter, privacy, label) {
 }
 
 function rangeHtml(savings) {
-  if (!savings || savings.low == null) {
+  if (!savings || savings.low == null || !(savings.high > 0)) {
     return `<p>${esc((savings && savings.note) || "No dollar estimate on this check.")}</p>`;
-  }
-  if (savings.note === "No savings expected." || (savings.low === 0 && savings.mid === 0 && savings.high === 0)) {
-    return `<p>No savings expected.</p>`;
   }
   return `
     <p><span class="chip chip-estimate">Estimate</span></p>
@@ -87,7 +84,7 @@ function evidenceHtml(matter) {
   const rows = [
     ["Assessed value you entered", money(matter.assessed)],
     ["Your market-value estimate", matter.marketSkipped || matter.market == null ? "Skipped" : money(matter.market)],
-    ["Gap", matter.reduction == null ? "Not calculated" : money(matter.reduction)],
+    ["Gap", matter.reduction == null || matter.reduction <= 0 ? "Not calculated" : money(matter.reduction)],
     ["Tax bill you entered", matter.tax == null ? "Not entered" : money(matter.tax)]
   ];
   return `<h2>Your numbers</h2>
@@ -186,7 +183,7 @@ function render(matter, county) {
     ${deadline}
     <div class="split result-layout">
       <div class="result-evidence">
-        <p class="lead">For ${esc(matter.address)}. ${esc(county.county)} (${esc(county.status_label)}).</p>
+        <p class="lead">For ${esc(matter.address)}. ${esc(county.county)}${customerCountyLine(county) ? ` (${esc(customerCountyLine(county))})` : ""}.</p>
         ${evidenceHtml(matter)}
         ${priceLine(county, offer)}
         <p class="small muted">${matter.outcome === "off_season" ? esc(nextWindowCopy(county, new Date())) : `Window: ${esc(matter.window && matter.window.label || "not set")}. Adapter deadline: ${esc(formatDay(county.filing.current_year_deadline))}.`}</p>

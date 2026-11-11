@@ -45,7 +45,7 @@ Portfolio (`?for=portfolio`): up to three addresses on the check. The first addr
 | `no_go` | No action recommended. | Remind me next year |
 | `off_season` | Filing is closed for this season in [county]. | Email me when it opens |
 
-The high figure is the full bill math: `(assessed − market estimate) × (tax bill ÷ assessed)`. The likely figure is three quarters of that, and the low figure is half. Likely sits between low and high. A result that does not support a reduction shows $0 and “No savings expected.” The page calls this Sherwood’s planning assumption, not a county rule and not a promise. No comparable sales are invented.
+The high figure is the full bill math: `(assessed − market estimate) × (tax bill ÷ assessed)`. The low figure is half of that. The middle figure is halfway between low and high. Likely sits between low and high. When the market estimate is not below the assessed value, the page shows no dollar band and only “No savings estimate, because your market value isn't below your assessed value.” The page calls this Sherwood’s planning assumption, not a county rule and not a promise. No comparable sales are invented.
 
 ## Mobile and desktop
 

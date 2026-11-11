@@ -94,10 +94,12 @@ test("a no-action result does not show negative savings", () => {
     confidence: "sure"
   });
   assert.equal(decision.outcome, "no_go");
-  assert.equal(decision.savings.low, 0);
-  assert.equal(decision.savings.mid, 0);
-  assert.equal(decision.savings.high, 0);
-  assert.equal(decision.savings.note, "No savings expected.");
+  assert.equal(decision.savings.amount, null);
+  assert.equal(decision.savings.low, null);
+  assert.equal(decision.savings.mid, null);
+  assert.equal(decision.savings.high, null);
+  assert.equal(decision.savings.note, "No savings estimate, because your market value isn't below your assessed value.");
+  assert.equal(String(decision.savings.note).includes("$"), false);
 });
 
 test("a reviewer demo seeds a Santa Cruz case", () => {

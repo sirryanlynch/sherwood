@@ -1,5 +1,5 @@
 import "../boot.js";
-import { getCounty, loadCounties } from "../counties.js";
+import { customerCountyLine, getCounty, loadCounties } from "../counties.js";
 import { readAttribution } from "../attribution.js";
 import { decide } from "../engine.js";
 import { adapterFeeNotes, planPriceLines } from "../pricing.js";
@@ -24,7 +24,7 @@ let counties = [];
 const place = currentPlace(check.address);
 
 function optionHtml(list) {
-  return list.map(c => `<option value="${esc(c.id)}">${esc(c.county)} — ${esc(c.status_label)}</option>`).join("");
+  return list.map(c => `<option value="${esc(c.id)}">${esc(c.county)}${customerCountyLine(c) ? ` — ${esc(customerCountyLine(c))}` : ""}</option>`).join("");
 }
 
 function selectedCounty() {

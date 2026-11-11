@@ -83,9 +83,9 @@ form.wide{max-width:720px}
 pre.card{overflow:auto}
 @media(max-width:800px){.split{grid-template-columns:1fr}.result-decision{order:-1}}
 @media(max-width:640px){header .wrap{height:56px;flex-direction:row;align-items:center;padding:0 16px;min-width:0}nav{flex:1;min-width:0;flex-wrap:nowrap;overflow-x:auto;gap:14px}nav a{white-space:nowrap}main{padding:32px 0 88px}.plans{grid-template-columns:1fr}}
-.parent-lead{display:none}
-html.for-parent .parent-lead{display:block}
-html.for-parent #home-sub{display:none}
+.parent-lead,.parent-only{display:none}
+html.for-parent .parent-lead,html.for-parent .parent-only{display:block}
+html.for-parent #home-sub,html.for-parent .home-only{display:none}
 .chip{display:inline-block;border-radius:999px;padding:2px 8px;font-size:12px;font-weight:600;letter-spacing:0}
 .chip-estimate{background:var(--teal-soft);color:#0d6b66}
 .chip-sample{background:#f3d36b;color:#17191c}

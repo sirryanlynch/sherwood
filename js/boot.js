@@ -1,5 +1,5 @@
 import { maybeLoadDemo } from "./demo.js";
-import { getCounty, loadCounties } from "./counties.js";
+import { customerCountyLine, getCounty, loadCounties } from "./counties.js";
 
 maybeLoadDemo();
 import { contactLine, esc, formatDay, money } from "./format.js";
@@ -49,7 +49,7 @@ async function fillLaunchFacts() {
     const paper = county.filing.paper_fee;
     const prices = `We file it ${lines.dfy}`;
     facts.innerHTML = `
-      <p class="small muted">These lines are rendered from the Santa Cruz County adapter (${esc(county.status_label)}).</p>
+      <p class="small muted">These lines are rendered from the ${esc(customerCountyLine(county) || county.county + " County")}.</p>
       <ul>
         <li>Regular window: ${esc(county.filing.regular_window.label)}. Deadline on the adapter: ${esc(formatDay(county.filing.current_year_deadline))}. Source: ${county.filing.regular_window.source_url ? `<a href="${esc(county.filing.regular_window.source_url)}">${esc(county.filing.regular_window.source_url)}</a>` : "not set"}. Verified: ${esc(formatDay(county.filing.regular_window.verified_date))}.</li>
         <li>Sherwood prices: ${esc(prices)}</li>
@@ -125,7 +125,7 @@ function paintPlanPrices(county) {
 
 export async function countyOptions(select) {
   const counties = await loadCounties();
-  select.innerHTML = counties.map(c => `<option value="${esc(c.id)}">${esc(c.county)} — ${esc(c.status_label)}</option>`).join("");
+  select.innerHTML = counties.map(c => `<option value="${esc(c.id)}">${esc(c.county)}${customerCountyLine(c) ? ` — ${esc(customerCountyLine(c))}` : ""}</option>`).join("");
   return counties;
 }
 

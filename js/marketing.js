@@ -136,7 +136,8 @@ function bindCheckDock() {
   const sync = () => {
     const check = document.querySelector("#check-form");
     const waiting = !!(check && check.hidden);
-    go.textContent = waiting ? "Email me a reminder" : "Check my property";
+    const parentDoor = document.documentElement.classList.contains("for-parent");
+    go.textContent = waiting ? "Email me a reminder" : (parentDoor ? "Check for a parent" : "Check my property");
     const view = window.innerHeight || 0;
     const panelBox = panel.getBoundingClientRect();
     const sectionVisible = panelBox.top < view - 64 && panelBox.bottom > 88;
