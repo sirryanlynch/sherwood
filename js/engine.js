@@ -84,7 +84,7 @@ export function filingWindow(county, today, supplementalNoticeDate) {
   let supplemental = "n/a";
   if (supplementalNoticeDate && days == null) {
     supplemental = "unverified";
-    reasons.push("A supplemental notice date was entered, but your county's rules do not state the number of days. A person has to check it.");
+    reasons.push("A supplemental notice date was entered, but your county's details do not state the number of days. A person has to check it.");
   } else if (supplementalNoticeDate && typeof days === "number") {
     const notice = parseISODate(supplementalNoticeDate);
     if (!notice) {
@@ -97,7 +97,7 @@ export function filingWindow(county, today, supplementalNoticeDate) {
       const last = new Date(notice.getFullYear(), notice.getMonth(), notice.getDate() + days);
       supplemental = day <= last ? "open" : "closed";
       if (supplemental === "closed") {
-        reasons.push(`The supplemental window in your county's rules is ${days} days from the notice, and that date has passed.`);
+        reasons.push(`The supplemental window in your county's details is ${days} days from the notice, and that date has passed.`);
       }
     }
   }
@@ -116,7 +116,7 @@ export function filingWindow(county, today, supplementalNoticeDate) {
     reasons.unshift("Your county's filing window is closed.");
     return { state: "off_season", kind: regular === "closed" ? "closed" : regular, reasons, label: "" };
   }
-  reasons.unshift("Your county's rules do not say when the filing window opens, so Sherwood will not treat it as open.");
+  reasons.unshift("Your county's details do not say when the filing window opens, so Sherwood will not treat it as open.");
   return { state: "unknown", kind: "regular", reasons, label: win && win.label };
 }
 

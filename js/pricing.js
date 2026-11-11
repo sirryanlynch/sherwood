@@ -100,8 +100,8 @@ export function adapterFeeNotes(county) {
   if (typeof surcharge === "number" && surcharge > 0) {
     notes.push(`Online payment surcharge in your county's details: ${plainDollars(surcharge)}.`);
   }
-  if (filing.cutoff_time) notes.push(`Filing cutoff in your county's rules: ${filing.cutoff_time}.`);
-  if (filing.postmark_ok === true) notes.push("Your county's rules say a postmark can count.");
+  if (filing.cutoff_time) notes.push(`Filing cutoff in your county's details: ${filing.cutoff_time}.`);
+  if (filing.postmark_ok === true) notes.push("Your county's details say a postmark can count.");
   return notes;
 }
 

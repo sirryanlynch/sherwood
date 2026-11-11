@@ -64,7 +64,7 @@ function paintGate(root, matter, user, county) {
   const blocks = [];
   if (!signed) {
     const title = doc.doc_title || "the agent authorization";
-    const source = doc.source || "Your county's rules do not define an agent authorization document.";
+    const source = doc.source || "Your county's details do not define an agent authorization document.";
     const pending = auth && (pendingAgentContact(auth.agentName) || pendingAgentContact(auth.agentAddress) || pendingAgentContact(auth.agentPhone));
     if (pending) blocks.push("Agent name, address, and phone are still [pending]. Filing stays off until those are real details.");
     blocks.push(`Filing stays off until the agent authorization is complete: date signed, tax years (4 at most), parcel, agent name, address, and phone, and your signature and title. ${title}. ${source}`);
@@ -79,9 +79,9 @@ function paintGate(root, matter, user, county) {
   const canFile = blocks.length === 0;
   root.innerHTML = `
     <h1>File with the county</h1>
-    <p class="lead">Sherwood files only after the agent authorization in your county's rules is signed and stored on this appeal.</p>
+    <p class="lead">Sherwood files only after the agent authorization in your county's details is signed and stored on this appeal.</p>
     <div class="card">
-      <p>Document: <b>${esc(doc.doc_title || "Not defined in your county's rules")}</b></p>
+      <p>Document: <b>${esc(doc.doc_title || "Not defined in your county's details")}</b></p>
       <p class="small muted">${esc(doc.source || "No source in your county's details.")} Verified in your county's details: ${doc.verified === true ? "yes" : "no"}.</p>
       ${signed ? `<p>Signed by ${esc(auth.signerName)} at ${esc(auth.signedAt)}. Stored on this appeal.</p>` : `<p>Not signed yet.</p>`}
       ${signed && auth.rule6Label ? `<p>Local Rule 6: ${esc(auth.rule6Label)}.</p>` : ""}

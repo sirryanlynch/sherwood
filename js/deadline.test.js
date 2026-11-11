@@ -221,6 +221,22 @@ test("customer pages do not mention the pilot filing or October 12", () => {
   assert.equal(banned.test(read("backend/functions/counties/santa_cruz.json")), false);
 });
 
+test("customer pages do not say your county's rules or unless your county", () => {
+  const read = path => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
+  const banned = /your county's rules|unless your county/i;
+  for (const page of customerPages()) {
+    assert.equal(banned.test(visibleCopy(read(page))), false, page);
+  }
+  for (const file of [
+    "js/engine.js", "js/pricing.js", "js/outcome.js", "js/caseStatus.js", "js/boot.js", "js/kitdoc.js",
+    "js/pages/filed.js", "js/pages/results.js", "js/pages/checkout.js", "js/pages/intake.js",
+    "js/pages/kit.js", "js/pages/dashboard.js", "js/pages/sign.js", "js/pages/values.js"
+  ]) {
+    assert.equal(banned.test(read(file)), false, file);
+  }
+  assert.match(read("dashboard.html"), /Keep paying your property taxes on time\. An appeal does not pause your bill\./);
+});
+
 test("customer pages do not show the word adapter", () => {
   const read = path => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
   const pages = customerPages();

@@ -62,7 +62,7 @@ export function advanceMatter(matter, county) {
       date.setDate(date.getDate() + minDays);
       matter.hearing = { date: isoDay(date), simulated: true, minimumDays: minDays };
     } else {
-      matter.hearing = { date: null, simulated: true, note: "Your county's rules have no minimum notice period, so no preview date was invented." };
+      matter.hearing = { date: null, simulated: true, note: "Your county's details have no minimum notice period, so no preview date was invented." };
     }
     emailKind = "hearing_scheduled";
   }
